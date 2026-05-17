@@ -1,8 +1,9 @@
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { Bot, CircleDot, Download, Mic, Sparkles, Volume2, X } from 'lucide-react'
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { CollectionStrip } from './components/CollectionStrip.jsx'
 import { DeviceShell } from './components/DeviceShell.jsx'
+import { ErrorBoundary } from './components/ErrorBoundary.jsx'
 import { FavoritesStrip } from './components/FavoritesStrip.jsx'
 import { ImageScanner } from './components/ImageScanner.jsx'
 import { PokemonCompare } from './components/PokemonCompare.jsx'
@@ -10,6 +11,7 @@ import { PokemonSearch } from './components/PokemonSearch.jsx'
 import { ResultCard } from './components/ResultCard.jsx'
 import { ScanCandidateStrip } from './components/ScanCandidateStrip.jsx'
 import { ScanHistoryStrip } from './components/ScanHistoryStrip.jsx'
+import { useAchievements } from './hooks/useAchievements.js'
 import pokemonCatalog from './data/pokemonFullCatalog.json'
 import { useImagePreview } from './hooks/useImagePreview.js'
 import { useLocalStorage } from './hooks/useLocalStorage.js'
@@ -32,6 +34,7 @@ const FAVORITES_KEY = 'pokedex-visual-gen1:favorites'
 const KIDS_MODE_KEY = 'pokedex-visual-gen1:kids-mode'
 const COLLECTION_KEY = 'pokedex-visual-gen1:collection'
 const AUTO_NARRATE_KEY = 'pokedex-visual-gen1:auto-narrate'
+const SCAN_FEEDBACK_KEY = 'pokedex-visual-gen1:scan-feedback'
 
 function App() {
   const { imageFile, previewUrl, setImageFile, clearImage } = useImagePreview()
@@ -41,9 +44,12 @@ function App() {
   const [collection, setCollection] = useLocalStorage(COLLECTION_KEY, [])
   const [isKidsMode, setIsKidsMode] = useLocalStorage(KIDS_MODE_KEY, false)
   const [isAutoNarrate, setIsAutoNarrate] = useLocalStorage(AUTO_NARRATE_KEY, true)
+  const [scanFeedback, setScanFeedback] = useLocalStorage(SCAN_FEEDBACK_KEY, {})
   const [error, setError] = useState('')
   const [isScanning, setIsScanning] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
+  const prefersReducedMotion = useReducedMotion()
+  const achievements = useAchievements({ collection, favorites })
   const [isAssistantOpen, setIsAssistantOpen] = useState(false)
   const [scanCandidates, setScanCandidates] = useState([])
   const [pokemonIndex, setPokemonIndex] = useState([])
@@ -372,6 +378,11 @@ function App() {
     setScanCandidates([])
   }
 
+  function handleScanFeedback(vote) {
+    if (!result?.id) return
+    setScanFeedback((prev) => ({ ...prev, [result.id]: vote }))
+  }
+
   return (
     <main className={`pokedex-stage min-h-svh px-2 py-2 text-dex-ink sm:px-5 sm:py-4 ${isKidsMode ? 'kids-mode' : ''}`}>
       <DeviceShell>
@@ -472,11 +483,13 @@ function App() {
         <AnimatePresence mode="wait">
           <ResultCard
             collectionEntry={collectionEntry}
+            feedback={result?.id ? scanFeedback[result.id] : null}
             key={result?.apiName ?? result?.id ?? (isScanning ? 'scanning' : 'empty')}
             isFavorite={isCurrentFavorite}
             isKidsMode={isKidsMode}
             isSpeaking={isSpeaking}
             isScanning={isScanning}
+            onFeedback={handleScanFeedback}
             onMarkCaptured={(pokemon) => updateCollection(pokemon, 'captured')}
             onMarkSeen={(pokemon) => updateCollection(pokemon, 'seen')}
             onSpeakPokedex={narratePokemon}
@@ -485,6 +498,17 @@ function App() {
             result={result}
           />
         </AnimatePresence>
+
+        {achievements.some((a) => a.unlocked) && (
+          <section className="achievements-strip" aria-label="Logros">
+            {achievements.filter((a) => a.unlocked).map((a) => (
+              <div key={a.id} className="achievement-chip" title={a.desc}>
+                <span>{a.emoji}</span>
+                <span>{a.label}</span>
+              </div>
+            ))}
+          </section>
+        )}
 
         {(favorites.length > 0 || collection.length > 0 || result) && (
           <section className="utility-dock" aria-label="Herramientas de colección">
@@ -529,11 +553,11 @@ function App() {
               className="assistant-modal-backdrop" 
               role="presentation"
             >
-              <motion.section 
-                initial={{ opacity: 0, y: 50, scale: 0.9 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                transition={{ type: 'spring', bounce: 0.25 }}
+              <motion.section
+                initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 50, scale: 0.9 }}
+                animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+                exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 20, scale: 0.95 }}
+                transition={prefersReducedMotion ? { duration: 0.15 } : { type: 'spring', bounce: 0.25 }}
                 className="assistant-modal" 
                 role="dialog" 
                 aria-modal="true" 
@@ -574,7 +598,9 @@ function App() {
                   </button>
                 </header>
                 <Suspense fallback={<div className="assistant-loading">Cargando asistente...</div>}>
-                  <PokemonAssistant pokemon={result} />
+                  <ErrorBoundary message="El asistente tuvo un problema. Prueba recargando.">
+                    <PokemonAssistant pokemon={result} />
+                  </ErrorBoundary>
                 </Suspense>
               </motion.section>
             </motion.div>

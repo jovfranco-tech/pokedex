@@ -203,7 +203,7 @@
 
 .profile-audio-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 9px;
 }
 
@@ -1370,4 +1370,186 @@
   .profile-info-grid {
     grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
   }
+}
+
+/* --- Feedback row (#13) -------------------------------------------- */
+.profile-feedback-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: -4px 0 10px;
+  font-size: 0.85rem;
+  font-weight: 900;
+  color: #9198a7;
+}
+
+.profile-feedback-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #e8ecf3;
+  border-radius: 8px;
+  background: #f7f9fc;
+  color: #9198a7;
+  transition: all 160ms ease;
+}
+
+.profile-feedback-btn:hover { transform: translateY(-1px); }
+.profile-feedback-btn-yes { border-color: #22c55e; background: #f0fdf4; color: #16a34a; }
+.profile-feedback-btn-no  { border-color: #ef4444; background: #fef2f2; color: #dc2626; }
+
+/* --- Evolution chain (#11) ----------------------------------------- */
+.evolution-chain-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #e9edf4;
+  border-radius: 12px;
+  background: #fff;
+  padding: 0.7rem;
+}
+
+.evolution-chain-item-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.evolution-arrow {
+  color: #c6cad5;
+  font-weight: 900;
+}
+
+.evolution-chain-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  border-radius: 10px;
+  padding: 4px 6px;
+  transition: background 160ms ease;
+}
+
+.evolution-chain-item img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+.evolution-chain-item span {
+  font-size: 0.72rem;
+  font-weight: 900;
+  color: #646b7d;
+  text-align: center;
+}
+
+.evolution-chain-item-current {
+  background: rgba(255, 214, 67, 0.18);
+}
+
+/* --- Error boundary (#14) ------------------------------------------ */
+.error-boundary-fallback {
+  display: grid;
+  place-items: center;
+  gap: 8px;
+  min-height: 120px;
+  border: 1px dashed #e7ecf4;
+  border-radius: 14px;
+  background: #fafbff;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.error-boundary-fallback span { font-size: 2rem; }
+.error-boundary-fallback p { color: #9198a7; font-size: 0.9rem; font-weight: 800; }
+.error-boundary-fallback button {
+  border: 1px solid #e8ecf3;
+  border-radius: 8px;
+  background: #fff;
+  padding: 0.4rem 0.9rem;
+  color: #646b7d;
+  font-size: 0.85rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+/* --- Achievements strip (#12) -------------------------------------- */
+.achievements-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding: 4px 0 2px;
+}
+
+.achievement-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid rgba(255, 214, 67, 0.65);
+  border-radius: 999px;
+  background: linear-gradient(135deg, #fffbe6, #fffdf5);
+  padding: 0.35rem 0.75rem;
+  font-size: 0.82rem;
+  font-weight: 900;
+  color: #7a5800;
+  box-shadow: 0 2px 6px rgba(255, 214, 67, 0.12);
+  animation: achievement-pop 320ms ease-out both;
+}
+
+@keyframes achievement-pop {
+  from { opacity: 0; transform: scale(0.8); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* --- Generation filter chips (#16) --------------------------------- */
+.console-gen-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 4px 0;
+}
+
+.console-gen-chip {
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  padding: 0.2rem 0.6rem;
+  color: rgba(255,255,255,0.65);
+  font-size: 0.75rem;
+  font-weight: 900;
+  transition: all 140ms ease;
+}
+
+.console-gen-chip:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+.console-gen-chip-active {
+  border-color: #ffd643;
+  background: rgba(255, 214, 67, 0.18);
+  color: #ffd643;
+}
+
+/* --- Assistant auto-speak toggle (#9) ------------------------------ */
+.assistant-action-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.1);
+  padding: 0.25rem 0.6rem;
+  color: rgba(255,255,255,0.7);
+  font-size: 0.75rem;
+  font-weight: 900;
+  transition: all 140ms ease;
+}
+
+.assistant-action-toggle:hover { background: rgba(255,255,255,0.18); color: #fff; }
+
+.assistant-action-toggle-active {
+  border-color: #ffd643;
+  background: rgba(255, 214, 67, 0.2);
+  color: #ffd643;
 }

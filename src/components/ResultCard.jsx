@@ -1,10 +1,12 @@
-import { AnimatePresence, motion } from 'framer-motion'
-import { Gamepad2, Heart, Info, ShieldAlert, Sparkles, Swords, Volume2 } from 'lucide-react'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { Gamepad2, Heart, Info, Share2, ShieldAlert, Sparkles, Swords, ThumbsDown, ThumbsUp, Volume2 } from 'lucide-react'
 import { Suspense, lazy, useMemo, useState } from 'react'
 import { TypeBadge } from './TypeBadge.jsx'
 import { getPokemonTypeTheme, getTypeMeta } from '../data/typeColors.js'
 import { formatPokemonNumber } from '../utils/formatPokemonNumber.js'
+import { ErrorBoundary } from './ErrorBoundary.jsx'
 import { playPokemonCry } from '../utils/playPokemonCry.js'
+import { sharePokemonCard } from '../utils/shareCard.js'
 
 const Pokemon3DStage = lazy(() => import('./Pokemon3DStage.jsx').then((module) => ({ default: module.Pokemon3DStage })))
 const typeLabel = (type) => getTypeMeta(type).label
@@ -93,10 +95,12 @@ function buildQuickSummary(result) {
 
 export function ResultCard({
   collectionEntry,
+  feedback,
   isFavorite,
   isKidsMode,
   isSpeaking,
   isScanning,
+  onFeedback,
   onMarkCaptured,
   onMarkSeen,
   onSpeakPokedex,
@@ -104,7 +108,9 @@ export function ResultCard({
   pokemonTotal = 1025,
   result,
 }) {
+  const prefersReducedMotion = useReducedMotion()
   const [activeTab, setActiveTab] = useState('info')
+  const [isSharing, setIsSharing] = useState(false)
   const visibleTabs = useMemo(
     () => (isKidsMode ? profileTabs.filter((tab) => ['info', 'stage'].includes(tab.id)) : profileTabs),
     [isKidsMode],
@@ -153,13 +159,20 @@ export function ResultCard({
     )
   }
 
+  async function handleShare() {
+    setIsSharing(true)
+    try { await sharePokemonCard(result) } catch { /* user cancelled or unsupported */ }
+    finally { setIsSharing(false) }
+  }
+
+  const motionProps = prefersReducedMotion
+    ? { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }, transition: { duration: 0.15 } }
+    : { initial: { opacity: 0, y: 20, scale: 0.95 }, animate: { opacity: 1, y: 0, scale: 1 }, exit: { opacity: 0, scale: 0.95 }, transition: { duration: 0.4, type: 'spring', bounce: 0.3 } }
+
   return (
-    <motion.section 
-      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ duration: 0.4, type: 'spring', bounce: 0.3 }}
-      className="pokemon-profile-card" 
+    <motion.section
+      {...motionProps}
+      className="pokemon-profile-card"
       style={getPokemonTypeTheme(result.type)}
     >
       <div className="profile-hero">
@@ -221,7 +234,39 @@ export function ResultCard({
           <Volume2 className="size-4" />
           {isSpeaking ? 'Narrando…' : 'Narrar'}
         </button>
+        <button
+          type="button"
+          onClick={handleShare}
+          disabled={isSharing}
+          className="profile-sound-button"
+          aria-label={`Compartir ${result.name}`}
+        >
+          <Share2 className="size-4" />
+          {isSharing ? '…' : 'Compartir'}
+        </button>
       </div>
+
+      {result.scanMode?.includes('visual') && (
+        <div className="profile-feedback-row">
+          <span>¿Acerté?</span>
+          <button
+            type="button"
+            className={`profile-feedback-btn${feedback === 'correct' ? ' profile-feedback-btn-yes' : ''}`}
+            onClick={() => onFeedback?.('correct')}
+            aria-label="Identificación correcta"
+          >
+            <ThumbsUp className="size-4" />
+          </button>
+          <button
+            type="button"
+            className={`profile-feedback-btn${feedback === 'wrong' ? ' profile-feedback-btn-no' : ''}`}
+            onClick={() => onFeedback?.('wrong')}
+            aria-label="Identificación incorrecta"
+          >
+            <ThumbsDown className="size-4" />
+          </button>
+        </div>
+      )}
 
       <p className="profile-quick-summary">{buildQuickSummary(result)}</p>
 
@@ -294,6 +339,23 @@ export function ResultCard({
   )
 }
 
+function EvolutionChainRow({ chain = [], currentId }) {
+  if (chain.length <= 1) return null
+  return (
+    <div className="evolution-chain-row">
+      {chain.map((entry, idx) => (
+        <span key={entry.id} className="evolution-chain-item-wrap">
+          {idx > 0 && <span className="evolution-arrow" aria-hidden="true">→</span>}
+          <span className={`evolution-chain-item${entry.id === currentId ? ' evolution-chain-item-current' : ''}`}>
+            <img src={entry.sprite} alt={entry.name} loading="lazy" />
+            <span>{entry.name}</span>
+          </span>
+        </span>
+      ))}
+    </div>
+  )
+}
+
 function InfoTab({ isKidsMode, result }) {
   if (isKidsMode) return <KidsInfoTab result={result} />
 
@@ -303,10 +365,14 @@ function InfoTab({ isKidsMode, result }) {
       <div className="grid gap-3">
         <MiniList title="Ataques" values={result.attacks} />
         <MiniList title="Habilidades" values={result.abilities} />
-        <div className="profile-note">
-          <span>Evolución</span>
-          <strong>{result.evolution}</strong>
-        </div>
+        {result.evolutionChain?.length > 1
+          ? <EvolutionChainRow chain={result.evolutionChain} currentId={result.id} />
+          : (
+            <div className="profile-note">
+              <span>Evolución</span>
+              <strong>{result.evolution}</strong>
+            </div>
+          )}
       </div>
     </div>
   )
@@ -511,9 +577,11 @@ function GameAppearances({ games = [] }) {
 function StageTab({ result }) {
   return (
     <div className="stage-tab-panel">
-      <Suspense fallback={<div className="stage-loading">Preparando escena...</div>}>
-        <Pokemon3DStage pokemon={result} />
-      </Suspense>
+      <ErrorBoundary message="La escena 3D no pudo cargarse.">
+        <Suspense fallback={<div className="stage-loading">Preparando escena...</div>}>
+          <Pokemon3DStage pokemon={result} />
+        </Suspense>
+      </ErrorBoundary>
       <div className="stage-data-row">
         <span>Exp. base</span>
         <strong>{result.baseExperience ?? '-'}</strong>

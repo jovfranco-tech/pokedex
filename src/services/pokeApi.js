@@ -5,7 +5,7 @@ import { buildTypeMatchups } from '../data/typeChart.js'
 
 export const DEFAULT_POKEMON_SPECIES_COUNT = 1025
 export const MAX_POKEMON_ID = DEFAULT_POKEMON_SPECIES_COUNT
-export const POKEMON_DETAIL_SCHEMA_VERSION = 'spanish-localized-stage-v5'
+export const POKEMON_DETAIL_SCHEMA_VERSION = 'spanish-localized-stage-v6'
 
 const API_BASE = 'https://pokeapi.co/api/v2'
 const INDEX_CACHE_KEY = 'pokedex-visual-latest-species:index:v2-mega'
@@ -588,19 +588,21 @@ function formatGameName(versionName) {
 }
 
 async function parseEvolutionChain(chain) {
-  const names = []
+  const entries = []
 
   async function walk(node) {
     if (!node) return
-    names.push(await fetchLocalizedResourceName(node.species, formatPokemonName(node.species.name)))
-
+    const name = await fetchLocalizedResourceName(node.species, formatPokemonName(node.species.name))
+    const id = idFromResourceUrl(node.species.url)
+    entries.push({ id, name, sprite: artworkUrl(id) })
     for (const child of node.evolves_to ?? []) {
       await walk(child)
     }
   }
 
   await walk(chain)
-  return names.length ? names.join(' -> ') : 'No evoluciona'
+  if (!entries.length) return { text: 'No evoluciona', chain: [] }
+  return { text: entries.map((e) => e.name).join(' -> '), chain: entries }
 }
 
 async function fetchEvolution(species) {
@@ -610,7 +612,7 @@ async function fetchEvolution(species) {
     const data = await response.json()
     return parseEvolutionChain(data.chain)
   } catch {
-    return 'Evolución no disponible'
+    return { text: 'Evolución no disponible', chain: [] }
   }
 }
 
@@ -635,11 +637,13 @@ export async function fetchPokemonDetails(nameOrId, options = {}) {
   const baseDisplayName =
     species.names?.find((name) => name.language.name === 'es')?.name ?? formatPokemonName(pokemon.name)
   const displayName = isSpecialForm ? formatSpecialFormName(pokemon.name) : baseDisplayName
-  const [evolution, abilities, attacks] = await Promise.all([
+  const [evolutionResult, abilities, attacks] = await Promise.all([
     fetchEvolution(species),
     Promise.all(pokemon.abilities.slice(0, 3).map((entry) => getLocalizedAbilityName(entry.ability))),
     Promise.all(pokemon.moves.slice(0, 4).map((entry) => getLocalizedMoveName(entry.move))),
   ])
+  const evolution = evolutionResult.text
+  const evolutionChain = evolutionResult.chain
   const types = pokemon.types.map((entry) => typeTranslations[entry.type.name] ?? formatPokemonName(entry.type.name))
   const gameAppearances = pokemon.game_indices
     .map((entry) => formatGameName(entry.version.name))
@@ -677,6 +681,7 @@ export async function fetchPokemonDetails(nameOrId, options = {}) {
     abilities,
     attacks,
     evolution: isSpecialForm ? `${baseDisplayName} -> ${displayName}` : evolution,
+    evolutionChain: isSpecialForm ? [] : evolutionChain,
     baseExperience: pokemon.base_experience,
     stats: pokemon.stats.map((entry) => ({
       key: entry.stat.name,

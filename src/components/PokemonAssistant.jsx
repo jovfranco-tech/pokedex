@@ -48,8 +48,10 @@ export function PokemonAssistant({ pokemon }) {
   const [source, setSource] = useState('local')
   const [isThinking, setIsThinking] = useState(false)
   const [isListening, setIsListening] = useState(false)
+  const [isAutoSpeak, setIsAutoSpeak] = useState(false)
   const [speechError, setSpeechError] = useState('')
   const recognitionRef = useRef(null)
+  const autoSpokeRef = useRef('')
 
   useEffect(() => {
     return () => recognitionRef.current?.stop?.()
@@ -76,6 +78,13 @@ export function PokemonAssistant({ pokemon }) {
     timeoutId = window.setTimeout(revealNextChunk, 8)
     return () => window.clearTimeout(timeoutId)
   }, [answer, isThinking])
+
+  useEffect(() => {
+    if (isAutoSpeak && visibleAnswer && visibleAnswer === answer && autoSpokeRef.current !== answer) {
+      autoSpokeRef.current = answer
+      speakPokedexLine(answer, { rate: 0.88, pitch: 0.62, withBeep: false })
+    }
+  }, [visibleAnswer, answer, isAutoSpeak])
 
   async function submitQuestion(value) {
     const trimmedQuestion = value.trim()
@@ -143,7 +152,17 @@ export function PokemonAssistant({ pokemon }) {
     <section className="assistant-panel">
       <div className="assistant-panel-actions">
         <span>{source === 'openai' ? 'Chat IA real' : 'Chat IA local'}</span>
-        <div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className={`assistant-action-toggle ${isAutoSpeak ? 'assistant-action-toggle-active' : ''}`}
+            onClick={() => setIsAutoSpeak((v) => !v)}
+            aria-label={isAutoSpeak ? 'Desactivar lectura automática' : 'Activar lectura automática'}
+            title={isAutoSpeak ? 'Auto-lectura activa' : 'Auto-lectura inactiva'}
+          >
+            <Volume2 className="size-4" />
+            Auto
+          </button>
           <button type="button" onClick={() => handleSpeak()} disabled={!answer} aria-label="Leer respuesta">
             <Volume2 className="size-4" />
           </button>

@@ -3,10 +3,18 @@ import { useMemo, useState } from 'react'
 import { formatPokemonNumber } from '../utils/formatPokemonNumber.js'
 import { searchPokemonIndex } from '../services/pokeApi.js'
 
+const GENERATIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+
 export function PokemonSearch({ index, isLoading, onSelect, variant = 'panel' }) {
   const [query, setQuery] = useState('')
+  const [filterGen, setFilterGen] = useState(0)
 
-  const matches = useMemo(() => searchPokemonIndex(index, query, 8), [index, query])
+  const filtered = useMemo(
+    () => (filterGen ? index.filter((p) => p.generation === filterGen) : index),
+    [index, filterGen],
+  )
+
+  const matches = useMemo(() => searchPokemonIndex(filtered, query, 8), [filtered, query])
 
   function selectPokemon(pokemon) {
     setQuery('')
@@ -38,7 +46,27 @@ export function PokemonSearch({ index, isLoading, onSelect, variant = 'panel' })
           </button>
         </form>
 
-        {query && (
+        <div className="console-gen-filters">
+          <button
+            type="button"
+            className={`console-gen-chip ${filterGen === 0 ? 'console-gen-chip-active' : ''}`}
+            onClick={() => setFilterGen(0)}
+          >
+            Todos
+          </button>
+          {GENERATIONS.map((gen) => (
+            <button
+              key={gen}
+              type="button"
+              className={`console-gen-chip ${filterGen === gen ? 'console-gen-chip-active' : ''}`}
+              onClick={() => setFilterGen(filterGen === gen ? 0 : gen)}
+            >
+              {gen}
+            </button>
+          ))}
+        </div>
+
+        {(query || filterGen > 0) && (
           <div className="console-search-results">
             {matches.length ? (
               matches.slice(0, 5).map((pokemon) => (

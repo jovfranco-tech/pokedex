@@ -13,6 +13,14 @@ const MIN_AI_CONFIDENCE_SCORE = 38
 
 const wait = (ms) => new Promise((resolve) => globalThis.setTimeout(resolve, ms))
 
+// Session-level cache keyed by file fingerprint (avoids re-calling OpenAI for same photo)
+const _visionCache = new Map()
+const VISION_CACHE_MAX = 20
+
+function fileFingerprint(file) {
+  return `${file.name}|${file.size}|${file.lastModified}`
+}
+
 function fileNameTokens(fileName) {
   const withoutExtension = fileName.replace(/\.[^.]+$/, '')
   return normalizePokemonText(withoutExtension)
@@ -177,31 +185,38 @@ async function identifyWithFileName(file, index) {
 }
 
 export async function identifyPokemonFromImage(file, indexOverride) {
+  const fp = fileFingerprint(file)
+  const cached = _visionCache.get(fp)
+  if (cached) return cached
+
   await wait(SCAN_DELAY_MS)
 
   const index = indexOverride?.length ? indexOverride : await loadPokemonIndex()
   const aiResult = await identifyWithRealVision(file, index)
 
+  let result = null
+
   if (aiResult && !aiResult.unavailable && !aiResult.error) {
     const candidates = findAiCandidateMatches(aiResult, index)
     const match = candidates[0]
-    if (!match) return null
-
-    const detail = await fetchPokemonDetails(match.pokemon.name, {
-      confidenceScore: match.score,
-      scannedAt: new Date().toISOString(),
-      scanMode: `IA visual real (${aiResult.model})`,
-      visualReason: aiResult.reason,
-    })
-
-    return {
-      ...detail,
-      scanCandidates: scanCandidateSummaries(candidates),
+    if (match) {
+      const detail = await fetchPokemonDetails(match.pokemon.name, {
+        confidenceScore: match.score,
+        scannedAt: new Date().toISOString(),
+        scanMode: `IA visual real (${aiResult.model})`,
+        visualReason: aiResult.reason,
+      })
+      result = { ...detail, scanCandidates: scanCandidateSummaries(candidates) }
     }
   }
 
-  const fileNameMatch = await identifyWithFileName(file, index)
-  if (fileNameMatch) return fileNameMatch
+  if (!result) result = await identifyWithFileName(file, index)
+
+  if (result) {
+    if (_visionCache.size >= VISION_CACHE_MAX) _visionCache.delete(_visionCache.keys().next().value)
+    _visionCache.set(fp, result)
+    return result
+  }
 
   if (aiResult?.unavailable) {
     throw new Error('La IA visual no está configurada. Agrega OPENAI_API_KEY en Vercel para reconocer fotos de cartas, juguetes o cámara.')
