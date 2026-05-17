@@ -200,6 +200,8 @@ export function ResultCard({
         <MiniStat label="Peso" value={result.weight} />
         <MiniStat label="Altura" value={result.height} />
         <MiniStat label="Gen." value={result.generation ?? '-'} />
+      </div>
+      <div className="profile-audio-row">
         <button
           type="button"
           onClick={() => playPokemonCry(result.cryUrl)}

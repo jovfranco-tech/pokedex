@@ -197,7 +197,13 @@
 
 .profile-meta-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(92px, 0.75fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.profile-audio-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 9px;
 }
 
@@ -652,7 +658,7 @@
 }
 
 .profile-meta-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .profile-mini-stat,
