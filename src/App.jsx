@@ -59,7 +59,7 @@ function App() {
   async function narratePokemon(pokemon) {
     const announcement = buildPokedexAnnouncement(pokemon)
     if (!announcement) return
-    await speakPokedexLine(announcement, { rate: 0.82, pitch: 0.56, volume: 0.98, withBeep: true })
+    await speakPokedexLine(announcement, { rate: 0.82, pitch: 0.08, volume: 1, withBeep: true })
   }
 
   const lastScanLabel = result?.scannedAt
@@ -541,7 +541,7 @@ function App() {
                     onClick={() => {
                       speakPokedexLine(
                         result ? `Hola. Soy tu Pokédex IA. Pregúntame sobre ${result.name}.` : 'Hola. Soy tu Pokédex IA.',
-                        { rate: 0.88, pitch: 0.62, withBeep: true },
+                        { rate: 0.88, pitch: 0.08, withBeep: true },
                       )
                     }}
                   >
