@@ -402,8 +402,61 @@ export async function handleIdentifyPokemonRequest(request, response, env = {}) 
   }
 }
 
+const OPENAI_TTS_URL = 'https://api.openai.com/v1/audio/speech'
+
+export async function handleNarrateRequest(request, response, env = {}) {
+  if (request.method !== 'POST') return sendJson(response, 405, { error: 'Método no permitido.' })
+
+  const apiKey = env.OPENAI_API_KEY || process.env.OPENAI_API_KEY
+  if (!apiKey) {
+    return sendJson(response, 424, {
+      code: 'missing_openai_key',
+      error: 'Falta OPENAI_API_KEY. Se usará la voz del navegador.',
+    })
+  }
+
+  try {
+    const body = await readJsonBody(request)
+    const text = String(body.text ?? '').trim()
+    if (!text) return sendJson(response, 400, { error: 'Texto vacío.' })
+
+    const ttsResponse = await fetch(OPENAI_TTS_URL, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${apiKey}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'tts-1',
+        voice: 'onyx',
+        input: text,
+        speed: 0.92,
+      }),
+    })
+
+    if (!ttsResponse.ok) {
+      const err = await ttsResponse.json().catch(() => ({}))
+      throw Object.assign(new Error(err.error?.message ?? 'TTS falló.'), { statusCode: ttsResponse.status })
+    }
+
+    const buffer = await ttsResponse.arrayBuffer()
+    response.statusCode = 200
+    response.setHeader('content-type', 'audio/mpeg')
+    response.setHeader('cache-control', 'no-store')
+    response.end(Buffer.from(buffer))
+  } catch (error) {
+    return sendJson(response, error.statusCode ?? 500, {
+      error: error.message || 'No se pudo generar la narración.',
+    })
+  }
+}
+
 export function openaiVisionApiPlugin({ env = {} } = {}) {
   const middleware = async (request, response, next) => {
+    if (request.url?.startsWith('/api/narrate')) {
+      return handleNarrateRequest(request, response, env)
+    }
+
     if (request.url?.startsWith('/api/pokemon-chat')) {
       return handlePokemonChatRequest(request, response, env)
     }

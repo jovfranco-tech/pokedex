@@ -6,7 +6,6 @@ function wait(ms) {
   return new Promise((resolve) => window.setTimeout(resolve, ms))
 }
 
-// --- iOS detection ----------------------------------------------------
 function isIOS() {
   return typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent)
 }
@@ -22,10 +21,18 @@ function getAudioContext() {
   return _audioCtx
 }
 
-// --- Synchronous voice cache ------------------------------------------
-// getVoices() returns [] on first call. We update a plain array eagerly
-// via voiceschanged so speak() can always be called without await.
+// --- Pre-unlocked Audio element (iOS requires play() from a gesture) --
+let _audioEl = null
 
+function getAudioEl() {
+  if (_audioEl) return _audioEl
+  if (typeof window === 'undefined') return null
+  _audioEl = new Audio()
+  _audioEl.preload = 'auto'
+  return _audioEl
+}
+
+// --- Synchronous voice cache (fallback Web Speech API) ---------------
 let _voices = []
 
 function syncVoices() {
@@ -43,19 +50,27 @@ function chooseRoboticVoice() {
   if (!_voices.length) return null
   const spanishVoices = _voices.filter((v) => /^es(-|$)/i.test(v.lang))
   const pool = spanishVoices.length ? spanishVoices : _voices
-  // Prefer Google/Microsoft TTS — they sound more synthetic
   return (
     pool.find((v) => /google/i.test(v.name)) ??
     pool.find((v) => /microsoft/i.test(v.name)) ??
-    pool.find((v) => /compact|remote|online/i.test(v.name)) ??
     pool[0]
   )
 }
 
-// --- Unlock on first gesture (iOS requirement) -----------------------
+// --- Unlock on first gesture ------------------------------------------
 function unlockAll() {
+  // Web Audio
   const ctx = getAudioContext()
   if (ctx?.state === 'suspended') ctx.resume().catch(() => {})
+
+  // Audio element (iOS: play() from gesture unlocks it for later use)
+  const audio = getAudioEl()
+  if (audio) {
+    audio.play().catch(() => {})
+    audio.pause()
+  }
+
+  // Web Speech API
   if (window.speechSynthesis) {
     syncVoices()
     const u = new SpeechSynthesisUtterance(' ')
@@ -102,20 +117,46 @@ export function playPokedexBeep() {
   }
 }
 
-// --- Core speak (synchronous speak() call) ---------------------------
-// speak() is called immediately (no awaits before it) so iOS Safari
-// accepts it from a user-gesture chain.
+// --- OpenAI TTS -------------------------------------------------------
+
+async function fetchAndPlayTTS(text) {
+  const response = await fetch('/api/narrate', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ text }),
+  })
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}))
+    return { unavailable: data.code === 'missing_openai_key', error: data.error }
+  }
+
+  const blob = await response.blob()
+  const url = URL.createObjectURL(blob)
+
+  // Reuse the pre-unlocked Audio element so iOS lets us play
+  const audio = getAudioEl() ?? new Audio()
+
+  return new Promise((resolve) => {
+    const guard = window.setTimeout(() => { URL.revokeObjectURL(url); resolve() }, 30_000)
+    const done = () => { window.clearTimeout(guard); URL.revokeObjectURL(url); resolve() }
+    audio.addEventListener('ended', done, { once: true })
+    audio.addEventListener('error', done, { once: true })
+    audio.src = url
+    audio.load()
+    audio.play().catch(done)
+  })
+}
+
+// --- Web Speech API fallback ------------------------------------------
 
 export function speakSyncAndWait(text, options = {}) {
-  if (!text || typeof window === 'undefined' || !window.speechSynthesis) {
-    return Promise.resolve()
-  }
+  if (!text || typeof window === 'undefined' || !window.speechSynthesis) return Promise.resolve()
   const message = normalize(text)
   if (!message) return Promise.resolve()
 
   const utterance = new SpeechSynthesisUtterance(message)
   utterance.lang   = 'es-MX'
-  // Dexter-computer style: mid-low pitch (not deep), deliberate pace
   utterance.rate   = options.rate   ?? 0.88
   utterance.pitch  = options.pitch  ?? 0.55
   utterance.volume = options.volume ?? 1
@@ -123,7 +164,6 @@ export function speakSyncAndWait(text, options = {}) {
   const voice = chooseRoboticVoice()
   if (voice) utterance.voice = voice
 
-  // speak() fires here — synchronously, before any Promise resolution
   window.speechSynthesis.cancel()
   window.speechSynthesis.speak(utterance)
 
@@ -135,24 +175,36 @@ export function speakSyncAndWait(text, options = {}) {
   })
 }
 
-// --- Public API ------------------------------------------------------
+// --- Public API -------------------------------------------------------
 
-// On desktop: beep finishes, then voice starts (sequential).
-// On iOS:     both start synchronously at the same time (concurrent)
-//             — AudioContext has lower latency so beep is heard first.
-export function speakPokedexLine(text, options = {}) {
-  if (!text) return Promise.resolve()
+// Tries OpenAI TTS (onyx voice). If unavailable, falls back to Web
+// Speech API. Beep always plays via AudioContext before the voice.
+export async function speakPokedexLine(text, options = {}) {
+  if (!text) return
   const withBeep = options.withBeep !== false
 
-  if (isIOS()) {
-    const beepP  = withBeep ? playPokedexBeep() : Promise.resolve()
-    const speakP = speakSyncAndWait(text, options)
-    return Promise.all([beepP, speakP])
-  }
+  // On iOS beep and TTS fetch must start synchronously from the gesture.
+  // Both calls below fire before any await so iOS accepts them.
+  const beepPromise = withBeep ? playPokedexBeep() : Promise.resolve()
 
-  // Desktop: true sequential — hear full beep before voice starts
-  const beepP = withBeep ? playPokedexBeep() : Promise.resolve()
-  return beepP.then(() => speakSyncAndWait(text, options))
+  try {
+    // Fetch TTS audio (async — beep plays while we wait for the API)
+    const ttsResult = await fetchAndPlayTTS(normalize(text))
+
+    if (ttsResult && (ttsResult.unavailable || ttsResult.error)) {
+      // No API key or error — fall back to Web Speech API
+      await beepPromise
+      speakSyncAndWait(text, options)
+      return
+    }
+
+    // ttsResult is undefined when audio finished playing successfully
+    await beepPromise
+  } catch {
+    // Network error — fall back
+    await beepPromise
+    speakSyncAndWait(text, options)
+  }
 }
 
 export async function speakWithPokedexVoice(text, options = {}) {
@@ -160,9 +212,6 @@ export async function speakWithPokedexVoice(text, options = {}) {
 }
 
 // --- Announcement text -----------------------------------------------
-// Format: "{Name}. Tipo {types}. {description}"
-// Mirrors what the Pokédex card shows in the description section.
-
 export function buildPokedexAnnouncement(pokemon) {
   if (!pokemon) return ''
   const types = pokemon.type?.join(' y ') ?? ''
