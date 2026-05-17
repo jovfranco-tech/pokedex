@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { getTypeMeta } from '../data/typeColors.js'
 
 const neutralTilt = {
   x: '-7deg',
@@ -132,19 +131,6 @@ export function Pokemon3DStage({ pokemon }) {
       )}
 
       <div className="pokemon-3d-shadow" aria-hidden="true" />
-      <div className="pokemon-stage-types">
-        {pokemon.type.map((type) => {
-          const meta = getTypeMeta(type)
-          return (
-            <span
-              key={type}
-              style={{ '--chip-color': meta.color, '--chip-text': meta.text }}
-            >
-              {meta.label}
-            </span>
-          )
-        })}
-      </div>
     </div>
   )
 }
