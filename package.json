@@ -14,6 +14,7 @@
     "cert:local": "node scripts/create-local-cert.mjs",
     "eval:vision": "node scripts/vision-eval-samples.mjs",
     "eval:real-world": "node scripts/vision-eval-real-world.mjs",
+    "test": "node --test src/utils/__tests__/*.test.mjs",
     "test:knowledge": "node scripts/pokemon-knowledge-smoke.mjs",
     "build": "vite build",
     "desktop:dev": "npm run build && electron .",

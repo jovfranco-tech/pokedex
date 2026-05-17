@@ -257,6 +257,18 @@
   opacity: 0.55;
 }
 
+.profile-sound-button-speaking {
+  border-color: rgba(255, 214, 67, 1);
+  background: linear-gradient(135deg, #fffbe6, #fff9d0);
+  color: #b07a00;
+  animation: speaking-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes speaking-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 214, 67, 0.5); }
+  50% { box-shadow: 0 0 0 8px rgba(255, 214, 67, 0); }
+}
+
 .profile-description {
   margin: 14px 0;
   border: 1px solid #e7ebf2;
@@ -396,6 +408,89 @@
 .kids-mode .profile-description {
   color: #5f6677;
   font-size: 1.08rem;
+}
+
+.kids-category-banner {
+  border: 2px solid rgba(255, 214, 67, 0.85);
+  border-radius: 14px;
+  background: linear-gradient(135deg, #fffbe6, #fff3c0);
+  padding: 0.85rem 1rem;
+  color: #7a5800;
+  font-size: 1.05rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+.kids-type-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.kids-type-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 999px;
+  background: var(--type-color, #e0e5f0);
+  padding: 0.45rem 0.9rem;
+  color: var(--type-text, #fff);
+  font-size: 0.95rem;
+  font-weight: 900;
+}
+
+.kids-section-label {
+  margin-bottom: 6px;
+  color: #9198a7;
+  font-size: 0.75rem;
+  font-weight: 1000;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.kids-moves-list {
+  border: 1px solid #e9edf4;
+  border-radius: 12px;
+  background: #fff;
+  padding: 0.75rem;
+}
+
+.kids-move-pill {
+  border-radius: 8px;
+  background: #f4f7fc;
+  margin-bottom: 5px;
+  padding: 0.55rem 0.7rem;
+  color: #44485a;
+  font-size: 0.95rem;
+  font-weight: 900;
+}
+
+.kids-move-pill:last-child {
+  margin-bottom: 0;
+}
+
+.kids-evolution-note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #e9edf4;
+  border-radius: 12px;
+  background: #fff;
+  padding: 0.75rem;
+  font-size: 0.92rem;
+}
+
+.kids-evolution-note span {
+  color: #9198a7;
+  font-weight: 1000;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+}
+
+.kids-evolution-note strong {
+  color: #44485a;
+  font-weight: 1000;
 }
 
 .stats-list {

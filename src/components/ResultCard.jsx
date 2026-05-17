@@ -95,6 +95,7 @@ export function ResultCard({
   collectionEntry,
   isFavorite,
   isKidsMode,
+  isSpeaking,
   isScanning,
   onMarkCaptured,
   onMarkSeen,
@@ -214,11 +215,11 @@ export function ResultCard({
         <button
           type="button"
           onClick={() => onSpeakPokedex?.(result)}
-          className="profile-sound-button"
-          aria-label={`Narrar información de ${result.name}`}
+          className={`profile-sound-button${isSpeaking ? ' profile-sound-button-speaking' : ''}`}
+          aria-label={isSpeaking ? 'Narrando...' : `Narrar información de ${result.name}`}
         >
           <Volume2 className="size-4" />
-          Narrar
+          {isSpeaking ? 'Narrando…' : 'Narrar'}
         </button>
       </div>
 
@@ -311,20 +312,67 @@ function InfoTab({ isKidsMode, result }) {
   )
 }
 
+const kidsTypeEmojis = {
+  fire: '🔥', water: '💧', grass: '🌿', electric: '⚡', psychic: '🔮',
+  ice: '❄️', dragon: '🐉', dark: '🌙', fairy: '✨', normal: '⭐',
+  fighting: '🥊', poison: '☠️', ground: '🌍', flying: '🦋', bug: '🐛',
+  rock: '🪨', ghost: '👻', steel: '⚙️',
+}
+
+function getKidsCategory(result) {
+  if (result.isMythical) return '✨ ¡Es un Pokémon mítico! Muy raro de encontrar.'
+  if (result.isLegendary) return '⭐ ¡Es un Pokémon legendario!'
+  if (result.isStarter) return '🌟 ¡Es un Pokémon inicial!'
+  if (result.isBaby) return '🍼 ¡Es un Pokémon bebé, qué tierno!'
+  return null
+}
+
 function KidsInfoTab({ result }) {
+  const categoryNote = getKidsCategory(result)
+  const topAttacks = result.attacks?.slice(0, 4) ?? []
+  const topAbilities = result.abilities?.slice(0, 2) ?? []
+
   return (
     <div className="kids-info-panel">
+      {categoryNote && (
+        <div className="kids-category-banner">
+          <p>{categoryNote}</p>
+        </div>
+      )}
       <div className="kids-info-hero">
         <Sparkles className="size-6" />
         <p>{result.description}</p>
       </div>
+      <div className="kids-type-chips">
+        {result.type?.map((t) => (
+          <span key={t} className="kids-type-pill">
+            {kidsTypeEmojis[t] ?? '🔵'} {typeLabel(t)}
+          </span>
+        ))}
+      </div>
       <div className="kids-info-grid">
-        <MiniList title="Ataques favoritos" values={result.attacks.slice(0, 3)} />
-        <MiniList title="Habilidades" values={result.abilities.slice(0, 2)} />
-        <div className="profile-note">
-          <span>Evolución</span>
-          <strong>{result.evolution}</strong>
-        </div>
+        {topAttacks.length > 0 && (
+          <div className="kids-moves-list">
+            <p className="kids-section-label">Ataques</p>
+            {topAttacks.map((attack) => (
+              <div key={attack} className="kids-move-pill">⚔️ {attack}</div>
+            ))}
+          </div>
+        )}
+        {topAbilities.length > 0 && (
+          <div className="kids-moves-list">
+            <p className="kids-section-label">Habilidades</p>
+            {topAbilities.map((ability) => (
+              <div key={ability} className="kids-move-pill">💡 {ability}</div>
+            ))}
+          </div>
+        )}
+        {result.evolution && (
+          <div className="kids-evolution-note">
+            <span>Evolución</span>
+            <strong>{result.evolution}</strong>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -1,4 +1,6 @@
 const MAX_BODY_BYTES = 8 * 1024 * 1024
+const MAX_NARRATE_TEXT = 600
+const MAX_VISION_CANDIDATES = 900
 const OPENAI_RESPONSES_URL = 'https://api.openai.com/v1/responses'
 
 const responseSchema = {
@@ -152,12 +154,9 @@ function extractOutputText(responseJson) {
 
 async function identifyWithOpenAI({ apiKey, candidates, detail, fileName, imageDataUrl, model }) {
   const candidateList = candidates
-    .slice(0, 1200)
-    .map((pokemon) => {
-      const displayName = pokemon.displayName && pokemon.displayName !== pokemon.name ? ` (${pokemon.displayName})` : ''
-      return `${pokemon.id}:${pokemon.name}${displayName}`
-    })
-    .join(', ')
+    .slice(0, MAX_VISION_CANDIDATES)
+    .map((pokemon) => `${pokemon.id}:${pokemon.name}`)
+    .join(',')
 
   const openAiResponse = await fetch(OPENAI_RESPONSES_URL, {
     method: 'POST',
@@ -419,6 +418,7 @@ export async function handleNarrateRequest(request, response, env = {}) {
     const body = await readJsonBody(request)
     const text = String(body.text ?? '').trim()
     if (!text) return sendJson(response, 400, { error: 'Texto vacío.' })
+    if (text.length > MAX_NARRATE_TEXT) return sendJson(response, 400, { error: 'Texto demasiado largo.' })
 
     const ttsResponse = await fetch(OPENAI_TTS_URL, {
       method: 'POST',

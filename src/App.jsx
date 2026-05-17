@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { Bot, CircleDot, Download, Sparkles, Volume2, X } from 'lucide-react'
+import { Bot, CircleDot, Download, Mic, Sparkles, Volume2, X } from 'lucide-react'
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { CollectionStrip } from './components/CollectionStrip.jsx'
 import { DeviceShell } from './components/DeviceShell.jsx'
@@ -31,6 +31,7 @@ const SCAN_HISTORY_KEY = 'pokedex-visual-gen1:scan-history'
 const FAVORITES_KEY = 'pokedex-visual-gen1:favorites'
 const KIDS_MODE_KEY = 'pokedex-visual-gen1:kids-mode'
 const COLLECTION_KEY = 'pokedex-visual-gen1:collection'
+const AUTO_NARRATE_KEY = 'pokedex-visual-gen1:auto-narrate'
 
 function App() {
   const { imageFile, previewUrl, setImageFile, clearImage } = useImagePreview()
@@ -39,8 +40,10 @@ function App() {
   const [favorites, setFavorites] = useLocalStorage(FAVORITES_KEY, [])
   const [collection, setCollection] = useLocalStorage(COLLECTION_KEY, [])
   const [isKidsMode, setIsKidsMode] = useLocalStorage(KIDS_MODE_KEY, false)
+  const [isAutoNarrate, setIsAutoNarrate] = useLocalStorage(AUTO_NARRATE_KEY, true)
   const [error, setError] = useState('')
   const [isScanning, setIsScanning] = useState(false)
+  const [isSpeaking, setIsSpeaking] = useState(false)
   const [isAssistantOpen, setIsAssistantOpen] = useState(false)
   const [scanCandidates, setScanCandidates] = useState([])
   const [pokemonIndex, setPokemonIndex] = useState([])
@@ -59,9 +62,13 @@ function App() {
   function narratePokemon(pokemon) {
     const announcement = buildPokedexAnnouncement(pokemon)
     if (!announcement) return
+    setIsSpeaking(true)
     // Not awaited intentionally: speak() must fire synchronously from
     // the user-gesture call stack (iOS Safari requirement).
-    speakPokedexLine(announcement, { rate: 0.82, pitch: 0.1, volume: 1, withBeep: true })
+    speakPokedexLine(announcement, {
+      rate: 0.82, pitch: 0.1, volume: 1, withBeep: true,
+      onEnd: () => setIsSpeaking(false),
+    })
   }
 
   const lastScanLabel = result?.scannedAt
@@ -137,12 +144,12 @@ function App() {
         await new Promise((r) => window.setTimeout(r, 350))
       }
 
-      if (cancelled) return
+      if (cancelled || !isAutoNarrate) return
       narratePokemon(result)
     })()
 
     return () => { cancelled = true }
-  }, [isScanning, result])
+  }, [isScanning, result, isAutoNarrate])
 
   function handleImageSelected(file) {
     setError('')
@@ -388,6 +395,15 @@ function App() {
             )}
             <button
               type="button"
+              className={`console-mini-button ${isAutoNarrate ? 'console-mini-button-active' : ''}`}
+              onClick={() => setIsAutoNarrate((value) => !value)}
+              aria-label={isAutoNarrate ? 'Desactivar narración automática' : 'Activar narración automática'}
+            >
+              <Mic className="size-4" />
+              Auto
+            </button>
+            <button
+              type="button"
               className={`console-mini-button ${isKidsMode ? 'console-mini-button-active' : ''}`}
               onClick={() => setIsKidsMode((value) => !value)}
             >
@@ -459,6 +475,7 @@ function App() {
             key={result?.apiName ?? result?.id ?? (isScanning ? 'scanning' : 'empty')}
             isFavorite={isCurrentFavorite}
             isKidsMode={isKidsMode}
+            isSpeaking={isSpeaking}
             isScanning={isScanning}
             onMarkCaptured={(pokemon) => updateCollection(pokemon, 'captured')}
             onMarkSeen={(pokemon) => updateCollection(pokemon, 'seen')}

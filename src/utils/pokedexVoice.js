@@ -121,7 +121,29 @@ export function playPokedexBeep() {
 
 // --- OpenAI TTS -------------------------------------------------------
 
+// Session-level cache: maps normalized text → blob URL (never revoked during session)
+const _ttsCache = new Map()
+const TTS_CACHE_MAX = 40
+
+function playAudioUrl(url) {
+  const audio = getAudioEl() ?? new Audio()
+  return new Promise((resolve) => {
+    const guard = window.setTimeout(resolve, 30_000)
+    const done = () => { window.clearTimeout(guard); resolve() }
+    audio.addEventListener('ended', done, { once: true })
+    audio.addEventListener('error', done, { once: true })
+    audio.src = url
+    audio.load()
+    audio.play().catch(done)
+  })
+}
+
 async function fetchAndPlayTTS(text) {
+  const key = text.trim()
+
+  const cached = _ttsCache.get(key)
+  if (cached) return playAudioUrl(cached)
+
   const response = await fetch('/api/narrate', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -136,18 +158,14 @@ async function fetchAndPlayTTS(text) {
   const blob = await response.blob()
   const url = URL.createObjectURL(blob)
 
-  // Reuse the pre-unlocked Audio element so iOS lets us play
-  const audio = getAudioEl() ?? new Audio()
+  if (_ttsCache.size >= TTS_CACHE_MAX) {
+    const [oldKey, oldUrl] = _ttsCache.entries().next().value
+    URL.revokeObjectURL(oldUrl)
+    _ttsCache.delete(oldKey)
+  }
+  _ttsCache.set(key, url)
 
-  return new Promise((resolve) => {
-    const guard = window.setTimeout(() => { URL.revokeObjectURL(url); resolve() }, 30_000)
-    const done = () => { window.clearTimeout(guard); URL.revokeObjectURL(url); resolve() }
-    audio.addEventListener('ended', done, { once: true })
-    audio.addEventListener('error', done, { once: true })
-    audio.src = url
-    audio.load()
-    audio.play().catch(done)
-  })
+  return playAudioUrl(url)
 }
 
 // --- Web Speech API fallback ------------------------------------------
@@ -181,6 +199,7 @@ export function speakSyncAndWait(text, options = {}) {
 
 // Tries OpenAI TTS (onyx voice). If unavailable, falls back to Web
 // Speech API. Beep always plays via AudioContext before the voice.
+// options.onEnd() is called after speech finishes (useful for UI indicators).
 export async function speakPokedexLine(text, options = {}) {
   if (!text) return
   const withBeep = options.withBeep !== false
@@ -196,17 +215,18 @@ export async function speakPokedexLine(text, options = {}) {
     if (ttsResult && (ttsResult.unavailable || ttsResult.error)) {
       // No API key or error — fall back to Web Speech API
       await beepPromise
-      speakSyncAndWait(text, options)
-      return
+      await speakSyncAndWait(text, options)
+    } else {
+      // ttsResult is undefined when audio finished playing successfully
+      await beepPromise
     }
-
-    // ttsResult is undefined when audio finished playing successfully
-    await beepPromise
   } catch {
     // Network error — fall back
     await beepPromise
-    speakSyncAndWait(text, options)
+    await speakSyncAndWait(text, options)
   }
+
+  options.onEnd?.()
 }
 
 export async function speakWithPokedexVoice(text, options = {}) {
