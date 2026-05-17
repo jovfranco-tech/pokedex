@@ -1,6 +1,7 @@
 import { Bot, Mic, Send, Trash2, Volume2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { askPokemonAssistant } from '../services/pokemonAiChat.js'
+import { speakWithPokedexVoice } from '../utils/pokedexVoice.js'
 
 const fallbackQuestions = [
   '¿Este Pokémon es legendario?',
@@ -99,12 +100,7 @@ export function PokemonAssistant({ pokemon }) {
   }
 
   function handleSpeak(text = answer) {
-    if (!text || !window.speechSynthesis) return
-    window.speechSynthesis.cancel()
-    const utterance = new SpeechSynthesisUtterance(text)
-    utterance.lang = 'es-MX'
-    utterance.rate = 0.95
-    window.speechSynthesis.speak(utterance)
+    speakWithPokedexVoice(text, { rate: 0.9, pitch: 0.66 })
   }
 
   function handleVoiceQuestion() {

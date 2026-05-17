@@ -22,6 +22,7 @@ import {
 } from './services/pokeApi.js'
 import { identifyPokemonFromImage } from './services/visionSimulator.js'
 import { playPokemonCry } from './utils/playPokemonCry.js'
+import { buildPokedexAnnouncement, speakWithPokedexVoice } from './utils/pokedexVoice.js'
 
 const PokemonAssistant = lazy(() => import('./components/PokemonAssistant.jsx').then((module) => ({ default: module.PokemonAssistant })))
 
@@ -46,6 +47,7 @@ function App() {
   const [isIndexLoading, setIsIndexLoading] = useState(true)
   const pokemonTotal = pokemonIndex.length || DEFAULT_POKEMON_SPECIES_COUNT
   const lastAutoCryKey = useRef('')
+  const lastAutoSpeechKey = useRef('')
   const { canInstall, isInstalled, promptInstall } = usePwaInstall()
   const isCurrentFavorite = Boolean(
     result && Array.isArray(favorites) && favorites.some((pokemon) => pokemon.apiName === result.apiName || pokemon.id === result.id),
@@ -121,6 +123,23 @@ function App() {
 
     return () => window.clearTimeout(timeoutId)
   }, [isScanning, result?.cryUrl, result?.id, result?.scannedAt])
+
+  useEffect(() => {
+    if (!result?.id || isScanning) return
+
+    const speechKey = `${result.id}-${result.scannedAt ?? 'scan'}`
+    if (lastAutoSpeechKey.current === speechKey) return
+    lastAutoSpeechKey.current = speechKey
+
+    const announcement = buildPokedexAnnouncement(result)
+    if (!announcement) return
+
+    const timeoutId = window.setTimeout(() => {
+      speakWithPokedexVoice(announcement, { rate: 0.86, pitch: 0.6, volume: 0.98 })
+    }, 760)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [isScanning, result])
 
   function handleImageSelected(file) {
     setError('')
@@ -516,11 +535,10 @@ function App() {
                     className="assistant-modal-close"
                     aria-label="Leer saludo de Pokédex IA"
                     onClick={() => {
-                      if (!window.speechSynthesis) return
-                      window.speechSynthesis.cancel()
-                      window.speechSynthesis.speak(new SpeechSynthesisUtterance(
-                        result ? `Hola, soy tu Pokédex IA. Pregúntame sobre ${result.name}.` : 'Hola, soy tu Pokédex IA.',
-                      ))
+                      speakWithPokedexVoice(
+                        result ? `Hola. Soy tu Pokédex IA. Pregúntame sobre ${result.name}.` : 'Hola. Soy tu Pokédex IA.',
+                        { rate: 0.9, pitch: 0.66 },
+                      )
                     }}
                   >
                     <Volume2 className="size-5" />
