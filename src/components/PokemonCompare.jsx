@@ -65,6 +65,14 @@ function toWinRate(firstScore, secondScore) {
   return { firstRate, secondRate }
 }
 
+function advantageText(multiplier) {
+  if (multiplier >= 4) return 'súper fuerte'
+  if (multiplier > 1) return 'fuerte'
+  if (multiplier === 1) return 'normal'
+  if (multiplier > 0) return 'débil'
+  return 'no le hace daño'
+}
+
 function ComparePicker({ index, label, onSelect, selected }) {
   const [query, setQuery] = useState('')
   const matches = useMemo(() => searchPokemonIndex(index, query, 5), [index, query])
@@ -161,10 +169,9 @@ export function PokemonCompare({ index = [], initialPokemon }) {
 
       {battle && (
         <p className="compare-winner">
-          En un 1v1, <strong>{battle.winner.name}</strong> tiene más probabilidad de ganar por matchup.
-          Probabilidad estimada: <strong>{battle.winnerRate.toFixed(0)}%</strong> vs <strong>{battle.loserRate.toFixed(0)}%</strong>.
-          Su mejor daño por tipo es x{battle.winnerScore.ownBestHit} y recibe hasta x{battle.winnerScore.opponentBestHit},
-          frente al rival que pega hasta x{battle.loserScore.ownBestHit} y recibe hasta x{battle.loserScore.opponentBestHit}.
+          {battle.winner.name} tiene ventaja en este duelo.
+          Tiene más chance de ganar: <strong>{battle.winnerRate.toFixed(0)}%</strong> vs <strong>{battle.loserRate.toFixed(0)}%</strong>.
+          Sus ataques son {advantageText(battle.winnerScore.ownBestHit)}s contra su rival y además aguanta mejor los golpes.
         </p>
       )}
     </section>
