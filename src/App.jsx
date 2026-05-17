@@ -13,6 +13,7 @@ import { ResultCard } from './components/ResultCard.jsx'
 import { ScanCandidateStrip } from './components/ScanCandidateStrip.jsx'
 import { ScanHistoryStrip } from './components/ScanHistoryStrip.jsx'
 import { useAchievements } from './hooks/useAchievements.js'
+import { useFocusTrap } from './hooks/useFocusTrap.js'
 import pokemonCatalog from './data/pokemonFullCatalog.json'
 import { useImagePreview } from './hooks/useImagePreview.js'
 import { useLocalStorage } from './hooks/useLocalStorage.js'
@@ -53,6 +54,8 @@ function App() {
   const achievements = useAchievements({ collection, favorites })
   const [isAssistantOpen, setIsAssistantOpen] = useState(false)
   const [isQuizOpen, setIsQuizOpen] = useState(false)
+  const quizTrapRef = useFocusTrap(isQuizOpen)
+  const assistantTrapRef = useFocusTrap(isAssistantOpen)
   const [scanCandidates, setScanCandidates] = useState([])
   const [pokemonIndex, setPokemonIndex] = useState([])
   const [isIndexLoading, setIsIndexLoading] = useState(true)
@@ -562,6 +565,7 @@ function App() {
               role="presentation"
             >
               <motion.section
+                ref={quizTrapRef}
                 initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 50, scale: 0.9 }}
                 animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
                 exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 20, scale: 0.95 }}
@@ -570,6 +574,8 @@ function App() {
                 role="dialog"
                 aria-modal="true"
                 aria-label="Quiz Pokémon"
+                onTrapEscape={() => setIsQuizOpen(false)}
+                onKeyDown={(e) => e.key === 'Escape' && setIsQuizOpen(false)}
               >
                 <PokemonQuiz
                   index={pokemonIndex.length ? pokemonIndex : []}
@@ -590,14 +596,16 @@ function App() {
               role="presentation"
             >
               <motion.section
+                ref={assistantTrapRef}
                 initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 50, scale: 0.9 }}
                 animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
                 exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 20, scale: 0.95 }}
                 transition={prefersReducedMotion ? { duration: 0.15 } : { type: 'spring', bounce: 0.25 }}
-                className="assistant-modal" 
-                role="dialog" 
-                aria-modal="true" 
+                className="assistant-modal"
+                role="dialog"
+                aria-modal="true"
                 aria-label="Pokédex IA"
+                onKeyDown={(e) => e.key === 'Escape' && setIsAssistantOpen(false)}
               >
                 <header className="assistant-modal-header">
                   <div className="flex min-w-0 items-center gap-3">

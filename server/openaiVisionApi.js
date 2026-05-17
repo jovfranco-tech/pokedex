@@ -3,6 +3,20 @@ const MAX_NARRATE_TEXT = 600
 const MAX_VISION_CANDIDATES = 900
 const OPENAI_RESPONSES_URL = 'https://api.openai.com/v1/responses'
 
+// --- Origin allowlist (blocks cross-site abuse of OpenAI budget) ---------
+function isAllowedOrigin(request, env) {
+  const origin = request.headers['origin'] ?? ''
+  if (!origin) return true // server-to-server or same-origin form posts
+
+  const allowed = (env.ALLOWED_ORIGINS || process.env.ALLOWED_ORIGINS || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+
+  if (!allowed.length) return true // not configured → allow all (dev mode)
+  return allowed.some((o) => origin === o || origin.startsWith(o))
+}
+
 // --- Rate limiter (per-IP sliding window) --------------------------------
 const _rateWindows = new Map() // ip → [timestamp, ...]
 
@@ -321,6 +335,10 @@ export async function handlePokemonChatRequest(request, response, env = {}) {
     return sendJson(response, 429, { error: 'Demasiadas peticiones. Espera un momento e intenta de nuevo.' })
   }
 
+  if (!isAllowedOrigin(request, env)) {
+    return sendJson(response, 403, { error: 'Origen no permitido.' })
+  }
+
   const apiKey = env.OPENAI_API_KEY || process.env.OPENAI_API_KEY
   if (!apiKey) {
     return sendJson(response, 424, {
@@ -370,6 +388,10 @@ export async function handleIdentifyPokemonRequest(request, response, env = {}) 
 
   if (isRateLimited(getClientIp(request), 15)) {
     return sendJson(response, 429, { error: 'Demasiadas peticiones. Espera un momento e intenta de nuevo.' })
+  }
+
+  if (!isAllowedOrigin(request, env)) {
+    return sendJson(response, 403, { error: 'Origen no permitido.' })
   }
 
   const apiKey = env.OPENAI_API_KEY || process.env.OPENAI_API_KEY
@@ -436,6 +458,10 @@ export async function handleNarrateRequest(request, response, env = {}) {
 
   if (isRateLimited(getClientIp(request), 30)) {
     return sendJson(response, 429, { error: 'Demasiadas peticiones. Espera un momento e intenta de nuevo.' })
+  }
+
+  if (!isAllowedOrigin(request, env)) {
+    return sendJson(response, 403, { error: 'Origen no permitido.' })
   }
 
   const apiKey = env.OPENAI_API_KEY || process.env.OPENAI_API_KEY
