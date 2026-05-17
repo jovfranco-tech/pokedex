@@ -56,10 +56,12 @@ function App() {
     ? collection.find((pokemon) => pokemon.apiName === result.apiName || pokemon.id === result.id)
     : null
 
-  async function narratePokemon(pokemon) {
+  function narratePokemon(pokemon) {
     const announcement = buildPokedexAnnouncement(pokemon)
     if (!announcement) return
-    await speakPokedexLine(announcement, { rate: 0.82, pitch: 0.08, volume: 1, withBeep: true })
+    // Not awaited intentionally: speak() must fire synchronously from
+    // the user-gesture call stack (iOS Safari requirement).
+    speakPokedexLine(announcement, { rate: 0.82, pitch: 0.1, volume: 1, withBeep: true })
   }
 
   const lastScanLabel = result?.scannedAt
@@ -541,7 +543,7 @@ function App() {
                     onClick={() => {
                       speakPokedexLine(
                         result ? `Hola. Soy tu Pokédex IA. Pregúntame sobre ${result.name}.` : 'Hola. Soy tu Pokédex IA.',
-                        { rate: 0.88, pitch: 0.08, withBeep: true },
+                        { rate: 0.88, pitch: 0.1, withBeep: true },
                       )
                     }}
                   >
