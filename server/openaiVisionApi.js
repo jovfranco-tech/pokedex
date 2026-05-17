@@ -3,6 +3,26 @@ const MAX_NARRATE_TEXT = 600
 const MAX_VISION_CANDIDATES = 900
 const OPENAI_RESPONSES_URL = 'https://api.openai.com/v1/responses'
 
+// --- Rate limiter (per-IP sliding window) --------------------------------
+const _rateWindows = new Map() // ip → [timestamp, ...]
+
+function getClientIp(request) {
+  return (
+    (request.headers['x-forwarded-for'] ?? '').split(',')[0].trim() ||
+    request.socket?.remoteAddress ||
+    'unknown'
+  )
+}
+
+function isRateLimited(ip, limit, windowMs = 60_000) {
+  const now = Date.now()
+  const timestamps = (_rateWindows.get(ip) ?? []).filter((t) => now - t < windowMs)
+  if (timestamps.length >= limit) return true
+  timestamps.push(now)
+  _rateWindows.set(ip, timestamps)
+  return false
+}
+
 const responseSchema = {
   type: 'object',
   additionalProperties: false,
@@ -297,6 +317,10 @@ async function answerWithOpenAI({ apiKey, model, pokemon, question }) {
 export async function handlePokemonChatRequest(request, response, env = {}) {
   if (request.method !== 'POST') return sendJson(response, 405, { error: 'Método no permitido.' })
 
+  if (isRateLimited(getClientIp(request), 25)) {
+    return sendJson(response, 429, { error: 'Demasiadas peticiones. Espera un momento e intenta de nuevo.' })
+  }
+
   const apiKey = env.OPENAI_API_KEY || process.env.OPENAI_API_KEY
   if (!apiKey) {
     return sendJson(response, 424, {
@@ -343,6 +367,10 @@ export async function handlePokemonChatRequest(request, response, env = {}) {
 
 export async function handleIdentifyPokemonRequest(request, response, env = {}) {
   if (request.method !== 'POST') return sendJson(response, 405, { error: 'Método no permitido.' })
+
+  if (isRateLimited(getClientIp(request), 15)) {
+    return sendJson(response, 429, { error: 'Demasiadas peticiones. Espera un momento e intenta de nuevo.' })
+  }
 
   const apiKey = env.OPENAI_API_KEY || process.env.OPENAI_API_KEY
   if (!apiKey) {
@@ -405,6 +433,10 @@ const OPENAI_TTS_URL = 'https://api.openai.com/v1/audio/speech'
 
 export async function handleNarrateRequest(request, response, env = {}) {
   if (request.method !== 'POST') return sendJson(response, 405, { error: 'Método no permitido.' })
+
+  if (isRateLimited(getClientIp(request), 30)) {
+    return sendJson(response, 429, { error: 'Demasiadas peticiones. Espera un momento e intenta de nuevo.' })
+  }
 
   const apiKey = env.OPENAI_API_KEY || process.env.OPENAI_API_KEY
   if (!apiKey) {

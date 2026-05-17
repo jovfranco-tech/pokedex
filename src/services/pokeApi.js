@@ -10,10 +10,42 @@ export const POKEMON_DETAIL_SCHEMA_VERSION = 'spanish-localized-stage-v6'
 const API_BASE = 'https://pokeapi.co/api/v2'
 const INDEX_CACHE_KEY = 'pokedex-visual-latest-species:index:v2-mega'
 const INDEX_CACHE_TTL_MS = 1000 * 60 * 60 * 24 * 7
+const DETAIL_CACHE_PREFIX = 'pokedex-detail-v1:'
+const DETAIL_CACHE_TTL_MS = 1000 * 60 * 60 * 24 // 24 hours
+const DETAIL_CACHE_MAX = 25
 
 let indexPromise
 const detailsCache = new Map()
 const resourceNameCache = new Map()
+
+function readCachedDetail(key) {
+  try {
+    const raw = localStorage.getItem(DETAIL_CACHE_PREFIX + key)
+    if (!raw) return null
+    const cached = JSON.parse(raw)
+    if (!cached?.savedAt || Date.now() - cached.savedAt > DETAIL_CACHE_TTL_MS) return null
+    if (cached.dataVersion !== POKEMON_DETAIL_SCHEMA_VERSION) return null
+    return cached.detail
+  } catch { return null }
+}
+
+function writeCachedDetail(key, detail) {
+  try {
+    const allKeys = Object.keys(localStorage).filter((k) => k.startsWith(DETAIL_CACHE_PREFIX))
+    if (allKeys.length >= DETAIL_CACHE_MAX) {
+      const oldest = allKeys
+        .map((k) => {
+          try { return { k, t: JSON.parse(localStorage.getItem(k))?.savedAt ?? 0 } } catch { return { k, t: 0 } }
+        })
+        .sort((a, b) => a.t - b.t)[0]
+      if (oldest) localStorage.removeItem(oldest.k)
+    }
+    localStorage.setItem(
+      DETAIL_CACHE_PREFIX + key,
+      JSON.stringify({ savedAt: Date.now(), dataVersion: POKEMON_DETAIL_SCHEMA_VERSION, detail }),
+    )
+  } catch {}
+}
 
 const generationRanges = [
   [1, 151, 1],
@@ -622,6 +654,11 @@ export async function fetchPokemonDetails(nameOrId, options = {}) {
     return detailsCache.get(cacheKey)
   }
 
+  if (!options.confidenceScore) {
+    const persisted = readCachedDetail(cacheKey)
+    if (persisted) { detailsCache.set(cacheKey, persisted); return persisted }
+  }
+
   const pokemonResponse = await fetch(`${API_BASE}/pokemon/${cacheKey}`)
   if (!pokemonResponse.ok) throw new Error('Pokémon no encontrado')
   const pokemon = await pokemonResponse.json()
@@ -705,6 +742,9 @@ export async function fetchPokemonDetails(nameOrId, options = {}) {
     dataVersion: POKEMON_DETAIL_SCHEMA_VERSION,
   }
 
-  if (!options.confidenceScore) detailsCache.set(cacheKey, detail)
+  if (!options.confidenceScore) {
+    detailsCache.set(cacheKey, detail)
+    writeCachedDetail(cacheKey, detail)
+  }
   return detail
 }

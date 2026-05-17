@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { Bot, CircleDot, Download, Mic, Sparkles, Volume2, X } from 'lucide-react'
+import { Bot, CircleDot, Download, Gamepad2, Mic, Sparkles, Volume2, X } from 'lucide-react'
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { CollectionStrip } from './components/CollectionStrip.jsx'
 import { DeviceShell } from './components/DeviceShell.jsx'
@@ -7,6 +7,7 @@ import { ErrorBoundary } from './components/ErrorBoundary.jsx'
 import { FavoritesStrip } from './components/FavoritesStrip.jsx'
 import { ImageScanner } from './components/ImageScanner.jsx'
 import { PokemonCompare } from './components/PokemonCompare.jsx'
+import { PokemonQuiz } from './components/PokemonQuiz.jsx'
 import { PokemonSearch } from './components/PokemonSearch.jsx'
 import { ResultCard } from './components/ResultCard.jsx'
 import { ScanCandidateStrip } from './components/ScanCandidateStrip.jsx'
@@ -51,6 +52,7 @@ function App() {
   const prefersReducedMotion = useReducedMotion()
   const achievements = useAchievements({ collection, favorites })
   const [isAssistantOpen, setIsAssistantOpen] = useState(false)
+  const [isQuizOpen, setIsQuizOpen] = useState(false)
   const [scanCandidates, setScanCandidates] = useState([])
   const [pokemonIndex, setPokemonIndex] = useState([])
   const [isIndexLoading, setIsIndexLoading] = useState(true)
@@ -267,7 +269,7 @@ function App() {
       const detectedPokemon = await identifyPokemonFromImage(fileOverride, pokemonIndex)
 
       if (!detectedPokemon) {
-        setError('No pude reconocerlo con seguridad. Escribe el nombre en el buscador para elegirlo manualmente.')
+        setError('No pude reconocerlo. 🔍 Prueba con otra foto o búscalo por nombre en el buscador.')
         setResult(null)
         setScanCandidates([])
         return
@@ -278,7 +280,7 @@ function App() {
       rememberScan(detectedPokemon)
       updateCollection(detectedPokemon, 'seen')
     } catch (scanError) {
-      setError(scanError?.message || 'No pude terminar el escaneo. Intenta con otra imagen o usa la búsqueda por texto.')
+      setError(scanError?.message || '¡Ups! Algo salió mal. 😅 Prueba con otra foto o usa el buscador.')
     } finally {
       setIsScanning(false)
     }
@@ -299,7 +301,7 @@ function App() {
       rememberScan(details)
       updateCollection(details, 'seen')
     } catch {
-      setError('No pude cargar ese Pokémon desde PokéAPI. Prueba con otro nombre.')
+      setError('No encontré ese Pokémon. 🤔 Prueba con el nombre en inglés o el número de Pokédex.')
     } finally {
       setIsScanning(false)
     }
@@ -320,7 +322,7 @@ function App() {
       rememberScan(details)
       updateCollection(details, 'seen')
     } catch {
-      setError('No pude reabrir ese escaneo. Prueba buscándolo por nombre.')
+      setError('No pude abrir ese escaneo. 📋 Búscalo por nombre.')
     } finally {
       setIsScanning(false)
     }
@@ -341,7 +343,7 @@ function App() {
       rememberScan(details)
       updateCollection(details, 'seen')
     } catch {
-      setError('No pude abrir ese favorito. Prueba buscándolo por nombre.')
+      setError('No pude abrir ese favorito. ⭐ Búscalo por nombre.')
     } finally {
       setIsScanning(false)
     }
@@ -362,7 +364,7 @@ function App() {
       rememberScan(details)
       updateCollection(details, 'seen')
     } catch {
-      setError('No pude abrir ese candidato. Prueba buscándolo por nombre.')
+      setError('No pude abrir ese Pokémon. Búscalo por nombre.')
     } finally {
       setIsScanning(false)
     }
@@ -472,10 +474,16 @@ function App() {
               </details>
             )}
 
-            <button type="button" className="console-ai-button" onClick={() => setIsAssistantOpen(true)}>
-              <Bot className="size-5" />
-              Pokédex IA
-            </button>
+            <div className="flex gap-2">
+              <button type="button" className="console-ai-button flex-1" onClick={() => setIsAssistantOpen(true)}>
+                <Bot className="size-5" />
+                Pokédex IA
+              </button>
+              <button type="button" className="console-ai-button flex-1" onClick={() => setIsQuizOpen(true)}>
+                <Gamepad2 className="size-5" />
+                Quiz
+              </button>
+            </div>
 
           </div>
         </section>
@@ -543,6 +551,34 @@ function App() {
             )}
           </section>
         )}
+
+        <AnimatePresence>
+          {isQuizOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="assistant-modal-backdrop"
+              role="presentation"
+            >
+              <motion.section
+                initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 50, scale: 0.9 }}
+                animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+                exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 20, scale: 0.95 }}
+                transition={prefersReducedMotion ? { duration: 0.15 } : { type: 'spring', bounce: 0.25 }}
+                className="assistant-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Quiz Pokémon"
+              >
+                <PokemonQuiz
+                  index={pokemonIndex.length ? pokemonIndex : []}
+                  onClose={() => setIsQuizOpen(false)}
+                />
+              </motion.section>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <AnimatePresence>
           {isAssistantOpen && (

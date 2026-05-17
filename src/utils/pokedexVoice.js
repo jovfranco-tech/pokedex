@@ -119,17 +119,62 @@ export function playPokedexBeep() {
   }
 }
 
-// --- OpenAI TTS -------------------------------------------------------
+// --- OpenAI TTS with IndexedDB persistence (#1) ----------------------
 
-// Session-level cache: maps normalized text → blob URL (never revoked during session)
-const _ttsCache = new Map()
-const TTS_CACHE_MAX = 40
+const TTS_DB_NAME = 'pokedex-tts-v1'
+const TTS_STORE = 'audio'
+const TTS_CACHE_MAX = 50
+const _ttsMemCache = new Map() // text → Blob (session-level, fast)
 
-function playAudioUrl(url) {
+function openTtsDb() {
+  if (typeof indexedDB === 'undefined') return Promise.resolve(null)
+  return new Promise((resolve) => {
+    const req = indexedDB.open(TTS_DB_NAME, 1)
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result
+      if (!db.objectStoreNames.contains(TTS_STORE)) {
+        db.createObjectStore(TTS_STORE, { keyPath: 'key' })
+      }
+    }
+    req.onsuccess = () => resolve(req.result)
+    req.onerror = () => resolve(null)
+  })
+}
+
+async function idbGetBlob(key) {
+  try {
+    const db = await openTtsDb()
+    if (!db) return null
+    return new Promise((resolve) => {
+      const req = db.transaction(TTS_STORE, 'readonly').objectStore(TTS_STORE).get(key)
+      req.onsuccess = () => resolve(req.result?.blob ?? null)
+      req.onerror = () => resolve(null)
+    })
+  } catch { return null }
+}
+
+async function idbSetBlob(key, blob) {
+  try {
+    const db = await openTtsDb()
+    if (!db) return
+    const tx = db.transaction(TTS_STORE, 'readwrite')
+    const store = tx.objectStore(TTS_STORE)
+    const count = await new Promise((r) => { const q = store.count(); q.onsuccess = () => r(q.result); q.onerror = () => r(0) })
+    if (count >= TTS_CACHE_MAX) {
+      const cursor = await new Promise((r) => { const q = store.openCursor(); q.onsuccess = (e) => r(e.target.result); q.onerror = () => r(null) })
+      cursor?.delete()
+    }
+    store.put({ key, blob })
+  } catch {}
+}
+
+function playBlob(blob) {
+  const url = URL.createObjectURL(blob)
   const audio = getAudioEl() ?? new Audio()
   return new Promise((resolve) => {
-    const guard = window.setTimeout(resolve, 30_000)
-    const done = () => { window.clearTimeout(guard); resolve() }
+    const cleanup = () => { URL.revokeObjectURL(url); resolve() }
+    const guard = window.setTimeout(cleanup, 30_000)
+    const done = () => { window.clearTimeout(guard); cleanup() }
     audio.addEventListener('ended', done, { once: true })
     audio.addEventListener('error', done, { once: true })
     audio.src = url
@@ -141,9 +186,15 @@ function playAudioUrl(url) {
 async function fetchAndPlayTTS(text) {
   const key = text.trim()
 
-  const cached = _ttsCache.get(key)
-  if (cached) return playAudioUrl(cached)
+  // 1. Memory cache (fast, current session)
+  const memBlob = _ttsMemCache.get(key)
+  if (memBlob) return playBlob(memBlob)
 
+  // 2. IndexedDB cache (persisted across sessions)
+  const idbBlob = await idbGetBlob(key)
+  if (idbBlob) { _ttsMemCache.set(key, idbBlob); return playBlob(idbBlob) }
+
+  // 3. Fetch from OpenAI TTS API
   const response = await fetch('/api/narrate', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -156,16 +207,13 @@ async function fetchAndPlayTTS(text) {
   }
 
   const blob = await response.blob()
-  const url = URL.createObjectURL(blob)
 
-  if (_ttsCache.size >= TTS_CACHE_MAX) {
-    const [oldKey, oldUrl] = _ttsCache.entries().next().value
-    URL.revokeObjectURL(oldUrl)
-    _ttsCache.delete(oldKey)
-  }
-  _ttsCache.set(key, url)
+  // Evict oldest memory entry if full
+  if (_ttsMemCache.size >= TTS_CACHE_MAX) _ttsMemCache.delete(_ttsMemCache.keys().next().value)
+  _ttsMemCache.set(key, blob)
+  idbSetBlob(key, blob) // persist in background (no await)
 
-  return playAudioUrl(url)
+  return playBlob(blob)
 }
 
 // --- Web Speech API fallback ------------------------------------------
