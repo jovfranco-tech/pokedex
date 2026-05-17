@@ -1,0 +1,8 @@
+node_modules
+dist
+release
+reports
+certs
+.git
+.DS_Store
+*.log

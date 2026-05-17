@@ -1,0 +1,21 @@
+{
+  "name": "Pokédex Visual",
+  "short_name": "Pokédex",
+  "description": "Pokédex visual familiar con IA, cámara, búsqueda y favoritos.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#d9000b",
+  "background_color": "#f5f7fb",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "games", "kids"],
+  "lang": "es-MX"
+}

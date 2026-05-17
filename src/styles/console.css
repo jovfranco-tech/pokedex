@@ -1,0 +1,1338 @@
+.pokedex-app-frame {
+  display: grid;
+  gap: 14px;
+}
+
+.pokedex-console-card {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.44);
+  border-radius: 28px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0) 38%),
+    linear-gradient(180deg, #f10514 0%, #d9000b 56%, #b70008 100%);
+  box-shadow:
+    0 18px 36px rgba(184, 0, 8, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    inset 0 -7px 0 rgba(90, 0, 5, 0.18);
+  padding: 18px 22px 20px;
+  animation: console-drop-in 360ms cubic-bezier(0.2, 0.88, 0.24, 1.18);
+}
+
+.console-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 10px;
+}
+
+.pokedex-logo-mark,
+.pokedex-logo-large {
+  position: relative;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, #f11222 0 46%, #343642 46% 55%, #fff 55% 100%);
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.22),
+    inset 0 0 0 4px rgba(255, 255, 255, 0.8);
+}
+
+.pokedex-logo-mark {
+  width: 56px;
+  height: 56px;
+}
+
+.pokedex-logo-large {
+  width: 112px;
+  height: 112px;
+}
+
+.pokedex-logo-mark::before,
+.pokedex-logo-large::before {
+  position: absolute;
+  inset: 50% auto auto 0;
+  width: 100%;
+  height: 4px;
+  background: #343642;
+  content: '';
+  transform: translateY(-50%);
+}
+
+.pokedex-logo-mark::after,
+.pokedex-logo-large::after {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  border: 4px solid #9ca0aa;
+  border-radius: 999px;
+  background: #fff;
+  content: '';
+  transform: translate(-50%, -50%);
+}
+
+.pokedex-logo-mark::after {
+  width: 18px;
+  height: 18px;
+}
+
+.pokedex-logo-large::after {
+  width: 30px;
+  height: 30px;
+}
+
+.console-count-pill {
+  display: inline-flex;
+  min-width: max-content;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  background: rgba(100, 0, 7, 0.25);
+  padding: 0.42rem 0.7rem;
+  color: rgba(255, 255, 255, 0.78);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.console-quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.console-mini-button {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(76, 0, 5, 0.28);
+  padding: 0 0.72rem;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.78rem;
+  font-weight: 1000;
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease,
+    color 180ms ease;
+}
+
+.console-mini-button:hover,
+.console-mini-button-active {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+.console-status-bar {
+  display: flex;
+  min-height: 30px;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 9px;
+  background: rgba(78, 0, 4, 0.42);
+  padding: 0 12px;
+  color: rgba(255, 255, 255, 0.78);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.73rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.console-led {
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.36;
+  box-shadow: none;
+  transition:
+    opacity 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.console-led-red {
+  color: #ff5c68;
+}
+
+.console-led-yellow {
+  color: #ffd643;
+}
+
+.console-led-green {
+  color: #4de071;
+}
+
+.console-led-active {
+  opacity: 1;
+  box-shadow:
+    0 0 10px currentColor,
+    0 0 22px color-mix(in srgb, currentColor 62%, transparent);
+  animation: console-led-pulse 0.86s ease-in-out infinite;
+}
+
+.console-led-active:nth-child(2) {
+  animation-delay: 0.12s;
+}
+
+.console-led-active:nth-child(3) {
+  animation-delay: 0.24s;
+}
+
+.console-stack {
+  display: grid;
+  gap: 11px;
+}
+
+.console-label {
+  color: rgba(255, 255, 255, 0.7);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.console-search-module,
+.console-scan-module {
+  display: grid;
+  gap: 9px;
+}
+
+.console-scan-module-minimal {
+  gap: 10px;
+}
+
+.console-search-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 48px;
+  gap: 9px;
+}
+
+.console-search-input {
+  min-height: 46px;
+  min-width: 0;
+  border: 2px solid rgba(255, 255, 255, 0.36);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.18);
+  padding: 0 14px;
+  color: #fff;
+  font-weight: 900;
+  outline: none;
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.console-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.console-search-input:focus {
+  border-color: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.24);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.11);
+}
+
+.console-go-button,
+.console-reset-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+  background: rgba(119, 0, 6, 0.28);
+  color: #fff;
+  font-weight: 900;
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease;
+}
+
+.console-go-button:hover,
+.console-reset-button:hover,
+.console-action-button:hover,
+.console-identify-button:hover {
+  transform: translateY(-1px);
+}
+
+.console-reset-button {
+  gap: 0.35rem;
+  padding: 0.35rem 0.55rem;
+  font-size: 0.78rem;
+}
+
+.console-preview .console-reset-button {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+}
+
+.console-search-results {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.console-result-chip,
+.console-scanned-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.13);
+  padding: 0.38rem 0.52rem;
+  color: #fff;
+  font-size: 0.84rem;
+  font-weight: 900;
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease;
+}
+
+.console-result-chip:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.console-result-chip,
+.console-scanned-card {
+  transform-origin: 50% 80%;
+  animation: scanned-chip-in 260ms cubic-bezier(0.2, 0.9, 0.2, 1.22) both;
+}
+
+.console-help-text {
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.console-empty-scan,
+.console-preview {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  border: 1px dashed rgba(255, 255, 255, 0.24);
+  border-radius: 12px;
+  background: rgba(87, 0, 6, 0.18);
+  padding: 0.55rem 0.7rem;
+  color: rgba(255, 255, 255, 0.68);
+  font-weight: 900;
+}
+
+.console-preview {
+  border-style: solid;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.console-scan-module-minimal .console-preview {
+  min-height: 58px;
+  padding: 0.48rem 0.58rem;
+}
+
+.console-camera-preview {
+  position: relative;
+  overflow: hidden;
+  min-height: 230px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 14px;
+  background: rgba(41, 0, 4, 0.34);
+}
+
+.console-camera-video {
+  display: block;
+  width: 100%;
+  height: min(52vh, 320px);
+  object-fit: cover;
+}
+
+.console-camera-controls {
+  position: absolute;
+  inset: auto 12px 12px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.console-capture-button,
+.console-close-camera-button {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  padding: 0 0.9rem;
+  color: #9e0b12;
+  font-weight: 1000;
+  box-shadow: 0 10px 28px rgba(35, 0, 5, 0.24);
+}
+
+.console-close-camera-button {
+  width: 42px;
+  padding: 0;
+}
+
+.console-error {
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 0.65rem 0.75rem;
+  color: #b80008;
+  font-weight: 900;
+}
+
+.console-action-button,
+.console-identify-button {
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 1000;
+  transition:
+    transform 180ms ease,
+    filter 180ms ease,
+    background-color 180ms ease;
+}
+
+.console-action-dark {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(98, 0, 5, 0.44);
+  color: #fff;
+}
+
+.console-action-light {
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.console-identify-button {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  background: rgba(255, 255, 255, 0.17);
+  color: #fff;
+}
+
+.console-identify-button::after {
+  position: absolute;
+  inset: -40% auto -40% -32%;
+  width: 24%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.48), transparent);
+  content: '';
+  transform: skewX(-18deg);
+  animation: console-button-sheen 2.7s ease-in-out infinite;
+}
+
+.console-scanned-strip {
+  display: grid;
+  gap: 7px;
+}
+
+.scan-candidate-strip {
+  display: grid;
+  gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 10px;
+}
+
+.scan-candidate-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 1000;
+}
+
+.scan-candidate-header small {
+  width: 100%;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.scan-candidate-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.scan-candidate-card {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 36px minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.13);
+  padding: 6px;
+  color: #fff;
+  text-align: left;
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease;
+}
+
+.scan-candidate-card:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.scan-candidate-card img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+
+.scan-candidate-card span,
+.scan-candidate-card strong,
+.scan-candidate-card small {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scan-candidate-card strong {
+  font-size: 0.78rem;
+  font-weight: 1000;
+}
+
+.scan-candidate-card small {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.64rem;
+  font-weight: 900;
+}
+
+.console-history-strip {
+  display: grid;
+  gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 14px;
+  background: rgba(75, 0, 4, 0.22);
+  padding: 10px;
+}
+
+.console-history-header {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.console-history-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.console-history-chip {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 38px minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.12);
+  padding: 6px;
+  color: #fff;
+  text-align: left;
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease;
+  animation: scanned-chip-in 260ms cubic-bezier(0.2, 0.9, 0.2, 1.22) both;
+}
+
+.console-history-chip:nth-child(2) {
+  animation-delay: 45ms;
+}
+
+.console-history-chip:nth-child(3) {
+  animation-delay: 90ms;
+}
+
+.console-history-chip:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 10px 22px rgba(50, 0, 5, 0.16);
+}
+
+.console-history-chip img {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+}
+
+.console-history-chip span {
+  min-width: 0;
+}
+
+.console-history-chip strong,
+.console-history-chip small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.console-history-chip strong {
+  font-size: 0.78rem;
+  font-weight: 1000;
+}
+
+.console-history-chip small {
+  color: rgba(255, 255, 255, 0.63);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.64rem;
+  font-weight: 900;
+}
+
+.console-drawer {
+  border-radius: 14px;
+}
+
+.console-drawer summary {
+  display: flex;
+  min-height: 52px;
+  cursor: pointer;
+  list-style: none;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 14px;
+  background: rgba(75, 0, 4, 0.38);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 1000;
+}
+
+.console-drawer summary::-webkit-details-marker {
+  display: none;
+}
+
+.console-drawer[open] summary {
+  border-radius: 14px 14px 0 0;
+  background: rgba(75, 0, 4, 0.52);
+}
+
+.console-drawer > :not(summary) {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-top: 0;
+  border-radius: 0 0 14px 14px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.console-drawer-soft {
+  opacity: 0.96;
+}
+
+.console-ai-button {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 14px;
+  background: rgba(75, 0, 4, 0.38);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 1000;
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease;
+}
+
+.console-ai-button:hover {
+  transform: translateY(-1px);
+  background: rgba(75, 0, 4, 0.52);
+}
+
+.below-options-drawer {
+  border: 1px solid #e6eaf1;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 12px 28px rgba(54, 62, 85, 0.08);
+}
+
+.below-options-drawer summary {
+  display: flex;
+  min-height: 50px;
+  cursor: pointer;
+  list-style: none;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 18px;
+  color: #777f91;
+  font-weight: 1000;
+}
+
+.below-options-drawer summary::-webkit-details-marker {
+  display: none;
+}
+
+.below-options-drawer[open] summary {
+  border-bottom: 1px solid #e6eaf1;
+  border-radius: 18px 18px 0 0;
+}
+
+.favorites-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 10px;
+  padding: 12px;
+}
+
+.favorites-empty {
+  display: flex;
+  min-height: 74px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 12px;
+  color: #8d94a6;
+  font-weight: 1000;
+}
+
+.favorite-card {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  border: 1px solid #e6eaf1;
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255, 214, 67, 0.18), transparent 42%),
+    #fff;
+  padding: 9px;
+  text-align: left;
+  box-shadow: 0 8px 18px rgba(54, 62, 85, 0.08);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease;
+  animation: scanned-chip-in 260ms cubic-bezier(0.2, 0.9, 0.2, 1.22) both;
+}
+
+.favorite-card:nth-child(2) {
+  animation-delay: 45ms;
+}
+
+.favorite-card:nth-child(3) {
+  animation-delay: 90ms;
+}
+
+.favorite-card:nth-child(4) {
+  animation-delay: 135ms;
+}
+
+@keyframes console-drop-in {
+  from {
+    transform: translateY(-10px) scale(0.985);
+    opacity: 0;
+  }
+}
+
+@keyframes scanned-chip-in {
+  from {
+    transform: translateY(8px) scale(0.92);
+    opacity: 0;
+  }
+}
+
+@keyframes console-button-sheen {
+  0%,
+  44% {
+    transform: translateX(0) skewX(-18deg);
+    opacity: 0;
+  }
+  52% {
+    opacity: 0.9;
+  }
+  68%,
+  100% {
+    transform: translateX(640%) skewX(-18deg);
+    opacity: 0;
+  }
+}
+
+@keyframes console-led-pulse {
+  0%,
+  100% {
+    transform: scale(0.96);
+    filter: brightness(0.96);
+  }
+  50% {
+    transform: scale(1.18);
+    filter: brightness(1.18);
+  }
+}
+
+.favorite-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 26px rgba(54, 62, 85, 0.12);
+}
+
+.favorite-card img {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+}
+
+.favorite-card span {
+  min-width: 0;
+}
+
+.favorite-card strong,
+.favorite-card small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.favorite-card strong {
+  color: #252637;
+  font-size: 0.9rem;
+  font-weight: 1000;
+}
+
+.favorite-card small {
+  color: #a0a6b5;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.collection-panel,
+.compare-panel {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+}
+
+.collection-empty {
+  display: flex;
+  min-height: 74px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 12px;
+  color: #8d94a6;
+  font-weight: 1000;
+}
+
+.collection-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.collection-stats span,
+.compare-winner {
+  border: 1px solid #e6eaf1;
+  border-radius: 12px;
+  background: #f7f9fc;
+  padding: 0.62rem 0.72rem;
+  color: #687186;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.collection-stats strong,
+.compare-winner strong {
+  color: #252637;
+}
+
+.collection-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(126px, 1fr));
+  gap: 9px;
+}
+
+.collection-card,
+.compare-card {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  border: 1px solid #e6eaf1;
+  border-radius: 14px;
+  background: #fff;
+  padding: 8px;
+  text-align: left;
+  box-shadow: 0 8px 18px rgba(54, 62, 85, 0.08);
+}
+
+.collection-card-captured {
+  border-color: rgba(47, 140, 255, 0.28);
+  background: linear-gradient(180deg, #fff, #eef6ff);
+}
+
+.collection-card img,
+.compare-card img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+.collection-card span,
+.collection-card strong,
+.collection-card small,
+.compare-card div,
+.compare-card h3,
+.compare-card p,
+.compare-card small {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.collection-card strong,
+.compare-card h3 {
+  color: #252637;
+  font-size: 0.88rem;
+  font-weight: 1000;
+}
+
+.collection-card small,
+.compare-card p,
+.compare-card small {
+  color: #8d94a6;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.compare-header {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #4f596d;
+  font-weight: 1000;
+}
+
+.compare-picker-grid,
+.compare-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.compare-picker {
+  position: relative;
+  display: grid;
+  gap: 6px;
+}
+
+.compare-label {
+  color: #8d94a6;
+  font-size: 0.72rem;
+  font-weight: 1000;
+  text-transform: uppercase;
+}
+
+.compare-search-row {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #e6eaf1;
+  border-radius: 12px;
+  background: #fff;
+  padding: 0.55rem 0.65rem;
+  color: #8d94a6;
+}
+
+.compare-search-row input {
+  min-width: 0;
+  outline: none;
+  color: #252637;
+  font-size: 0.85rem;
+  font-weight: 900;
+}
+
+.compare-results {
+  position: absolute;
+  z-index: 4;
+  top: 100%;
+  right: 0;
+  left: 0;
+  display: grid;
+  gap: 6px;
+  margin-top: 6px;
+  border: 1px solid #e6eaf1;
+  border-radius: 12px;
+  background: #fff;
+  padding: 6px;
+  box-shadow: 0 16px 30px rgba(54, 62, 85, 0.16);
+}
+
+.compare-results button {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  border-radius: 9px;
+  padding: 5px;
+  color: #252637;
+  text-align: left;
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.compare-results button:hover {
+  background: #f2f6fb;
+}
+
+.compare-results img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.compare-card-empty {
+  min-height: 66px;
+  grid-template-columns: minmax(0, 1fr);
+  place-items: center;
+  color: #9aa2b4;
+  font-weight: 1000;
+}
+
+.compare-card strong {
+  color: #2f8cff;
+  font-size: 0.82rem;
+  font-weight: 1000;
+}
+
+.utility-dock {
+  display: grid;
+  gap: 12px;
+}
+
+.utility-dock-single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.console-preview-image {
+  width: 58px;
+  height: 58px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 14px;
+  object-fit: cover;
+  box-shadow: 0 10px 22px rgba(45, 0, 5, 0.18);
+}
+
+.console-camera-reticle {
+  position: absolute;
+  inset: 18px;
+  z-index: 2;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  border-radius: 18px;
+  pointer-events: none;
+}
+
+.console-camera-reticle span {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border-color: rgba(255, 214, 67, 0.95);
+}
+
+.console-camera-reticle span:nth-child(1) {
+  left: -1px;
+  top: -1px;
+  border-left: 3px solid;
+  border-top: 3px solid;
+  border-radius: 14px 0 0;
+}
+
+.console-camera-reticle span:nth-child(2) {
+  right: -1px;
+  top: -1px;
+  border-right: 3px solid;
+  border-top: 3px solid;
+  border-radius: 0 14px 0 0;
+}
+
+.console-camera-reticle span:nth-child(3) {
+  right: -1px;
+  bottom: -1px;
+  border-right: 3px solid;
+  border-bottom: 3px solid;
+  border-radius: 0 0 14px;
+}
+
+.console-camera-reticle span:nth-child(4) {
+  left: -1px;
+  bottom: -1px;
+  border-left: 3px solid;
+  border-bottom: 3px solid;
+  border-radius: 0 0 0 14px;
+}
+
+.console-camera-scanline {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(180deg, transparent 0 32%, rgba(255, 255, 255, 0.36) 48%, transparent 64% 100%);
+  mix-blend-mode: screen;
+  pointer-events: none;
+  animation: camera-scanline 2.4s ease-in-out infinite;
+}
+
+.console-drawer .console-history-strip {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 10px;
+}
+
+@media (min-width: 940px) {
+  .pokedex-app-frame {
+    grid-template-columns: minmax(320px, 390px) minmax(0, 1fr);
+    align-items: start;
+    gap: 16px;
+  }
+
+  .pokedex-console-card {
+    position: sticky;
+    top: 16px;
+  }
+
+  .utility-dock {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+}
+
+@media (min-width: 1200px) {
+  .pokedex-app-frame {
+    width: min(100%, calc(100vw - 48px));
+    grid-template-columns: minmax(340px, 430px) minmax(0, 1fr);
+    gap: 24px;
+  }
+
+  .pokedex-console-card {
+    top: 24px;
+  }
+}
+
+@media (min-width: 1360px) {
+  .pokedex-app-frame {
+    grid-template-columns: minmax(360px, 450px) minmax(760px, 1fr);
+  }
+}
+
+@media (max-width: 939px) {
+  .pokedex-app-frame {
+    gap: 12px;
+  }
+
+  .scan-candidate-list,
+  .compare-picker-grid,
+  .compare-card-grid,
+  .collection-stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@keyframes camera-scanline {
+  0%,
+  100% {
+    transform: translateY(-44%);
+    opacity: 0;
+  }
+  24%,
+  66% {
+    opacity: 0.62;
+  }
+  82% {
+    transform: translateY(46%);
+    opacity: 0;
+  }
+}
+
+/* Minimal Pokopia pass: keep the device feeling, trim dashboard noise. */
+.pokedex-console-card {
+  border-radius: 30px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0) 34%),
+    linear-gradient(180deg, #ef101b 0%, #cf000b 58%, #a90008 100%);
+  padding: 16px;
+  box-shadow:
+    0 18px 42px rgba(160, 0, 10, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.46),
+    inset 0 -7px 0 rgba(70, 0, 6, 0.2);
+}
+
+.console-title-row {
+  margin-bottom: 8px;
+}
+
+.console-title-row h1 {
+  font-size: 1.38rem;
+  line-height: 1;
+}
+
+.pokedex-logo-mark {
+  width: 48px;
+  height: 48px;
+}
+
+.console-count-pill,
+.console-mini-button,
+.console-status-bar {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(65, 0, 6, 0.28);
+}
+
+.console-quick-actions {
+  margin: -2px 0 10px;
+}
+
+.console-status-bar {
+  min-height: 28px;
+  margin-bottom: 12px;
+  border-radius: 11px;
+  font-size: 0.68rem;
+}
+
+.console-stack {
+  gap: 10px;
+}
+
+.console-label {
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.68rem;
+}
+
+.console-search-form {
+  grid-template-columns: minmax(0, 1fr) 46px;
+}
+
+.console-search-input {
+  min-height: 44px;
+  border-width: 1px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.16);
+  font-size: 0.92rem;
+}
+
+.console-go-button,
+.console-reset-button,
+.console-action-button,
+.console-identify-button,
+.console-ai-button,
+.console-drawer summary {
+  border-radius: 14px;
+}
+
+.console-empty-scan,
+.console-preview {
+  min-height: 66px;
+  border-color: rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  background: rgba(58, 0, 6, 0.18);
+}
+
+.console-camera-preview {
+  min-height: 250px;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 214, 67, 0.12), transparent 42%),
+    rgba(32, 0, 5, 0.34);
+}
+
+.console-camera-video {
+  height: min(46vh, 340px);
+}
+
+.console-action-button {
+  min-height: 48px;
+  font-size: 0.9rem;
+}
+
+.console-scan-module-minimal .console-action-button {
+  min-height: 50px;
+}
+
+.console-go-button,
+.console-reset-button,
+.console-drawer summary,
+.console-ai-button,
+.console-identify-button {
+  font-size: 0.9rem;
+}
+
+.console-identify-button {
+  min-height: 52px;
+  border-color: rgba(255, 255, 255, 0.78);
+  background: linear-gradient(180deg, #fff, #fff0f0);
+  color: #b70008;
+  box-shadow:
+    0 8px 0 rgba(64, 0, 6, 0.35),
+    0 16px 24px rgba(64, 0, 6, 0.16);
+}
+
+.console-identify-button:hover {
+  filter: brightness(1.02);
+}
+
+.console-ai-button {
+  min-height: 50px;
+  background: rgba(58, 0, 6, 0.42);
+}
+
+.below-options-drawer {
+  overflow: hidden;
+  border-color: rgba(221, 227, 238, 0.92);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(14px);
+}
+
+.below-options-drawer summary {
+  min-height: 54px;
+  color: #5f6677;
+}
+
+.utility-dock.utility-dock-single {
+  grid-template-columns: minmax(0, 1fr);
+}

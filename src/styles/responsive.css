@@ -1,0 +1,111 @@
+@media (max-width: 640px) {
+  .pokedex-console-card,
+  .pokemon-profile-card {
+    border-radius: 24px;
+    padding: 18px;
+  }
+
+  .console-title-row {
+    align-items: flex-start;
+  }
+
+  .console-count-pill {
+    display: none;
+  }
+
+  .pokedex-logo-mark {
+    width: 50px;
+    height: 50px;
+  }
+
+  .profile-hero {
+    grid-template-columns: minmax(0, 1fr) minmax(118px, 144px);
+    gap: 12px;
+  }
+
+  .profile-meta-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .console-history-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .empty-profile,
+  .result-loading {
+    min-height: 360px;
+  }
+
+  .pokopia-device {
+    border-radius: 24px;
+    padding: 12px 10px 14px;
+  }
+
+  .pokopia-screen {
+    padding: 12px;
+  }
+
+  .entry-topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .confidence-chip {
+    width: 100%;
+  }
+
+  .result-visual-side {
+    min-height: 300px;
+  }
+
+  .pokemon-3d-shell {
+    width: min(84vw, 275px);
+  }
+
+  .console-camera-preview {
+    min-height: 220px;
+  }
+
+  .console-camera-video {
+    height: min(45vh, 280px);
+  }
+}
+
+@media (max-width: 420px) {
+  .pokedex-console-card,
+  .pokemon-profile-card {
+    padding: 14px;
+  }
+
+  .profile-hero {
+    grid-template-columns: minmax(0, 1fr) 116px;
+  }
+
+  .profile-title-group h2 {
+    font-size: clamp(1.8rem, 12vw, 2.4rem);
+  }
+
+  .profile-meta-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .console-action-button {
+    font-size: 0.9rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .result-game-screen {
+    grid-template-columns: minmax(270px, 0.9fr) minmax(280px, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}

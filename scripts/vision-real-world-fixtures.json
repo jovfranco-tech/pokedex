@@ -1,0 +1,37 @@
+[
+  {
+    "name": "Pikachu TCG card",
+    "expectedId": 25,
+    "expectedName": "pikachu",
+    "kind": "card",
+    "url": "https://images.pokemontcg.io/base1/58_hires.png"
+  },
+  {
+    "name": "Bulbasaur TCG card",
+    "expectedId": 1,
+    "expectedName": "bulbasaur",
+    "kind": "card",
+    "url": "https://images.pokemontcg.io/base1/44_hires.png"
+  },
+  {
+    "name": "Charmander TCG card",
+    "expectedId": 4,
+    "expectedName": "charmander",
+    "kind": "card",
+    "url": "https://images.pokemontcg.io/base1/46_hires.png"
+  },
+  {
+    "name": "Squirtle TCG card",
+    "expectedId": 7,
+    "expectedName": "squirtle",
+    "kind": "card",
+    "url": "https://images.pokemontcg.io/base1/63_hires.png"
+  },
+  {
+    "name": "Pikachu toy photo",
+    "expectedId": 25,
+    "expectedName": "pikachu",
+    "kind": "toy",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/e/e8/Pok%C3%A9mon_Pikachu_digital_pet.JPG"
+  }
+]

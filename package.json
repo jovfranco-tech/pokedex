@@ -1,0 +1,104 @@
+{
+  "name": "pokedex-visual-gen1",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Pokédex IA familiar con escaneo visual, PokéAPI y chat local/real.",
+  "author": "Jovan",
+  "type": "module",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "vite",
+    "dev:lan": "vite --host 0.0.0.0 --port 5174",
+    "dev:https": "POKEDEX_HTTPS=true vite --host 0.0.0.0 --port 5174",
+    "setup:openai": "node scripts/setup-openai-key.mjs",
+    "cert:local": "node scripts/create-local-cert.mjs",
+    "eval:vision": "node scripts/vision-eval-samples.mjs",
+    "eval:real-world": "node scripts/vision-eval-real-world.mjs",
+    "test:knowledge": "node scripts/pokemon-knowledge-smoke.mjs",
+    "build": "vite build",
+    "desktop:dev": "npm run build && electron .",
+    "dist:mac": "npm run build && electron-builder --mac dmg --arm64",
+    "dist:win": "npm run build && electron-builder --win nsis portable --x64",
+    "dist:desktop": "npm run build && electron-builder --mac dmg --arm64 --win nsis portable --x64",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "framer-motion": "^12.38.0",
+    "lucide-react": "^1.12.0",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "autoprefixer": "^10.5.0",
+    "electron": "^41.3.0",
+    "electron-builder": "^26.8.1",
+    "eslint": "^10.2.1",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "globals": "^17.5.0",
+    "postcss": "^8.5.12",
+    "tailwindcss": "^3.4.17",
+    "vite": "^8.0.10",
+    "vite-plugin-pwa": "^1.2.0"
+  },
+  "build": {
+    "appId": "com.jovan.pokedexia",
+    "productName": "Pokédex IA",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "server/**/*",
+      "package.json"
+    ],
+    "extraMetadata": {
+      "main": "electron/main.cjs"
+    },
+    "afterPack": "scripts/clean-mac-xattrs.cjs",
+    "asar": true,
+    "mac": {
+      "category": "public.app-category.education",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64"
+          ]
+        }
+      ],
+      "extendInfo": {
+        "NSCameraUsageDescription": "Pokédex IA usa la cámara para tomar fotos y reconocer Pokémon.",
+        "NSMicrophoneUsageDescription": "Pokédex IA usa el micrófono para dictar preguntas al asistente."
+      }
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}
