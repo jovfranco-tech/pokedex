@@ -1,3 +1,5 @@
+import { getTypeMeta } from '../data/typeColors.js'
+
 function normalize(text = '') {
   return String(text).replace(/\s+/g, ' ').trim()
 }
@@ -214,7 +216,7 @@ export async function speakWithPokedexVoice(text, options = {}) {
 // --- Announcement text -----------------------------------------------
 export function buildPokedexAnnouncement(pokemon) {
   if (!pokemon) return ''
-  const types = pokemon.type?.join(' y ') ?? ''
+  const types = pokemon.type?.map((t) => getTypeMeta(t).label).join(' y ') ?? ''
   const description = pokemon.description ?? ''
   return normalize(`${pokemon.name}. Tipo ${types}. ${description}`)
 }
