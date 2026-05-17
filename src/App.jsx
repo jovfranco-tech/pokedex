@@ -119,31 +119,29 @@ function App() {
   }, [result, setResult])
 
   useEffect(() => {
-    if (!result?.cryUrl || isScanning) return
-
-    const cryKey = `${result.id}-${result.scannedAt ?? result.cryUrl}`
-    if (lastAutoCryKey.current === cryKey) return
-    lastAutoCryKey.current = cryKey
-
-    const timeoutId = window.setTimeout(() => {
-      playPokemonCry(result.cryUrl, 0.42)
-    }, 180)
-
-    return () => window.clearTimeout(timeoutId)
-  }, [isScanning, result?.cryUrl, result?.id, result?.scannedAt])
-
-  useEffect(() => {
     if (!result?.id || isScanning) return
 
-    const speechKey = `${result.id}-${result.scannedAt ?? 'scan'}`
-    if (lastAutoSpeechKey.current === speechKey) return
-    lastAutoSpeechKey.current = speechKey
+    const autoKey = `${result.id}-${result.scannedAt ?? 'auto'}`
+    if (lastAutoSpeechKey.current === autoKey) return
+    lastAutoSpeechKey.current = autoKey
+    lastAutoCryKey.current = autoKey
 
-    const timeoutId = window.setTimeout(() => {
+    let cancelled = false
+
+    ;(async () => {
+      await new Promise((r) => window.setTimeout(r, 180))
+      if (cancelled) return
+
+      if (result.cryUrl) {
+        await playPokemonCry(result.cryUrl, 0.42)
+        await new Promise((r) => window.setTimeout(r, 350))
+      }
+
+      if (cancelled) return
       narratePokemon(result)
-    }, 760)
+    })()
 
-    return () => window.clearTimeout(timeoutId)
+    return () => { cancelled = true }
   }, [isScanning, result])
 
   function handleImageSelected(file) {

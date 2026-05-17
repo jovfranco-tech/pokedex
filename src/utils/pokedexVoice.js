@@ -6,7 +6,12 @@ function wait(ms) {
   return new Promise((resolve) => window.setTimeout(resolve, ms))
 }
 
-// --- Shared AudioContext -----------------------------------------------
+// --- iOS detection ----------------------------------------------------
+function isIOS() {
+  return typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent)
+}
+
+// --- Shared AudioContext ----------------------------------------------
 let _audioCtx = null
 
 function getAudioContext() {
@@ -17,9 +22,9 @@ function getAudioContext() {
   return _audioCtx
 }
 
-// --- Voice cache (synchronous) ----------------------------------------
-// We keep voices in a plain array that is updated eagerly so that
-// speak() can be called synchronously without any await.
+// --- Synchronous voice cache ------------------------------------------
+// getVoices() returns [] on first call. We update a plain array eagerly
+// via voiceschanged so speak() can always be called without await.
 
 let _voices = []
 
@@ -38,40 +43,33 @@ function chooseRoboticVoice() {
   if (!_voices.length) return null
   const spanishVoices = _voices.filter((v) => /^es(-|$)/i.test(v.lang))
   const pool = spanishVoices.length ? spanishVoices : _voices
+  // Prefer Google/Microsoft TTS — they sound more synthetic
   return (
-    pool.find((v) => /google|microsoft/i.test(v.name)) ??
+    pool.find((v) => /google/i.test(v.name)) ??
+    pool.find((v) => /microsoft/i.test(v.name)) ??
     pool.find((v) => /compact|remote|online/i.test(v.name)) ??
     pool[0]
   )
 }
 
-// --- Unlock on first user touch/click ---------------------------------
-// iOS Safari requires AudioContext AND speechSynthesis to be activated
-// from a synchronous user-gesture handler before async code can use them.
-
+// --- Unlock on first gesture (iOS requirement) -----------------------
 function unlockAll() {
-  // Unlock Web Audio
   const ctx = getAudioContext()
   if (ctx?.state === 'suspended') ctx.resume().catch(() => {})
-
-  // Unlock speechSynthesis: speak a silent utterance synchronously so
-  // iOS marks the API as "user activated" for the rest of the session.
   if (window.speechSynthesis) {
     syncVoices()
     const u = new SpeechSynthesisUtterance(' ')
     u.volume = 0
-    u.rate = 1
     window.speechSynthesis.speak(u)
   }
 }
 
 if (typeof window !== 'undefined') {
-  // Use both touchstart and pointerdown to cover all iOS versions
   window.addEventListener('touchstart', unlockAll, { capture: true, passive: true, once: true })
   window.addEventListener('pointerdown', unlockAll, { capture: true, passive: true, once: true })
 }
 
-// --- Beep -------------------------------------------------------------
+// --- Beep (Dexter computer style) ------------------------------------
 
 function scheduleTone(ctx, freq, startSec, durationSec, gain = 0.22) {
   const osc = ctx.createOscillator()
@@ -94,81 +92,80 @@ export function playPokedexBeep() {
     const go = () => {
       scheduleTone(ctx, 1400, 0.00, 0.07)
       scheduleTone(ctx, 1900, 0.09, 0.09)
-      return wait(220)
+      return wait(240)
     }
     return ctx.state === 'suspended'
-      ? ctx.resume().then(go).catch(() => {})
+      ? ctx.resume().then(go).catch(() => Promise.resolve())
       : go()
   } catch {
     return Promise.resolve()
   }
 }
 
-// --- Speech (synchronous speak call) ----------------------------------
-// iOS Safari: speak() MUST be called synchronously from a user gesture.
-// This function calls speak() immediately (no awaits before it) and
-// returns a Promise that resolves when speech finishes.
+// --- Core speak (synchronous speak() call) ---------------------------
+// speak() is called immediately (no awaits before it) so iOS Safari
+// accepts it from a user-gesture chain.
 
 export function speakSyncAndWait(text, options = {}) {
   if (!text || typeof window === 'undefined' || !window.speechSynthesis) {
     return Promise.resolve()
   }
-
   const message = normalize(text)
   if (!message) return Promise.resolve()
 
   const utterance = new SpeechSynthesisUtterance(message)
-  utterance.lang = 'es-MX'
-  utterance.rate   = options.rate   ?? 0.82
-  utterance.pitch  = options.pitch  ?? 0.1
+  utterance.lang   = 'es-MX'
+  // Dexter-computer style: mid-low pitch (not deep), deliberate pace
+  utterance.rate   = options.rate   ?? 0.88
+  utterance.pitch  = options.pitch  ?? 0.55
   utterance.volume = options.volume ?? 1
 
   const voice = chooseRoboticVoice()
   if (voice) utterance.voice = voice
 
-  // speak() is called HERE — synchronously, before any await anywhere
+  // speak() fires here — synchronously, before any Promise resolution
   window.speechSynthesis.cancel()
   window.speechSynthesis.speak(utterance)
 
   return new Promise((resolve) => {
-    const guard = window.setTimeout(resolve, 15_000)
+    const guard = window.setTimeout(resolve, 20_000)
     const done = () => { window.clearTimeout(guard); resolve() }
     utterance.onend   = done
     utterance.onerror = done
   })
 }
 
-// --- Public API -------------------------------------------------------
+// --- Public API ------------------------------------------------------
 
-// speakPokedexLine: starts beep AND speech simultaneously (both sync),
-// then awaits both to finish. Beep and voice overlap slightly at start,
-// which is acceptable on iOS where sequential await is not allowed.
+// On desktop: beep finishes, then voice starts (sequential).
+// On iOS:     both start synchronously at the same time (concurrent)
+//             — AudioContext has lower latency so beep is heard first.
 export function speakPokedexLine(text, options = {}) {
   if (!text) return Promise.resolve()
+  const withBeep = options.withBeep !== false
 
-  // Both calls are synchronous — speak() fires before any microtask
-  const beepPromise   = options.withBeep !== false ? playPokedexBeep() : Promise.resolve()
-  const speechPromise = speakSyncAndWait(text, options)
+  if (isIOS()) {
+    const beepP  = withBeep ? playPokedexBeep() : Promise.resolve()
+    const speakP = speakSyncAndWait(text, options)
+    return Promise.all([beepP, speakP])
+  }
 
-  return Promise.all([beepPromise, speechPromise])
+  // Desktop: true sequential — hear full beep before voice starts
+  const beepP = withBeep ? playPokedexBeep() : Promise.resolve()
+  return beepP.then(() => speakSyncAndWait(text, options))
 }
 
 export async function speakWithPokedexVoice(text, options = {}) {
   return speakSyncAndWait(text, options)
 }
 
+// --- Announcement text -----------------------------------------------
+// Format: "{Name}. Tipo {types}. {description}"
+// Mirrors what the Pokédex card shows in the description section.
+
 export function buildPokedexAnnouncement(pokemon) {
   if (!pokemon) return ''
-
-  const kind = pokemon.isMythical
-    ? 'mítico'
-    : pokemon.isLegendary
-      ? 'legendario'
-      : 'registrado'
-
-  const types = pokemon.type?.join(' y ') ?? 'desconocido'
-  const topStat = pokemon.stats?.slice().sort((a, b) => b.value - a.value)[0]
-  const statLine = topStat ? `Dato clave: ${topStat.name} ${topStat.value}.` : ''
-
-  return `Pokédex en línea. ${pokemon.name}. Tipo ${types}. Estado ${kind}. Generación ${pokemon.generation}. ${statLine}`.trim()
+  const types = pokemon.type?.join(' y ') ?? ''
+  const description = pokemon.description ?? ''
+  return normalize(`${pokemon.name}. Tipo ${types}. ${description}`)
 }
