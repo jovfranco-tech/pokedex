@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
 import { X } from 'lucide-react'
 
 function pickQuizPokemon(index) {
@@ -13,27 +13,24 @@ function buildOptions(index, correct) {
   return [...shuffled, correct].sort(() => Math.random() - 0.5)
 }
 
+function makeQuestion(index) {
+  const pokemon = pickQuizPokemon(index)
+  return { pokemon, options: pokemon ? buildOptions(index, pokemon) : [] }
+}
+
 export function PokemonQuiz({ index, onClose }) {
-  const [pokemon, setPokemon] = useState(null)
-  const [options, setOptions] = useState([])
+  const [{ pokemon, options }, setQuestion] = useState(() => makeQuestion(index))
   const [selected, setSelected] = useState(null)
   const [score, setScore] = useState(0)
   const [total, setTotal] = useState(0)
 
-  const nextQuestion = useCallback(() => {
-    const next = pickQuizPokemon(index)
-    if (!next) return
-    setPokemon(next)
-    setOptions(buildOptions(index, next))
+  function nextQuestion() {
+    setQuestion(makeQuestion(index))
     setSelected(null)
-  }, [index])
-
-  useEffect(() => {
-    nextQuestion()
-  }, [nextQuestion])
+  }
 
   function handleAnswer(option) {
-    if (selected) return
+    if (selected !== null) return
     setSelected(option)
     setTotal((t) => t + 1)
     if (option.id === pokemon.id) setScore((s) => s + 1)

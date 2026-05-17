@@ -44,7 +44,9 @@ function writeCachedDetail(key, detail) {
       DETAIL_CACHE_PREFIX + key,
       JSON.stringify({ savedAt: Date.now(), dataVersion: POKEMON_DETAIL_SCHEMA_VERSION, detail }),
     )
-  } catch {}
+  } catch {
+    // localStorage is optional; storage quota or private mode should not break the app
+  }
 }
 
 const generationRanges = [

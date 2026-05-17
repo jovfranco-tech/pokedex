@@ -8,10 +8,6 @@ function wait(ms) {
   return new Promise((resolve) => window.setTimeout(resolve, ms))
 }
 
-function isIOS() {
-  return typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent)
-}
-
 // --- Shared AudioContext ----------------------------------------------
 let _audioCtx = null
 
@@ -165,7 +161,9 @@ async function idbSetBlob(key, blob) {
       cursor?.delete()
     }
     store.put({ key, blob })
-  } catch {}
+  } catch {
+    // IndexedDB is optional; errors are silently ignored
+  }
 }
 
 function playBlob(blob) {
