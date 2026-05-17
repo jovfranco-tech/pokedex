@@ -98,6 +98,7 @@ export function ResultCard({
   isScanning,
   onMarkCaptured,
   onMarkSeen,
+  onSpeakPokedex,
   onToggleFavorite,
   pokemonTotal = 1025,
   result,
@@ -207,6 +208,15 @@ export function ResultCard({
         >
           <Volume2 className="size-4" />
           Sonido
+        </button>
+        <button
+          type="button"
+          onClick={() => onSpeakPokedex?.(result)}
+          className="profile-sound-button"
+          aria-label={`Narrar información de ${result.name}`}
+        >
+          <Volume2 className="size-4" />
+          Narrar
         </button>
       </div>
 

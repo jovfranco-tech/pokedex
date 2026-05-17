@@ -22,7 +22,7 @@ import {
 } from './services/pokeApi.js'
 import { identifyPokemonFromImage } from './services/visionSimulator.js'
 import { playPokemonCry } from './utils/playPokemonCry.js'
-import { buildPokedexAnnouncement, speakWithPokedexVoice } from './utils/pokedexVoice.js'
+import { buildPokedexAnnouncement, speakPokedexLine } from './utils/pokedexVoice.js'
 
 const PokemonAssistant = lazy(() => import('./components/PokemonAssistant.jsx').then((module) => ({ default: module.PokemonAssistant })))
 
@@ -55,6 +55,12 @@ function App() {
   const collectionEntry = result && Array.isArray(collection)
     ? collection.find((pokemon) => pokemon.apiName === result.apiName || pokemon.id === result.id)
     : null
+
+  async function narratePokemon(pokemon) {
+    const announcement = buildPokedexAnnouncement(pokemon)
+    if (!announcement) return
+    await speakPokedexLine(announcement, { rate: 0.82, pitch: 0.56, volume: 0.98, withBeep: true })
+  }
 
   const lastScanLabel = result?.scannedAt
     ? new Intl.DateTimeFormat('es-MX', {
@@ -131,11 +137,8 @@ function App() {
     if (lastAutoSpeechKey.current === speechKey) return
     lastAutoSpeechKey.current = speechKey
 
-    const announcement = buildPokedexAnnouncement(result)
-    if (!announcement) return
-
     const timeoutId = window.setTimeout(() => {
-      speakWithPokedexVoice(announcement, { rate: 0.86, pitch: 0.6, volume: 0.98 })
+      narratePokemon(result)
     }, 760)
 
     return () => window.clearTimeout(timeoutId)
@@ -459,6 +462,7 @@ function App() {
             isScanning={isScanning}
             onMarkCaptured={(pokemon) => updateCollection(pokemon, 'captured')}
             onMarkSeen={(pokemon) => updateCollection(pokemon, 'seen')}
+            onSpeakPokedex={narratePokemon}
             onToggleFavorite={handleToggleFavorite}
             pokemonTotal={pokemonTotal}
             result={result}
@@ -535,9 +539,9 @@ function App() {
                     className="assistant-modal-close"
                     aria-label="Leer saludo de Pokédex IA"
                     onClick={() => {
-                      speakWithPokedexVoice(
+                      speakPokedexLine(
                         result ? `Hola. Soy tu Pokédex IA. Pregúntame sobre ${result.name}.` : 'Hola. Soy tu Pokédex IA.',
-                        { rate: 0.9, pitch: 0.66 },
+                        { rate: 0.88, pitch: 0.62, withBeep: true },
                       )
                     }}
                   >

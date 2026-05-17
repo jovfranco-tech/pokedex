@@ -1,7 +1,7 @@
 import { Bot, Mic, Send, Trash2, Volume2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { askPokemonAssistant } from '../services/pokemonAiChat.js'
-import { speakWithPokedexVoice } from '../utils/pokedexVoice.js'
+import { speakPokedexLine } from '../utils/pokedexVoice.js'
 
 const fallbackQuestions = [
   '¿Este Pokémon es legendario?',
@@ -100,7 +100,7 @@ export function PokemonAssistant({ pokemon }) {
   }
 
   function handleSpeak(text = answer) {
-    speakWithPokedexVoice(text, { rate: 0.9, pitch: 0.66 })
+    speakPokedexLine(text, { rate: 0.88, pitch: 0.62, withBeep: true })
   }
 
   function handleVoiceQuestion() {
