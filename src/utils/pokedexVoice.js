@@ -6,10 +6,44 @@ function wait(ms) {
   return new Promise((resolve) => window.setTimeout(resolve, ms))
 }
 
+// --- iOS / browser unlock ----------------------------------------------
+// Web Audio and Web Speech both require a user gesture to start.
+// After any pointer interaction we "unlock" both APIs so subsequent
+// async calls (after awaits) still work on iOS Safari and Chrome.
+
+let _audioCtx = null
+
+function getAudioContext() {
+  if (_audioCtx) return _audioCtx
+  const AudioCtx = window.AudioContext || window.webkitAudioContext
+  if (!AudioCtx) return null
+  try { _audioCtx = new AudioCtx() } catch { return null }
+  return _audioCtx
+}
+
+function unlockAudio() {
+  // Resume Web Audio if suspended
+  const ctx = getAudioContext()
+  if (ctx?.state === 'suspended') ctx.resume().catch(() => {})
+
+  // iOS needs at least one speak() call from a synchronous user-gesture
+  // handler before any async speak() calls work.
+  if (typeof window !== 'undefined' && window.speechSynthesis) {
+    const warm = new SpeechSynthesisUtterance('')
+    warm.volume = 0
+    window.speechSynthesis.speak(warm)
+  }
+}
+
+if (typeof window !== 'undefined') {
+  // Capture-phase so we fire before the target handler
+  window.addEventListener('pointerdown', unlockAudio, { capture: true, passive: true })
+}
+
 // --- Voice pre-loading -------------------------------------------------
-// getVoices() returns [] on the first call in every browser.
-// We resolve the promise once the voiceschanged event fires (or immediately
-// if voices were already cached by the browser).
+// getVoices() returns [] on the very first call in every browser.
+// We wait for the voiceschanged event (or a 2-second fallback) so a
+// voice is always assigned before we call speak().
 
 let _voicesPromise = null
 
@@ -23,47 +57,40 @@ function loadVoices() {
     }
 
     const immediate = window.speechSynthesis.getVoices()
-    if (immediate.length) {
-      resolve(immediate)
-      return
+    if (immediate.length) { resolve(immediate); return }
+
+    let done = false
+    const finish = () => {
+      if (done) return
+      done = true
+      resolve(window.speechSynthesis.getVoices())
     }
 
-    let settled = false
-    const settle = (voices) => {
-      if (settled) return
-      settled = true
-      resolve(voices ?? window.speechSynthesis.getVoices())
-    }
-
-    window.speechSynthesis.addEventListener('voiceschanged', () => settle(window.speechSynthesis.getVoices()), { once: true })
-    // Hard timeout — some browsers never fire the event
-    window.setTimeout(() => settle(window.speechSynthesis.getVoices()), 2000)
+    window.speechSynthesis.addEventListener('voiceschanged', finish, { once: true })
+    window.setTimeout(finish, 2000)
   })
 
   return _voicesPromise
 }
 
-// Kick off loading as soon as the module is imported
 if (typeof window !== 'undefined') loadVoices()
 
 function chooseRoboticVoice(voices) {
   if (!voices.length) return null
-
-  // Prefer voices that sound synthetic / robotic in Spanish
   const spanishVoices = voices.filter((v) => /^es(-|$)/i.test(v.lang))
-  const allCandidates = spanishVoices.length ? spanishVoices : voices
-
-  // Prefer known synthetic/TTS voices (they sound more robotic)
-  const synthetic = allCandidates.find((v) =>
-    /google|microsoft|alex|fred|victoria|compact|remote/i.test(v.name),
+  const pool = spanishVoices.length ? spanishVoices : voices
+  // Prefer known TTS engines — they sound more synthetic/robotic
+  return (
+    pool.find((v) => /google|microsoft/i.test(v.name)) ??
+    pool.find((v) => /compact|remote|online/i.test(v.name)) ??
+    pool[0]
   )
-  return synthetic ?? allCandidates[0]
 }
 
 // --- Beep --------------------------------------------------------------
-// Two-tone ascending blip that sounds like a Dexter computer alert.
+// Rising two-tone blip — Dexter computer style.
 
-function scheduleTone(ctx, freq, startSec, durationSec, gain = 0.18) {
+function scheduleTone(ctx, freq, startSec, durationSec, gain = 0.2) {
   const osc = ctx.createOscillator()
   const g = ctx.createGain()
   osc.type = 'square'
@@ -78,20 +105,15 @@ function scheduleTone(ctx, freq, startSec, durationSec, gain = 0.18) {
 
 export async function playPokedexBeep() {
   if (typeof window === 'undefined') return
-  const AudioCtx = window.AudioContext || window.webkitAudioContext
-  if (!AudioCtx) return
-
   try {
-    const ctx = new AudioCtx()
+    const ctx = getAudioContext()
+    if (!ctx) return
     if (ctx.state === 'suspended') await ctx.resume()
-
-    // Short rising two-tone blip (Dexter/sci-fi computer style)
-    scheduleTone(ctx, 1400, 0, 0.07)
+    scheduleTone(ctx, 1400, 0.00, 0.07)
     scheduleTone(ctx, 1900, 0.09, 0.09)
-
     await wait(220)
   } catch {
-    // AudioContext blocked — skip beep silently
+    // Silently skip if blocked
   }
 }
 
@@ -107,31 +129,29 @@ export async function speakWithPokedexVoice(text, options = {}) {
 
   const utterance = new SpeechSynthesisUtterance(message)
   utterance.lang = 'es-MX'
-  // Robotic Dexter-style: very low pitch, deliberate pace
-  utterance.rate = options.rate ?? 0.82
-  utterance.pitch = options.pitch ?? 0.08
+  // Low pitch = robotic Dexter effect; 0.1 is audibly synthetic without breaking
+  utterance.rate   = options.rate   ?? 0.82
+  utterance.pitch  = options.pitch  ?? 0.1
   utterance.volume = options.volume ?? 1
 
   const voice = chooseRoboticVoice(voices)
   if (voice) utterance.voice = voice
 
   return new Promise((resolve) => {
-    utterance.onend = resolve
-    utterance.onerror = resolve
-    // Cancel any ongoing speech, then yield one tick before speaking
-    // to avoid Chrome cancelling what we just enqueued.
+    // Safety: resolve after 15 s in case onend never fires
+    const safeguard = window.setTimeout(resolve, 15_000)
+    const done = () => { window.clearTimeout(safeguard); resolve() }
+    utterance.onend   = done
+    utterance.onerror = done
+
     window.speechSynthesis.cancel()
-    window.setTimeout(() => window.speechSynthesis.speak(utterance), 50)
+    window.speechSynthesis.speak(utterance)
   })
 }
 
 export async function speakPokedexLine(text, options = {}) {
   if (!text) return
-
-  if (options.withBeep !== false) {
-    await playPokedexBeep()
-  }
-
+  if (options.withBeep !== false) await playPokedexBeep()
   await speakWithPokedexVoice(text, options)
 }
 
