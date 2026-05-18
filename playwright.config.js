@@ -14,7 +14,8 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: process.env.CI ? 'github' : 'list',
   use: {
-    baseURL: 'http://localhost:5173',
+    // In CI, BASE_URL is the Vercel preview URL; locally falls back to dev server
+    baseURL: process.env.BASE_URL || 'http://localhost:5173',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
@@ -24,12 +25,11 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
-  webServer: {
-    // CI: serve the production build via vite preview (faster, stable port)
-    // Local: reuse the already-running dev server if available
-    command: process.env.CI ? 'npm run build && npm run preview -- --port 5173' : 'npm run dev',
+  // When BASE_URL is set (CI against Vercel preview), no local server needed
+  webServer: process.env.BASE_URL ? undefined : {
+    command: 'npm run dev',
     url: 'http://localhost:5173',
-    reuseExistingServer: !process.env.CI,
-    timeout: 60_000,
+    reuseExistingServer: true,
+    timeout: 30_000,
   },
 })

@@ -29,3 +29,6 @@ vercel_output*.txt
 *.sln
 *.sw?
 .vercel
+
+*storybook.log
+storybook-static
