@@ -5,12 +5,20 @@ import { ResultCard } from '../ResultCard.jsx'
 
 // vi.hoisted runs before vi.mock hoisting, so these refs are available in the factory.
 const { MotionDiv, MotionSection } = vi.hoisted(() => {
-  const strip = ({ children, animate, initial, exit, transition, variants,
-    whileHover, whileTap, whileFocus, layout, layoutId,
-    onAnimationComplete, onUpdate, ...rest }) => rest
+  const MOTION_PROPS = new Set([
+    'animate', 'initial', 'exit', 'transition', 'variants', 'whileHover',
+    'whileTap', 'whileFocus', 'layout', 'layoutId', 'onAnimationComplete', 'onUpdate',
+  ])
+  const strip = (props) => {
+    const out = {}
+    for (const key of Object.keys(props)) {
+      if (key !== 'children' && !MOTION_PROPS.has(key)) out[key] = props[key]
+    }
+    return out
+  }
   return {
-    MotionDiv:     (props) => { const r = strip(props); return <div {...r}>{props.children}</div> },
-    MotionSection: (props) => { const r = strip(props); return <section {...r}>{props.children}</section> },
+    MotionDiv:     (props) => <div {...strip(props)}>{props.children}</div>,
+    MotionSection: (props) => <section {...strip(props)}>{props.children}</section>,
   }
 })
 
