@@ -290,92 +290,69 @@ function App() {
     }
   }
 
-  async function handlePokemonSelected(pokemon) {
+  /**
+   * Shared core for all "load a Pokémon and display it" actions.
+   * @param {string|number} id          - Name or numeric id passed to fetchPokemonDetails
+   * @param {object}        meta        - Scan metadata (scanMode, confidenceScore, …)
+   * @param {string}        errorMsg    - User-facing message on failure
+   * @param {boolean}       [keepCandidates=false] - Keep the current scanCandidates strip visible
+   */
+  async function fetchAndDisplay(id, meta, errorMsg, keepCandidates = false) {
     setError('')
-    setScanCandidates([])
+    if (!keepCandidates) setScanCandidates([])
     setIsScanning(true)
-
     try {
-      const details = await fetchPokemonDetails(pokemon.id ?? pokemon.name, {
-        confidenceScore: 100,
-        scannedAt: new Date().toISOString(),
-        scanMode: 'búsqueda por texto Gen 1-9',
-      })
+      const details = await fetchPokemonDetails(id, meta)
       setResult(details)
       rememberScan(details)
       updateCollection(details, 'seen')
     } catch {
-      setError('No encontré ese Pokémon. 🤔 Prueba con el nombre en inglés o el número de Pokédex.')
+      setError(errorMsg)
     } finally {
       setIsScanning(false)
     }
   }
 
-  async function handleHistorySelected(pokemon) {
-    setError('')
-    setScanCandidates([])
-    setIsScanning(true)
-
-    try {
-      const details = await fetchPokemonDetails(pokemon.apiName ?? pokemon.id, {
-        confidenceScore: pokemon.confidenceScore ?? 100,
-        scannedAt: new Date().toISOString(),
-        scanMode: 'historial familiar',
-      })
-      setResult(details)
-      rememberScan(details)
-      updateCollection(details, 'seen')
-    } catch {
-      setError('No pude abrir ese escaneo. 📋 Búscalo por nombre.')
-    } finally {
-      setIsScanning(false)
-    }
+  function handlePokemonSelected(pokemon) {
+    return fetchAndDisplay(
+      pokemon.id ?? pokemon.name,
+      { confidenceScore: 100, scannedAt: new Date().toISOString(), scanMode: 'búsqueda por texto Gen 1-9' },
+      'No encontré ese Pokémon. 🤔 Prueba con el nombre en inglés o el número de Pokédex.',
+    )
   }
 
-  async function handleFavoriteSelected(pokemon) {
-    setError('')
-    setScanCandidates([])
-    setIsScanning(true)
-
-    try {
-      const details = await fetchPokemonDetails(pokemon.apiName ?? pokemon.id, {
-        confidenceScore: 100,
-        scannedAt: new Date().toISOString(),
-        scanMode: 'favorito familiar',
-      })
-      setResult(details)
-      rememberScan(details)
-      updateCollection(details, 'seen')
-    } catch {
-      setError('No pude abrir ese favorito. ⭐ Búscalo por nombre.')
-    } finally {
-      setIsScanning(false)
-    }
+  function handleHistorySelected(pokemon) {
+    return fetchAndDisplay(
+      pokemon.apiName ?? pokemon.id,
+      { confidenceScore: pokemon.confidenceScore ?? 100, scannedAt: new Date().toISOString(), scanMode: 'historial familiar' },
+      'No pude abrir ese escaneo. 📋 Búscalo por nombre.',
+    )
   }
 
-  async function handleScanCandidateSelected(pokemon) {
-    setError('')
-    setIsScanning(true)
+  function handleFavoriteSelected(pokemon) {
+    return fetchAndDisplay(
+      pokemon.apiName ?? pokemon.id,
+      { confidenceScore: 100, scannedAt: new Date().toISOString(), scanMode: 'favorito familiar' },
+      'No pude abrir ese favorito. ⭐ Búscalo por nombre.',
+    )
+  }
 
-    try {
-      const details = await fetchPokemonDetails(pokemon.apiName ?? pokemon.id, {
+  function handleScanCandidateSelected(pokemon) {
+    return fetchAndDisplay(
+      pokemon.apiName ?? pokemon.id,
+      {
         confidenceScore: pokemon.confidenceScore ?? 100,
         scannedAt: new Date().toISOString(),
         scanMode: 'corrección del usuario',
         visualReason: pokemon.reason,
-      })
-      setResult(details)
-      rememberScan(details)
-      updateCollection(details, 'seen')
-    } catch {
-      setError('No pude abrir ese Pokémon. Búscalo por nombre.')
-    } finally {
-      setIsScanning(false)
-    }
+      },
+      'No pude abrir ese Pokémon. Búscalo por nombre.',
+      true, // keep the candidates strip visible while loading
+    )
   }
 
   function handleCollectionSelected(pokemon) {
-    handleFavoriteSelected(pokemon)
+    return handleFavoriteSelected(pokemon)
   }
 
   function handleReset() {

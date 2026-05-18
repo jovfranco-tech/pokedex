@@ -401,6 +401,20 @@ function formatAbilityName(name = '') {
   return abilityTranslations[name] ?? formatPokemonName(name)
 }
 
+/**
+ * Fetch with one automatic retry on transient 5xx errors (500, 502, 503, 504).
+ * Client errors (4xx) and network failures throw immediately.
+ */
+async function apiFetch(url, retries = 1) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const response = await fetch(url) // let network errors propagate
+    if (response.ok) return response
+    const isTransient = response.status >= 500
+    if (!isTransient || attempt === retries) throw new Error(`HTTP ${response.status}`)
+    await new Promise((r) => globalThis.setTimeout(r, 400 * (attempt + 1)))
+  }
+}
+
 async function fetchLocalizedResourceName(resource, fallbackName) {
   const cacheKey = resource?.url ?? resource?.name ?? fallbackName
   if (resourceNameCache.has(cacheKey)) return resourceNameCache.get(cacheKey)
@@ -479,23 +493,20 @@ function writeCachedIndex(items, signature) {
 }
 
 export async function fetchLatestPokemonSpeciesCount() {
-  const response = await fetch(`${API_BASE}/pokemon-species?limit=1`)
-  if (!response.ok) throw new Error('No se pudo cargar el conteo actualizado de PokéAPI')
+  const response = await apiFetch(`${API_BASE}/pokemon-species?limit=1`)
   const data = await response.json()
   return Number.isInteger(data.count) && data.count > 0 ? data.count : DEFAULT_POKEMON_SPECIES_COUNT
 }
 
 async function fetchLatestPokemonCount() {
-  const response = await fetch(`${API_BASE}/pokemon?limit=1`)
-  if (!response.ok) throw new Error('No se pudo cargar el conteo actualizado de formas Pokémon')
+  const response = await apiFetch(`${API_BASE}/pokemon?limit=1`)
   const data = await response.json()
   return Number.isInteger(data.count) && data.count > 0 ? data.count : DEFAULT_POKEMON_SPECIES_COUNT
 }
 
 async function fetchMegaPokemonIndex() {
   const latestPokemonCount = await fetchLatestPokemonCount()
-  const response = await fetch(`${API_BASE}/pokemon?limit=${latestPokemonCount}`)
-  if (!response.ok) throw new Error('No se pudo cargar el índice de formas Pokémon')
+  const response = await apiFetch(`${API_BASE}/pokemon?limit=${latestPokemonCount}`)
 
   const data = await response.json()
   const megaItems = data.results
@@ -541,8 +552,7 @@ export async function loadPokemonIndex() {
       const cached = readCachedIndex(cacheSignature)
       if (cached) return cached
 
-      const response = await fetch(`${API_BASE}/pokemon-species?limit=${latestSpeciesCount}`)
-      if (!response.ok) throw new Error('No se pudo cargar el índice de Pokémon')
+      const response = await apiFetch(`${API_BASE}/pokemon-species?limit=${latestSpeciesCount}`)
 
       const data = await response.json()
       const items = data.results
@@ -609,8 +619,7 @@ async function parseEvolutionChain(chain) {
 
 async function fetchEvolution(species) {
   try {
-    const response = await fetch(species.evolution_chain.url)
-    if (!response.ok) throw new Error('No se pudo cargar evolución')
+    const response = await apiFetch(species.evolution_chain.url)
     const data = await response.json()
     return parseEvolutionChain(data.chain)
   } catch {
@@ -629,12 +638,10 @@ export async function fetchPokemonDetails(nameOrId, options = {}) {
     if (persisted) { detailsCache.set(cacheKey, persisted); return persisted }
   }
 
-  const pokemonResponse = await fetch(`${API_BASE}/pokemon/${cacheKey}`)
-  if (!pokemonResponse.ok) throw new Error('Pokémon no encontrado')
+  const pokemonResponse = await apiFetch(`${API_BASE}/pokemon/${cacheKey}`)
   const pokemon = await pokemonResponse.json()
 
-  const speciesResponse = await fetch(pokemon.species.url)
-  if (!speciesResponse.ok) throw new Error('Especie no encontrada')
+  const speciesResponse = await apiFetch(pokemon.species.url)
   const species = await speciesResponse.json()
 
   const isMega = pokemon.name.includes('-mega')

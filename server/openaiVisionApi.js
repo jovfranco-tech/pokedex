@@ -14,7 +14,9 @@ function isAllowedOrigin(request, env) {
     .filter(Boolean)
 
   if (!allowed.length) return true // not configured → allow all (dev mode)
-  return allowed.some((o) => origin === o || origin.startsWith(o))
+  // Exact-match only — startsWith would allow "https://myapp.com.evil.com"
+  // if "https://myapp.com" is in the allowlist.
+  return allowed.some((o) => origin === o)
 }
 
 // --- Rate limiter (per-IP sliding window) --------------------------------
@@ -186,7 +188,17 @@ function extractOutputText(responseJson) {
   return ''
 }
 
+/** Strip newlines and tabs so a crafted filename can't inject extra prompt lines. */
+function sanitizeFileName(name) {
+  return String(name ?? 'unknown')
+    .replace(/[\n\r\t\v\f\0]/g, ' ') // strip chars that could inject new prompt lines
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 120)
+}
+
 async function identifyWithOpenAI({ apiKey, candidates, detail, fileName, imageDataUrl, model }) {
+  const safeFileName = sanitizeFileName(fileName)
   const candidateList = candidates
     .slice(0, MAX_VISION_CANDIDATES)
     .map((pokemon) => `${pokemon.id}:${pokemon.name}`)
@@ -219,7 +231,7 @@ async function identifyWithOpenAI({ apiKey, candidates, detail, fileName, imageD
                 'Exception: if the image clearly shows a Mega Evolution or Primal form, choose the exact Mega/Primal candidate.',
                 'Confidence guide: 90-100 only for clear iconic matches; 70-89 for likely matches; 40-69 for uncertain but visible; below 40 if too unclear.',
                 'If the image is unclear or not a Pokémon, set isPokemon=false and confidenceScore below 35.',
-                `Image filename: ${fileName || 'unknown'}`,
+                `Image filename: ${safeFileName || 'unknown'}`,
                 `Valid candidates are: ${candidateList}`,
               ].join('\n'),
             },
