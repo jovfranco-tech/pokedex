@@ -46,7 +46,8 @@ test.describe('Accessibility', () => {
     await page.goto('/')
     await expect(page.getByRole('heading', { name: /pokédex ia/i })).toBeVisible()
     // The "Todos" filter should have aria-pressed="true" by default
-    const todosBtn = page.getByRole('button', { name: /todas las generaciones/i })
+    // aria-label starts with "Todos" (includes visible text per WCAG 2.5.3)
+    const todosBtn = page.getByRole('button', { name: /todos/i }).first()
     await expect(todosBtn).toHaveAttribute('aria-pressed', 'true')
   })
 })

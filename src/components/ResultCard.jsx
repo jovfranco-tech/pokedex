@@ -96,7 +96,6 @@ function buildQuickSummary(result) {
 export function ResultCard({
   collectionEntry,
   feedback,
-  id,
   isFavorite,
   isKidsMode,
   isSpeaking,
@@ -174,7 +173,6 @@ export function ResultCard({
   return (
     <m.section
       {...motionProps}
-      id={id}
       className="pokemon-profile-card"
       aria-label={`Resultado: ${result.name}`}
       aria-live="polite"

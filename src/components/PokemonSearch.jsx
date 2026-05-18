@@ -43,7 +43,7 @@ export function PokemonSearch({ index, isLoading, onSelect, variant = 'panel' })
             placeholder="Pikachu, Charizard, #150..."
             className="console-search-input"
           />
-          <button type="submit" className="console-go-button" aria-label="Buscar Pokémon">
+          <button type="submit" className="console-go-button" aria-label="Ir — buscar Pokémon">
             {isLoading ? <Loader2 className="size-4 animate-spin" /> : 'Ir'}
           </button>
         </form>
@@ -53,7 +53,7 @@ export function PokemonSearch({ index, isLoading, onSelect, variant = 'panel' })
             type="button"
             className={`console-gen-chip ${filterGen === 0 ? 'console-gen-chip-active' : ''}`}
             aria-pressed={filterGen === 0}
-            aria-label="Todas las generaciones"
+            aria-label="Todos — todas las generaciones"
             onClick={() => setFilterGen(0)}
           >
             Todos
@@ -64,7 +64,7 @@ export function PokemonSearch({ index, isLoading, onSelect, variant = 'panel' })
               type="button"
               className={`console-gen-chip ${filterGen === gen ? 'console-gen-chip-active' : ''}`}
               aria-pressed={filterGen === gen}
-              aria-label={`Generación ${gen}`}
+              aria-label={`${gen} — generación ${gen}`}
               onClick={() => setFilterGen(filterGen === gen ? 0 : gen)}
             >
               {gen}

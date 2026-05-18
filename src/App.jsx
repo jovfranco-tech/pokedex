@@ -477,10 +477,11 @@ function App() {
           </div>
         </section>
 
+        {/* Skip-link target — always present so keyboard users can jump here */}
+        <div id="main-result" tabIndex={-1} style={{ outline: 'none' }} />
         <AnimatePresence mode="wait">
           <ErrorBoundary message="No se pudo mostrar el Pokémon. Prueba buscando otro.">
             <ResultCard
-              id="main-result"
               collectionEntry={collectionEntry}
               feedback={result?.id ? scanFeedback[result.id] : null}
               key={result?.apiName ?? result?.id ?? (isScanning ? 'scanning' : 'empty')}
