@@ -31,7 +31,7 @@
 
 .empty-profile p,
 .result-loading p {
-  color: #a2a7b6;
+  color: #5f6475;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-weight: 900;
 }
@@ -49,7 +49,7 @@
   border-radius: 999px;
   background: #fbfcff;
   padding: 0.45rem 0.8rem;
-  color: #748098;
+  color: #5f6475;
   font-size: 0.9rem;
   font-weight: 900;
 }
@@ -78,7 +78,7 @@
 }
 
 .profile-number {
-  color: #c6cad5;
+  color: #6e7282;
   font-size: 0.9rem;
   font-weight: 1000;
 }
@@ -219,7 +219,7 @@
 }
 
 .profile-mini-stat dt {
-  color: #c2c7d2;
+  color: #6e7282;
   font-size: 0.7rem;
   font-weight: 1000;
   letter-spacing: 0.06em;
@@ -240,7 +240,7 @@
   gap: 0.35rem;
   border-color: rgba(255, 214, 67, 0.82);
   background: #fff;
-  color: #777d8e;
+  color: #5f6475;
   font-weight: 1000;
   transition:
     transform 180ms ease,
@@ -276,7 +276,7 @@
   border-radius: 9px;
   background: #fbfcff;
   padding: 0.95rem 1rem;
-  color: #7b8190;
+  color: #5f6475;
   font-size: 1rem;
   font-weight: 800;
   line-height: 1.65;
@@ -314,7 +314,7 @@
   gap: 0.35rem;
   border: 1px solid transparent;
   border-radius: 8px;
-  color: #9198a7;
+  color: #5f6475;
   font-size: 0.88rem;
   font-weight: 1000;
   transition:
@@ -361,7 +361,7 @@
   border: 1px solid #eef1f6;
   border-radius: 18px;
   background: #fbfcff;
-  color: #8f96a7;
+  color: #5f6475;
   font-weight: 1000;
 }
 
@@ -441,7 +441,7 @@
 
 .kids-section-label {
   margin-bottom: 6px;
-  color: #9198a7;
+  color: #5f6475;
   font-size: 0.75rem;
   font-weight: 1000;
   letter-spacing: 0.06em;
@@ -481,7 +481,7 @@
 }
 
 .kids-evolution-note span {
-  color: #9198a7;
+  color: #5f6475;
   font-weight: 1000;
   text-transform: uppercase;
   font-size: 0.72rem;
@@ -506,7 +506,7 @@
 }
 
 .stat-row > span:first-child {
-  color: #8f96a7;
+  color: #5f6475;
   font-size: 0.78rem;
   font-weight: 1000;
   text-transform: uppercase;
@@ -550,7 +550,7 @@
   align-items: center;
   gap: 0.35rem;
   margin-bottom: 0.5rem;
-  color: #a0a6b5;
+  color: #5f6475;
   font-size: 0.76rem;
   font-weight: 1000;
   letter-spacing: 0.06em;
@@ -591,14 +591,14 @@
   border-radius: 999px;
   background: #f5f7fb;
   padding: 0.28rem 0.55rem;
-  color: #7b8294;
+  color: #5f6475;
   font-size: 0.8rem;
   font-weight: 1000;
 }
 
 .chip-cloud p,
 .profile-muted {
-  color: #a0a6b5;
+  color: #5f6475;
   font-size: 0.9rem;
   font-weight: 850;
 }
@@ -726,7 +726,7 @@
 }
 
 .profile-number {
-  color: #b7bdca;
+  color: #6e7282;
   font-size: 0.86rem;
 }
 
@@ -1107,7 +1107,7 @@
 }
 
 .matchup-row > span {
-  color: #a1a8b5;
+  color: #5f6475;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.74rem;
   font-weight: 900;
@@ -1170,7 +1170,7 @@
 
 .game-generation-group .chip-cloud span {
   background: #f6f8fb;
-  color: #858d9b;
+  color: #5f6475;
 }
 
 .stage-data-row {
@@ -1185,7 +1185,7 @@
 }
 
 .stage-data-row span {
-  color: #b0b6c3;
+  color: #6e7282;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.76rem;
   font-weight: 1000;
@@ -1241,14 +1241,14 @@
 
 .type-badge {
   padding: 0.18rem 0.5rem;
-  font-size: 0.68rem;
+  font-size: 0.72rem;
 }
 
 .profile-legendary-badge,
 .profile-mythical-badge,
 .profile-category-badge {
   padding: 0.18rem 0.5rem;
-  font-size: 0.68rem;
+  font-size: 0.72rem;
 }
 
 .profile-art-card {
@@ -1262,7 +1262,7 @@
 }
 
 .profile-mini-stat dt {
-  font-size: 0.64rem;
+  font-size: 0.72rem;
 }
 
 .profile-mini-stat dd {
@@ -1296,7 +1296,7 @@
 .stat-row > span:first-child,
 .matchup-row > span,
 .stage-data-row span {
-  font-size: 0.68rem;
+  font-size: 0.74rem;
 }
 
 .stat-row strong,
@@ -1307,12 +1307,12 @@
 .profile-note > span,
 .matchup-group h3,
 .game-debut-row span {
-  font-size: 0.7rem;
+  font-size: 0.74rem;
 }
 
 .chip-cloud span,
 .chip-cloud .type-chip {
-  font-size: 0.68rem;
+  font-size: 0.74rem;
 }
 
 .empty-profile h2,
@@ -1380,7 +1380,7 @@
   margin: -4px 0 10px;
   font-size: 0.85rem;
   font-weight: 900;
-  color: #9198a7;
+  color: #5f6475;
 }
 
 .profile-feedback-btn {
@@ -1392,7 +1392,7 @@
   border: 1px solid #e8ecf3;
   border-radius: 8px;
   background: #f7f9fc;
-  color: #9198a7;
+  color: #5f6475;
   transition: all 160ms ease;
 }
 
@@ -1419,7 +1419,7 @@
 }
 
 .evolution-arrow {
-  color: #c6cad5;
+  color: #6e7282;
   font-weight: 900;
 }
 
