@@ -25,9 +25,11 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run dev',
+    // CI: serve the production build via vite preview (faster, stable port)
+    // Local: reuse the already-running dev server if available
+    command: process.env.CI ? 'npm run build && npm run preview -- --port 5173' : 'npm run dev',
     url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
-    timeout: 30_000,
+    timeout: 60_000,
   },
 })

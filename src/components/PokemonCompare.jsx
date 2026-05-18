@@ -1,3 +1,4 @@
+import { AnimatePresence, m, useReducedMotion } from 'framer-motion'
 import { BarChart3, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { fetchPokemonDetails, searchPokemonIndex } from '../services/pokeApi.js'
@@ -49,11 +50,7 @@ function buildBattleScore(pokemon, opponent) {
   if (opponentBestHit >= 4) score -= 35
   if (opponentBestHit === 0) score += 35
 
-  return {
-    score,
-    ownBestHit,
-    opponentBestHit,
-  }
+  return { score, ownBestHit, opponentBestHit }
 }
 
 function toWinRate(firstScore, secondScore) {
@@ -61,8 +58,7 @@ function toWinRate(firstScore, secondScore) {
   const secondPositive = Math.max(secondScore, 1)
   const total = firstPositive + secondPositive
   const firstRate = (firstPositive / total) * 100
-  const secondRate = 100 - firstRate
-  return { firstRate, secondRate }
+  return { firstRate, secondRate: 100 - firstRate }
 }
 
 function advantageText(multiplier) {
@@ -86,18 +82,26 @@ function ComparePicker({ index, label, onSelect, selected }) {
     <div className="compare-picker">
       <span className="compare-label">{label}</span>
       <div className="compare-search-row">
-        <Search className="size-4" />
+        <Search className="size-4" aria-hidden="true" />
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder={selected ? selected.name : 'Buscar Pokémon'}
+          aria-label={`Buscar ${label}`}
         />
       </div>
       {query && (
-        <div className="compare-results">
+        <div className="compare-results" role="listbox" aria-label={`Resultados para ${label}`}>
           {matches.map((pokemon) => (
-            <button key={`${label}-${pokemon.apiName ?? pokemon.name}`} type="button" onClick={() => choose(pokemon)}>
-              <img src={pokemon.sprite} alt="" />
+            <button
+              key={`${label}-${pokemon.apiName ?? pokemon.name}`}
+              type="button"
+              role="option"
+              aria-selected="false"
+              aria-label={`Elegir ${pokemon.displayName} como ${label}`}
+              onClick={() => choose(pokemon)}
+            >
+              <img src={pokemon.sprite} alt="" aria-hidden="true" />
               <span>{pokemon.displayName}</span>
             </button>
           ))}
@@ -107,7 +111,10 @@ function ComparePicker({ index, label, onSelect, selected }) {
   )
 }
 
-function CompareCard({ pokemon }) {
+function CompareCard({ pokemon, side }) {
+  const prefersReducedMotion = useReducedMotion()
+  const xOffset = side === 'left' ? -24 : 24
+
   if (!pokemon) {
     return <div className="compare-card compare-card-empty">Elige un Pokémon</div>
   }
@@ -115,21 +122,29 @@ function CompareCard({ pokemon }) {
   const strongest = topStat(pokemon)
 
   return (
-    <article className="compare-card">
-      <img src={pokemon.sprite} alt="" />
+    <m.article
+      key={pokemon.id}
+      className="compare-card"
+      initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: xOffset, scale: 0.95 }}
+      animate={{ opacity: 1, x: 0, scale: 1 }}
+      transition={{ duration: 0.3, type: 'spring', bounce: 0.2 }}
+    >
+      <img src={pokemon.sprite} alt={`Ilustración de ${pokemon.name}`} />
       <div>
         <h3>{pokemon.name}</h3>
         <p>{pokemon.type.map((type) => getTypeMeta(type).label).join(' / ')}</p>
-        <strong>{statTotal(pokemon)} stats</strong>
-        {strongest && <small>Mejor: {strongest.name} {strongest.value}</small>}
+        <strong>{statTotal(pokemon)} stats totales</strong>
+        {strongest && <small>Mejor stat: {strongest.name} ({strongest.value})</small>}
       </div>
-    </article>
+    </m.article>
   )
 }
 
 export function PokemonCompare({ index = [], initialPokemon }) {
+  const prefersReducedMotion = useReducedMotion()
   const [firstPokemon, setFirstPokemon] = useState(initialPokemon ?? null)
   const [secondPokemon, setSecondPokemon] = useState(null)
+
   const battle = useMemo(() => {
     if (!firstPokemon || !secondPokemon) return null
 
@@ -137,12 +152,11 @@ export function PokemonCompare({ index = [], initialPokemon }) {
     const secondScore = buildBattleScore(secondPokemon, firstPokemon)
     const winner = firstScore.score >= secondScore.score ? firstPokemon : secondPokemon
     const winnerScore = firstScore.score >= secondScore.score ? firstScore : secondScore
-    const loserScore = firstScore.score >= secondScore.score ? secondScore : firstScore
     const rates = toWinRate(firstScore.score, secondScore.score)
     const winnerRate = firstScore.score >= secondScore.score ? rates.firstRate : rates.secondRate
     const loserRate = firstScore.score >= secondScore.score ? rates.secondRate : rates.firstRate
 
-    return { winner, winnerScore, loserScore, winnerRate, loserRate }
+    return { winner, winnerScore, winnerRate, loserRate }
   }, [firstPokemon, secondPokemon])
 
   async function selectPokemon(setter, pokemon) {
@@ -153,7 +167,7 @@ export function PokemonCompare({ index = [], initialPokemon }) {
   return (
     <section className="compare-panel" aria-label="Comparador Pokémon">
       <div className="compare-header">
-        <BarChart3 className="size-5" />
+        <BarChart3 className="size-5" aria-hidden="true" />
         <span>Comparar Pokémon</span>
       </div>
 
@@ -163,17 +177,31 @@ export function PokemonCompare({ index = [], initialPokemon }) {
       </div>
 
       <div className="compare-card-grid">
-        <CompareCard pokemon={firstPokemon} />
-        <CompareCard pokemon={secondPokemon} />
+        <AnimatePresence mode="wait">
+          <CompareCard key={firstPokemon?.id ?? 'empty-a'} pokemon={firstPokemon} side="left" />
+        </AnimatePresence>
+        <AnimatePresence mode="wait">
+          <CompareCard key={secondPokemon?.id ?? 'empty-b'} pokemon={secondPokemon} side="right" />
+        </AnimatePresence>
       </div>
 
-      {battle && (
-        <p className="compare-winner">
-          {battle.winner.name} tiene ventaja en este duelo.
-          Tiene más chance de ganar: <strong>{battle.winnerRate.toFixed(0)}%</strong> vs <strong>{battle.loserRate.toFixed(0)}%</strong>.
-          Sus ataques son {advantageText(battle.winnerScore.ownBestHit)}s contra su rival y además aguanta mejor los golpes.
-        </p>
-      )}
+      <AnimatePresence>
+        {battle && (
+          <m.p
+            className="compare-winner"
+            role="status"
+            aria-live="polite"
+            initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <strong>{battle.winner.name}</strong> tiene ventaja en este duelo.
+            Probabilidad de ganar: <strong>{battle.winnerRate.toFixed(0)}%</strong> vs <strong>{battle.loserRate.toFixed(0)}%</strong>.
+            Sus ataques son {advantageText(battle.winnerScore.ownBestHit)}s contra el rival.
+          </m.p>
+        )}
+      </AnimatePresence>
     </section>
   )
 }

@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { AnimatePresence, m, useReducedMotion } from 'framer-motion'
 import { X } from 'lucide-react'
+import { useState } from 'react'
 
 function pickQuizPokemon(index) {
   const pool = index.filter((p) => !p.isMega && !p.isPrimal && p.id <= 1025)
@@ -19,14 +20,17 @@ function makeQuestion(index) {
 }
 
 export function PokemonQuiz({ index, onClose }) {
+  const prefersReducedMotion = useReducedMotion()
   const [{ pokemon, options }, setQuestion] = useState(() => makeQuestion(index))
   const [selected, setSelected] = useState(null)
   const [score, setScore] = useState(0)
   const [total, setTotal] = useState(0)
+  const [questionKey, setQuestionKey] = useState(0)
 
   function nextQuestion() {
     setQuestion(makeQuestion(index))
     setSelected(null)
+    setQuestionKey((k) => k + 1)
   }
 
   function handleAnswer(option) {
@@ -45,25 +49,47 @@ export function PokemonQuiz({ index, onClose }) {
     <div className="quiz-container">
       <div className="quiz-header">
         <h2 className="quiz-title">¿Quién es ese Pokémon?</h2>
-        <div className="quiz-score">{score}/{total}</div>
+        <div className="quiz-score" aria-live="polite" aria-atomic="true">{score}/{total}</div>
         <button type="button" className="assistant-modal-close" aria-label="Cerrar quiz" onClick={onClose}>
-          <X className="size-5" />
+          <X className="size-5" aria-hidden="true" />
         </button>
       </div>
 
+      {/* Silhouette — scales + un-blurs on reveal */}
       <div className="quiz-silhouette-wrap">
-        <img
+        <m.img
+          key={`sprite-${questionKey}`}
           src={pokemon.sprite}
-          alt={revealed ? pokemon.displayName : '???'}
+          alt={revealed ? pokemon.displayName : 'Pokémon desconocido'}
           className={`quiz-silhouette ${revealed ? 'quiz-silhouette-revealed' : ''}`}
+          animate={revealed
+            ? { scale: 1.08, filter: 'brightness(1) drop-shadow(0 4px 12px rgba(0,0,0,0.25))' }
+            : { scale: 1, filter: 'brightness(0) drop-shadow(none)' }}
+          transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.35, ease: 'easeOut' }}
         />
-        {revealed && (
-          <p className="quiz-pokemon-name">{pokemon.displayName}</p>
-        )}
+        <AnimatePresence>
+          {revealed && (
+            <m.p
+              className="quiz-pokemon-name"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.25 }}
+            >
+              {pokemon.displayName}
+            </m.p>
+          )}
+        </AnimatePresence>
       </div>
 
-      <div className="quiz-options" role="group" aria-label="Opciones de respuesta">
-        {options.map((option) => {
+      {/* Options — stagger in on each new question */}
+      <m.div
+        key={`options-${questionKey}`}
+        className="quiz-options"
+        role="group"
+        aria-label="Opciones de respuesta"
+      >
+        {options.map((option, i) => {
           let cls = 'quiz-option'
           let ariaCurrent
           if (revealed) {
@@ -72,30 +98,44 @@ export function PokemonQuiz({ index, onClose }) {
             else cls += ' quiz-option-dim'
           }
           return (
-            <button
+            <m.button
               key={option.id}
               type="button"
               className={cls}
               aria-current={ariaCurrent}
               onClick={() => handleAnswer(option)}
               disabled={revealed}
+              initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.22, delay: i * 0.05 }}
             >
               {option.displayName}
-            </button>
+            </m.button>
           )
         })}
-      </div>
+      </m.div>
 
-      {revealed && (
-        <div className="quiz-result" role="status" aria-live="polite">
-          <p className="quiz-result-text">
-            {correct ? '¡Correcto! 🎉' : `Era ${pokemon.displayName} 😅`}
-          </p>
-          <button type="button" className="quiz-next-button" onClick={nextQuestion}>
-            Siguiente →
-          </button>
-        </div>
-      )}
+      {/* Result — slides up */}
+      <AnimatePresence>
+        {revealed && (
+          <m.div
+            className="quiz-result"
+            role="status"
+            aria-live="polite"
+            initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.28, type: 'spring', bounce: 0.3 }}
+          >
+            <p className="quiz-result-text">
+              {correct ? '¡Correcto! 🎉' : `Era ${pokemon.displayName} 😅`}
+            </p>
+            <button type="button" className="quiz-next-button" onClick={nextQuestion}>
+              Siguiente →
+            </button>
+          </m.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
