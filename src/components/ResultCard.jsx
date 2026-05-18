@@ -1,4 +1,4 @@
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { AnimatePresence, m, useReducedMotion } from 'framer-motion'
 import { Gamepad2, Heart, Info, Share2, ShieldAlert, Sparkles, Swords, ThumbsDown, ThumbsUp, Volume2 } from 'lucide-react'
 import { Suspense, lazy, useMemo, useState } from 'react'
 import { TypeBadge } from './TypeBadge.jsx'
@@ -120,7 +120,7 @@ export function ResultCard({
 
   if (isScanning) {
     return (
-      <motion.section 
+      <m.section 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
@@ -134,13 +134,13 @@ export function ResultCard({
           <span className="mini-dot" />
           Procesando
         </div>
-      </motion.section>
+      </m.section>
     )
   }
 
   if (!result) {
     return (
-      <motion.section 
+      <m.section 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
@@ -155,7 +155,7 @@ export function ResultCard({
           <span>Buscar por nombre</span>
           <span>Chat IA</span>
         </div>
-      </motion.section>
+      </m.section>
     )
   }
 
@@ -170,7 +170,7 @@ export function ResultCard({
     : { initial: { opacity: 0, y: 20, scale: 0.95 }, animate: { opacity: 1, y: 0, scale: 1 }, exit: { opacity: 0, scale: 0.95 }, transition: { duration: 0.4, type: 'spring', bounce: 0.3 } }
 
   return (
-    <motion.section
+    <m.section
       {...motionProps}
       className="pokemon-profile-card"
       style={getPokemonTypeTheme(result.type)}
@@ -321,7 +321,7 @@ export function ResultCard({
       </div>
 
       <AnimatePresence mode="wait">
-        <motion.div 
+        <m.div 
           key={safeActiveTab} 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -333,9 +333,9 @@ export function ResultCard({
           {safeActiveTab === 'matchups' && <TypeMatchups matchups={result.matchups} />}
           {safeActiveTab === 'games' && <GameAppearances games={result.gameAppearances} />}
           {safeActiveTab === 'stage' && <StageTab result={result} />}
-        </motion.div>
+        </m.div>
       </AnimatePresence>
-    </motion.section>
+    </m.section>
   )
 }
 

@@ -1,4 +1,4 @@
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { AnimatePresence, LazyMotion, domAnimation, m, useReducedMotion } from 'framer-motion'
 import { Bot, CircleDot, Download, Gamepad2, Mic, Sparkles, Volume2, X } from 'lucide-react'
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { CollectionStrip } from './components/CollectionStrip.jsx'
@@ -389,6 +389,7 @@ function App() {
   }
 
   return (
+    <LazyMotion features={domAnimation}>
     <main className={`pokedex-stage min-h-svh px-2 py-2 text-dex-ink sm:px-5 sm:py-4 ${isKidsMode ? 'kids-mode' : ''}`}>
       <DeviceShell>
         <section className="pokedex-console-card">
@@ -557,14 +558,14 @@ function App() {
 
         <AnimatePresence>
           {isQuizOpen && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="assistant-modal-backdrop"
               role="presentation"
             >
-              <motion.section
+              <m.section
                 ref={quizTrapRef}
                 initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 50, scale: 0.9 }}
                 animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
@@ -581,21 +582,21 @@ function App() {
                   index={pokemonIndex.length ? pokemonIndex : []}
                   onClose={() => setIsQuizOpen(false)}
                 />
-              </motion.section>
-            </motion.div>
+              </m.section>
+            </m.div>
           )}
         </AnimatePresence>
 
         <AnimatePresence>
           {isAssistantOpen && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="assistant-modal-backdrop" 
               role="presentation"
             >
-              <motion.section
+              <m.section
                 ref={assistantTrapRef}
                 initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 50, scale: 0.9 }}
                 animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
@@ -646,12 +647,13 @@ function App() {
                     <PokemonAssistant pokemon={result} />
                   </ErrorBoundary>
                 </Suspense>
-              </motion.section>
-            </motion.div>
+              </m.section>
+            </m.div>
           )}
         </AnimatePresence>
       </DeviceShell>
     </main>
+    </LazyMotion>
   )
 }
 
