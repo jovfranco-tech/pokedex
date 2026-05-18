@@ -660,7 +660,7 @@
   padding: 0.28rem 0.62rem;
   color: var(--chip-text);
   font-size: 0.68rem;
-  font-weight: 1000;
+  font-weight: var(--weight-black);
   line-height: 1;
   text-transform: uppercase;
   box-shadow:

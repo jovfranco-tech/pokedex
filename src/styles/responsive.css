@@ -101,11 +101,29 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  /* Stop ALL animations/transitions — critical for users with vestibular disorders */
   *,
   *::before,
   *::after {
-    animation-duration: 1ms !important;
+    animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+
+  /* Decorative looping effects — disable completely */
+  .empty-pokeball,
+  .spinning-pokeball,
+  .pokeball-spin,
+  .stage-orbit,
+  .stage-ghost,
+  .type-particle,
+  .aura-ring,
+  .pokemon-halo,
+  .battle-impact,
+  .confetti-star {
+    animation: none !important;
+  }
+
+  /* Framer Motion respects prefers-reduced-motion natively when useReducedMotion() is used */
 }

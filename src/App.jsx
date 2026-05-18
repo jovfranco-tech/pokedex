@@ -418,21 +418,25 @@ function App() {
           </div>
 
           <div className="console-stack">
-            <PokemonSearch
-              index={pokemonIndex}
-              isLoading={isIndexLoading}
-              onSelect={handlePokemonSelected}
-              variant="console"
-            />
+            <ErrorBoundary message="El buscador tuvo un problema. Recarga la página.">
+              <PokemonSearch
+                index={pokemonIndex}
+                isLoading={isIndexLoading}
+                onSelect={handlePokemonSelected}
+                variant="console"
+              />
+            </ErrorBoundary>
 
-            <ImageScanner
-              error={error}
-              imageFile={imageFile}
-              isScanning={isScanning}
-              onImageSelected={handleImageSelected}
-              onReset={handleReset}
-              previewUrl={previewUrl}
-            />
+            <ErrorBoundary message="El escáner tuvo un problema. Recarga la página.">
+              <ImageScanner
+                error={error}
+                imageFile={imageFile}
+                isScanning={isScanning}
+                onImageSelected={handleImageSelected}
+                onReset={handleReset}
+                previewUrl={previewUrl}
+              />
+            </ErrorBoundary>
 
             <ScanCandidateStrip candidates={scanCandidates} onSelect={handleScanCandidateSelected} />
 
@@ -517,11 +521,13 @@ function App() {
                 <Sparkles className="size-5" />
                 Comparar
               </summary>
-              <PokemonCompare
-                key={result?.apiName ?? result?.id ?? 'compare-empty'}
-                index={pokemonIndex}
-                initialPokemon={result}
-              />
+              <ErrorBoundary message="El comparador tuvo un problema.">
+                <PokemonCompare
+                  key={result?.apiName ?? result?.id ?? 'compare-empty'}
+                  index={pokemonIndex}
+                  initialPokemon={result}
+                />
+              </ErrorBoundary>
             </details>
 
             {favorites.length > 0 && (
@@ -558,10 +564,12 @@ function App() {
                 onTrapEscape={() => setIsQuizOpen(false)}
                 onKeyDown={(e) => e.key === 'Escape' && setIsQuizOpen(false)}
               >
-                <PokemonQuiz
-                  index={pokemonIndex.length ? pokemonIndex : []}
-                  onClose={() => setIsQuizOpen(false)}
-                />
+                <ErrorBoundary message="El quiz tuvo un problema. Prueba cerrándolo y volviéndolo a abrir.">
+                  <PokemonQuiz
+                    index={pokemonIndex.length ? pokemonIndex : []}
+                    onClose={() => setIsQuizOpen(false)}
+                  />
+                </ErrorBoundary>
               </m.section>
             </m.div>
           )}

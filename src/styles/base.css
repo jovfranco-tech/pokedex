@@ -1,6 +1,48 @@
+/* ── Design tokens ─────────────────────────────────────────────────────────
+   Single source of truth for color, spacing, radius, and weight.
+   Dark-mode overrides are defined in dark.css using these same names.
+────────────────────────────────────────────────────────────────────────── */
 :root {
-  color: #20212a;
-  background: #f5f7fb;
+  /* Colors — text */
+  --ink-strong:  #16171c;
+  --ink:         #252637;
+  --ink-muted:   #5f6475;
+  --ink-faint:   #9aa2b4;
+
+  /* Colors — brand */
+  --brand:       #f12122;
+  --brand-mid:   #e3283e;
+  --brand-deep:  #c8172f;
+
+  /* Colors — surface */
+  --surface:        #ffffff;
+  --surface-alt:    #f5f7fb;
+  --surface-raised: #fafcff;
+  --border:         #e6eaf2;
+  --border-strong:  rgba(22, 23, 28, 0.18);
+
+  /* Spacing scale (4-base) */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+
+  /* Border-radius scale */
+  --r-sm:   10px;
+  --r-md:   16px;
+  --r-lg:   24px;
+  --r-xl:   28px;
+  --r-pill: 999px;
+
+  /* Typography */
+  --weight-black: 900;
+
+  /* Base inherited values */
+  color: var(--ink);
+  background: var(--surface-alt);
   font-family: Nunito, Inter, ui-sans-serif, system-ui, sans-serif;
   font-synthesis: none;
   letter-spacing: 0;

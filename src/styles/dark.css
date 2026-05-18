@@ -319,4 +319,177 @@
   .profile-favorite-button-active {
     background: rgba(60, 20, 28, 0.8);
   }
+
+  /* ── Dark token overrides (apply to the root for global cascade) ─── */
+  :root {
+    --ink-strong:  #e4e6f0;
+    --ink:         #c8cad8;
+    --ink-muted:   #8a8e9e;
+    --ink-faint:   #5a5e70;
+    --surface:        #12141e;
+    --surface-alt:    #0f1117;
+    --surface-raised: #1a1c28;
+    --border:         rgba(45, 50, 72, 0.7);
+    --border-strong:  rgba(55, 62, 88, 0.8);
+  }
+
+  /* ── Pokédex console card ────────────────────────────────────────── */
+  .pokedex-console-card {
+    border-color: rgba(200, 30, 50, 0.35);
+    background:
+      linear-gradient(180deg, rgba(255, 50, 80, 0.06), rgba(255, 50, 80, 0) 38%),
+      linear-gradient(180deg, #1a0d10 0%, #150a0c 56%, #100608 100%);
+    box-shadow:
+      0 18px 36px rgba(0, 0, 0, 0.55),
+      inset 0 1px 0 rgba(255, 80, 100, 0.12),
+      inset 0 -7px 0 rgba(0, 0, 0, 0.25);
+  }
+
+  /* ── Console text & labels on dark panel ────────────────────────── */
+  .console-label,
+  .console-status-bar,
+  .console-count-pill {
+    color: rgba(220, 160, 170, 0.75);
+  }
+
+  .console-status-bar {
+    border-color: rgba(200, 80, 100, 0.15);
+    background: rgba(25, 10, 12, 0.6);
+  }
+
+  .console-count-pill {
+    border-color: rgba(200, 80, 100, 0.25);
+    background: rgba(40, 15, 18, 0.5);
+  }
+
+  /* ── Console inputs & buttons ────────────────────────────────────── */
+  .console-search-input {
+    border-color: rgba(200, 80, 100, 0.3);
+    background: rgba(30, 12, 15, 0.7);
+    color: #e4e6f0;
+  }
+
+  .console-search-input::placeholder {
+    color: rgba(180, 100, 120, 0.55);
+  }
+
+  .console-search-input:focus,
+  .console-search-input:focus-visible {
+    border-color: rgba(240, 100, 130, 0.55);
+    background: rgba(40, 15, 20, 0.8);
+    box-shadow: 0 0 0 4px rgba(200, 50, 80, 0.18);
+  }
+
+  .console-go-button,
+  .console-reset-button {
+    border-color: rgba(200, 80, 100, 0.2);
+    background: rgba(50, 15, 20, 0.6);
+    color: #e4a0b0;
+  }
+
+  .console-go-button:hover,
+  .console-reset-button:hover {
+    background: rgba(80, 20, 30, 0.8);
+    color: #f0c0cc;
+  }
+
+  .console-mini-button {
+    border-color: rgba(200, 80, 100, 0.18);
+    background: rgba(40, 12, 16, 0.5);
+    color: rgba(220, 160, 170, 0.82);
+  }
+
+  .console-mini-button:hover,
+  .console-mini-button-active {
+    background: rgba(100, 30, 40, 0.55);
+    color: #f0c0cc;
+  }
+
+  .console-ai-button {
+    border-color: rgba(200, 80, 100, 0.22);
+    background: rgba(40, 12, 16, 0.55);
+    color: rgba(220, 160, 170, 0.85);
+  }
+
+  .console-ai-button:hover {
+    background: rgba(90, 25, 35, 0.65);
+    color: #f0c0cc;
+  }
+
+  /* ── History / candidate strips on dark console ──────────────────── */
+  .console-history-item,
+  .console-result-chip,
+  .scan-candidate-chip {
+    border-color: rgba(200, 80, 100, 0.18);
+    background: rgba(30, 10, 14, 0.75);
+    color: #c8cad8;
+  }
+
+  .console-history-item:hover,
+  .console-result-chip:hover,
+  .scan-candidate-chip:hover {
+    border-color: rgba(240, 100, 130, 0.4);
+    background: rgba(55, 18, 26, 0.8);
+  }
+
+  /* ── Pokopia device shell (frame around screen) ──────────────────── */
+  .pokopia-device {
+    border-color: rgba(200, 80, 100, 0.3);
+    background:
+      linear-gradient(180deg, rgba(255, 60, 90, 0.06), rgba(255, 60, 90, 0) 35%),
+      linear-gradient(135deg, #1f0d10 0%, #180a0d 48%, #110507 100%);
+    box-shadow:
+      0 28px 80px rgba(0, 0, 0, 0.65),
+      inset 0 -10px 0 rgba(0, 0, 0, 0.3);
+  }
+
+  .pokopia-screen {
+    border-color: rgba(55, 60, 85, 0.6);
+    background:
+      radial-gradient(ellipse at 25% 40%, rgba(30, 35, 60, 0.8), transparent 58%),
+      linear-gradient(90deg, rgba(16, 18, 32, 0.95), rgba(18, 20, 35, 0.95));
+    box-shadow:
+      inset 0 0 0 1px rgba(55, 62, 88, 0.3),
+      inset 0 -28px 70px rgba(0, 0, 0, 0.4);
+  }
+
+  /* ── Page-level strip / utility panels ──────────────────────────── */
+  .panel-card {
+    border-color: rgba(45, 50, 72, 0.7);
+    background:
+      linear-gradient(180deg, rgba(22, 24, 36, 0.94), rgba(18, 20, 32, 0.86)),
+      rgba(18, 20, 32, 0.95);
+    box-shadow:
+      0 12px 0 rgba(0, 0, 0, 0.25),
+      0 20px 35px rgba(0, 0, 0, 0.3);
+  }
+
+  .below-options-drawer,
+  .utility-dock {
+    border-color: rgba(45, 50, 72, 0.5);
+    background: rgba(16, 18, 28, 0.8);
+  }
+
+  .below-options-drawer summary {
+    border-color: rgba(200, 180, 50, 0.3);
+    background: rgba(40, 36, 8, 0.85);
+    color: #c8b040;
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+  }
+
+  .achievements-strip {
+    border-color: rgba(45, 50, 72, 0.5);
+    background: rgba(16, 18, 28, 0.8);
+  }
+
+  .achievement-chip {
+    border-color: rgba(55, 62, 88, 0.6);
+    background: rgba(22, 24, 36, 0.9);
+    color: #c8cad8;
+  }
+
+  .error-boundary-fallback {
+    border-color: rgba(45, 50, 72, 0.5);
+    background: rgba(16, 18, 27, 0.9);
+  }
 }

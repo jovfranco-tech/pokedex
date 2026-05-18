@@ -134,11 +134,18 @@ function scanCandidateSummaries(matches) {
   }))
 }
 
+/** Timeout for the vision API call — images can be large, so allow 20s */
+const VISION_FETCH_TIMEOUT_MS = 20_000
+
 async function identifyWithRealVision(file, index) {
+  const controller = new AbortController()
+  const timerId = globalThis.setTimeout(() => controller.abort(), VISION_FETCH_TIMEOUT_MS)
+
   try {
     const imageDataUrl = await fileToModelImageDataUrl(file)
     const response = await fetch('/api/identify-pokemon', {
       method: 'POST',
+      signal: controller.signal,
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         fileName: file.name,
@@ -164,8 +171,10 @@ async function identifyWithRealVision(file, index) {
 
     return payload
   } catch {
-    // Network failure (offline, DNS, timeout) — fall through to filename matching
+    // Network failure, AbortError (timeout), offline — fall through to filename matching
     return { networkError: true }
+  } finally {
+    globalThis.clearTimeout(timerId)
   }
 }
 

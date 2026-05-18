@@ -81,7 +81,7 @@
   place-items: center;
   padding: 18px;
   color: #8f96a7;
-  font-weight: 1000;
+  font-weight: var(--weight-black);
 }
 
 .assistant-dialogue {
@@ -233,7 +233,7 @@
   gap: 1rem;
   color: #9ba2b2;
   font-size: 0.74rem;
-  font-weight: 1000;
+  font-weight: var(--weight-black);
   text-transform: uppercase;
 }
 

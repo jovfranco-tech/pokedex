@@ -401,16 +401,29 @@ function formatAbilityName(name = '') {
   return abilityTranslations[name] ?? formatPokemonName(name)
 }
 
+/** Timeout in ms for individual PokéAPI fetch calls */
+const FETCH_TIMEOUT_MS = 8000
+
 /**
  * Fetch with one automatic retry on transient 5xx errors (500, 502, 503, 504).
  * Client errors (4xx) and network failures throw immediately.
+ * Each attempt has an 8-second AbortController timeout.
  */
 async function apiFetch(url, retries = 1) {
   for (let attempt = 0; attempt <= retries; attempt++) {
-    const response = await fetch(url) // let network errors propagate
-    if (response.ok) return response
-    const isTransient = response.status >= 500
-    if (!isTransient || attempt === retries) throw new Error(`HTTP ${response.status}`)
+    const controller = new AbortController()
+    const timerId = globalThis.setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
+    try {
+      const response = await fetch(url, { signal: controller.signal })
+      if (response.ok) return response
+      const isTransient = response.status >= 500
+      if (!isTransient || attempt === retries) throw new Error(`HTTP ${response.status}`)
+    } catch (err) {
+      if (err.name === 'AbortError') throw new Error(`Timeout fetching ${url}`, { cause: err })
+      if (attempt === retries) throw err
+    } finally {
+      globalThis.clearTimeout(timerId)
+    }
     await new Promise((r) => globalThis.setTimeout(r, 400 * (attempt + 1)))
   }
 }
