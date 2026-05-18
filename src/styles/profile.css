@@ -31,7 +31,7 @@
 
 .empty-profile p,
 .result-loading p {
-  color: #5f6475;
+  color: var(--ink-muted);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-weight: 900;
 }
@@ -57,9 +57,9 @@
 .empty-action-pills span {
   border: 1px solid #e6eaf2;
   border-radius: 999px;
-  background: #fbfcff;
+  background: var(--surface-raised);
   padding: 0.45rem 0.8rem;
-  color: #5f6475;
+  color: var(--ink-muted);
   font-size: 0.9rem;
   font-weight: 900;
 }
@@ -88,14 +88,14 @@
 }
 
 .profile-number {
-  color: #6e7282;
+  color: var(--ink-secondary);
   font-size: 0.9rem;
   font-weight: var(--weight-black);
 }
 
 .profile-title-group h2 {
   margin: 0.15rem 0 0.5rem;
-  color: #252637;
+  color: var(--ink);
   font-size: clamp(2.2rem, 7vw, 3.1rem);
   font-weight: var(--weight-black);
   line-height: 0.95;
@@ -222,14 +222,14 @@
   min-height: 58px;
   border: 1px solid #e8ecf3;
   border-radius: 10px;
-  background: #f7f9fc;
+  background: var(--surface-raised);
   padding: 0.65rem 0.7rem;
   text-align: left;
   box-shadow: inset 0 -2px 0 rgba(32, 33, 42, 0.03);
 }
 
 .profile-mini-stat dt {
-  color: #6e7282;
+  color: var(--ink-secondary);
   font-size: 0.7rem;
   font-weight: var(--weight-black);
   letter-spacing: 0.06em;
@@ -238,7 +238,7 @@
 
 .profile-mini-stat dd {
   margin: 0.15rem 0 0;
-  color: #2b2d3d;
+  color: var(--ink);
   font-size: 1.08rem;
   font-weight: var(--weight-black);
 }
@@ -250,7 +250,7 @@
   gap: 0.35rem;
   border-color: rgba(255, 214, 67, 0.82);
   background: #fff;
-  color: #5f6475;
+  color: var(--ink-muted);
   font-weight: var(--weight-black);
   transition:
     transform 180ms ease,
@@ -284,9 +284,9 @@
   border: 1px solid #e7ebf2;
   border-left: 4px solid #ffd643;
   border-radius: 9px;
-  background: #fbfcff;
+  background: var(--surface-raised);
   padding: 0.95rem 1rem;
-  color: #5f6475;
+  color: var(--ink-muted);
   font-size: 1rem;
   font-weight: 800;
   line-height: 1.65;
@@ -324,7 +324,7 @@
   gap: 0.35rem;
   border: 1px solid transparent;
   border-radius: 8px;
-  color: #5f6475;
+  color: var(--ink-muted);
   font-size: 0.88rem;
   font-weight: var(--weight-black);
   transition:
@@ -370,8 +370,8 @@
   place-items: center;
   border: 1px solid #eef1f6;
   border-radius: 18px;
-  background: #fbfcff;
-  color: #5f6475;
+  background: var(--surface-raised);
+  color: var(--ink-muted);
   font-weight: var(--weight-black);
 }
 
@@ -416,7 +416,7 @@
 }
 
 .kids-mode .profile-description {
-  color: #5f6677;
+  color: var(--ink-muted);
   font-size: 1.08rem;
 }
 
@@ -451,7 +451,7 @@
 
 .kids-section-label {
   margin-bottom: 6px;
-  color: #5f6475;
+  color: var(--ink-muted);
   font-size: 0.75rem;
   font-weight: var(--weight-black);
   letter-spacing: 0.06em;
@@ -491,7 +491,7 @@
 }
 
 .kids-evolution-note span {
-  color: #5f6475;
+  color: var(--ink-muted);
   font-weight: var(--weight-black);
   text-transform: uppercase;
   font-size: 0.72rem;
@@ -516,7 +516,7 @@
 }
 
 .stat-row > span:first-child {
-  color: #5f6475;
+  color: var(--ink-muted);
   font-size: 0.78rem;
   font-weight: var(--weight-black);
   text-transform: uppercase;
@@ -560,7 +560,7 @@
   align-items: center;
   gap: 0.35rem;
   margin-bottom: 0.5rem;
-  color: #5f6475;
+  color: var(--ink-muted);
   font-size: 0.76rem;
   font-weight: var(--weight-black);
   letter-spacing: 0.06em;
@@ -601,14 +601,14 @@
   border-radius: 999px;
   background: #f5f7fb;
   padding: 0.28rem 0.55rem;
-  color: #5f6475;
+  color: var(--ink-muted);
   font-size: 0.8rem;
   font-weight: var(--weight-black);
 }
 
 .chip-cloud p,
 .profile-muted {
-  color: #5f6475;
+  color: var(--ink-muted);
   font-size: 0.9rem;
   font-weight: 850;
 }
@@ -736,7 +736,7 @@
 }
 
 .profile-number {
-  color: #6e7282;
+  color: var(--ink-secondary);
   font-size: 0.86rem;
 }
 
@@ -776,7 +776,7 @@
 .profile-description {
   margin: 12px 0;
   border-radius: 14px;
-  background: #fbfcff;
+  background: var(--surface-raised);
   line-height: 1.55;
 }
 
@@ -838,7 +838,7 @@
   }
 
   .empty-profile .empty-tagline {
-    font-size: 1.15rem !important;
+    font-size: 1.15rem; /* same specificity as base rule — later source order wins */
   }
 
   .empty-action-pills {
@@ -1036,7 +1036,7 @@
   min-height: 40px;
   border: 1px solid #dfe5ee;
   border-radius: 10px;
-  background: #f7f9fc;
+  background: var(--surface-raised);
   color: #667085;
   font-size: 0.78rem;
   font-weight: var(--weight-black);
@@ -1170,7 +1170,7 @@
 }
 
 .matchup-row > span {
-  color: #5f6475;
+  color: var(--ink-muted);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.74rem;
   font-weight: 900;
@@ -1233,7 +1233,7 @@
 
 .game-generation-group .chip-cloud span {
   background: #f6f8fb;
-  color: #5f6475;
+  color: var(--ink-muted);
 }
 
 .stage-data-row {
@@ -1243,12 +1243,12 @@
   gap: 12px;
   border: 1px solid #eef1f6;
   border-radius: 12px;
-  background: #fbfcff;
+  background: var(--surface-raised);
   padding: 0.52rem 0.7rem;
 }
 
 .stage-data-row span {
-  color: #6e7282;
+  color: var(--ink-secondary);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.76rem;
   font-weight: var(--weight-black);
@@ -1443,7 +1443,7 @@
   margin: -4px 0 10px;
   font-size: 0.85rem;
   font-weight: 900;
-  color: #5f6475;
+  color: var(--ink-muted);
 }
 
 .profile-feedback-btn {
@@ -1454,8 +1454,8 @@
   height: 44px;
   border: 1px solid #e8ecf3;
   border-radius: 8px;
-  background: #f7f9fc;
-  color: #5f6475;
+  background: var(--surface-raised);
+  color: var(--ink-muted);
   transition: all 160ms ease;
 }
 
@@ -1482,7 +1482,7 @@
 }
 
 .evolution-arrow {
-  color: #6e7282;
+  color: var(--ink-secondary);
   font-weight: 900;
 }
 

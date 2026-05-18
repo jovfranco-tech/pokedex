@@ -50,8 +50,9 @@
     color: #8a8e9e;
   }
 
-  .empty-tagline {
-    color: #c09030 !important;
+  /* Higher specificity beats .empty-profile .empty-tagline (0,2,0) from profile.css */
+  .empty-profile .empty-tagline {
+    color: #c09030;
   }
 
   .empty-action-pills span {
@@ -324,8 +325,9 @@
   :root {
     --ink-strong:  #e4e6f0;
     --ink:         #c8cad8;
-    --ink-muted:   #8a8e9e;
-    --ink-faint:   #5a5e70;
+    --ink-muted:     #8a8e9e;
+    --ink-secondary: #7a7e90;
+    --ink-faint:     #5a5e70;
     --surface:        #12141e;
     --surface-alt:    #0f1117;
     --surface-raised: #1a1c28;

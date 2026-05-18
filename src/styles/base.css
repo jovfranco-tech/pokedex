@@ -6,8 +6,9 @@
   /* Colors — text */
   --ink-strong:  #16171c;
   --ink:         #252637;
-  --ink-muted:   #5f6475;
-  --ink-faint:   #9aa2b4;
+  --ink-muted:     #5f6475;
+  --ink-secondary: #6e7282;
+  --ink-faint:     #9aa2b4;
 
   /* Colors — brand */
   --brand:       #f12122;
@@ -284,7 +285,7 @@ button {
   border-radius: 8px;
   background: #ffd643;
   padding: 0.65rem 0.85rem;
-  color: #16171c;
+  color: var(--ink-strong);
   font-weight: 900;
   box-shadow: 0 4px 0 #16171c;
 }
