@@ -27,9 +27,10 @@ export function CollectionStrip({ collection = [], onSelect }) {
             key={pokemon.apiName ?? pokemon.name}
             type="button"
             className={`collection-card ${pokemon.capturedAt ? 'collection-card-captured' : ''}`}
+            aria-label={`Abrir ${pokemon.name}${pokemon.capturedAt ? ' (capturado)' : ''}`}
             onClick={() => onSelect?.(pokemon)}
           >
-            <img src={pokemon.sprite} alt="" loading="lazy" />
+            <img src={pokemon.sprite} alt="" loading="lazy" aria-hidden="true" />
             <span>
               <strong>{pokemon.name}</strong>
               <small>{pokemon.displayNumber ?? formatPokemonNumber(pokemon.speciesId ?? pokemon.id)}</small>

@@ -78,6 +78,25 @@ body::before {
   pointer-events: none;
 }
 
+/* ── Skip-to-content link (a11y) ────────────────────────────────────────── */
+.skip-to-content {
+  position: absolute;
+  top: -100%;
+  left: var(--sp-4);
+  z-index: 9999;
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--brand);
+  color: #fff;
+  font-weight: var(--weight-black);
+  font-size: 0.9rem;
+  border-radius: 0 0 var(--r-sm) var(--r-sm);
+  text-decoration: none;
+  transition: top 0.15s;
+}
+.skip-to-content:focus {
+  top: 0;
+}
+
 .pokedex-stage {
   display: grid;
   align-items: start;

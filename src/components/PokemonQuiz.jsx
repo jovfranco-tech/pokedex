@@ -62,11 +62,12 @@ export function PokemonQuiz({ index, onClose }) {
         )}
       </div>
 
-      <div className="quiz-options">
+      <div className="quiz-options" role="group" aria-label="Opciones de respuesta">
         {options.map((option) => {
           let cls = 'quiz-option'
+          let ariaCurrent
           if (revealed) {
-            if (option.id === pokemon.id) cls += ' quiz-option-correct'
+            if (option.id === pokemon.id) { cls += ' quiz-option-correct'; ariaCurrent = 'true' }
             else if (option.id === selected.id) cls += ' quiz-option-wrong'
             else cls += ' quiz-option-dim'
           }
@@ -75,6 +76,7 @@ export function PokemonQuiz({ index, onClose }) {
               key={option.id}
               type="button"
               className={cls}
+              aria-current={ariaCurrent}
               onClick={() => handleAnswer(option)}
               disabled={revealed}
             >
@@ -85,7 +87,7 @@ export function PokemonQuiz({ index, onClose }) {
       </div>
 
       {revealed && (
-        <div className="quiz-result">
+        <div className="quiz-result" role="status" aria-live="polite">
           <p className="quiz-result-text">
             {correct ? '¡Correcto! 🎉' : `Era ${pokemon.displayName} 😅`}
           </p>

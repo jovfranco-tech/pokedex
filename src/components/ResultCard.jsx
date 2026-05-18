@@ -96,6 +96,7 @@ function buildQuickSummary(result) {
 export function ResultCard({
   collectionEntry,
   feedback,
+  id,
   isFavorite,
   isKidsMode,
   isSpeaking,
@@ -173,7 +174,10 @@ export function ResultCard({
   return (
     <m.section
       {...motionProps}
+      id={id}
       className="pokemon-profile-card"
+      aria-label={`Resultado: ${result.name}`}
+      aria-live="polite"
       style={getPokemonTypeTheme(result.type)}
     >
       <div className="profile-hero">
@@ -446,21 +450,31 @@ function KidsInfoTab({ result }) {
 }
 
 function StatsPanel({ stats = [] }) {
+  const prefersReducedMotion = useReducedMotion()
   if (!stats.length) {
     return <p className="profile-muted">Stats no disponibles.</p>
   }
 
   return (
-    <div className="stats-list">
-      {stats.map((stat) => (
-        <div key={stat.key} className="stat-row">
-          <span>{stat.name}</span>
-          <span className="stat-track">
-            <span style={{ width: `${Math.min(100, (stat.value / 180) * 100)}%` }} />
-          </span>
-          <strong>{stat.value}</strong>
-        </div>
-      ))}
+    <div className="stats-list" role="list" aria-label="Estadísticas base">
+      {stats.map((stat, i) => {
+        const pct = Math.min(100, (stat.value / 180) * 100)
+        return (
+          <div key={stat.key} className="stat-row" role="listitem">
+            <span>{stat.name}</span>
+            <span className="stat-track" aria-hidden="true">
+              <m.span
+                initial={{ width: 0 }}
+                animate={{ width: `${pct}%` }}
+                transition={prefersReducedMotion
+                  ? { duration: 0 }
+                  : { duration: 0.5, delay: i * 0.06, ease: 'easeOut' }}
+              />
+            </span>
+            <strong aria-label={`${stat.value} puntos`}>{stat.value}</strong>
+          </div>
+        )
+      })}
     </div>
   )
 }

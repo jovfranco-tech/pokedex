@@ -20,7 +20,7 @@ export class ErrorBoundary extends Component {
         <div className="error-boundary-fallback">
           <span>🙈</span>
           <p>{this.props.message ?? 'Algo salió mal aquí.'}</p>
-          <button type="button" onClick={() => this.setState({ hasError: false })}>
+          <button type="button" aria-label="Reintentar" onClick={() => this.setState({ hasError: false })}>
             Reintentar
           </button>
         </div>

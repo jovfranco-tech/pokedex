@@ -368,6 +368,7 @@ function App() {
 
   return (
     <LazyMotion features={loadMotionFeatures}>
+    <a href="#main-result" className="skip-to-content">Saltar al resultado</a>
     <main className={`pokedex-stage min-h-svh px-2 py-2 text-dex-ink sm:px-5 sm:py-4 ${isKidsMode ? 'kids-mode' : ''}`}>
       <DeviceShell>
         <section className="pokedex-console-card">
@@ -383,8 +384,8 @@ function App() {
 
           <div className="console-quick-actions" aria-label="Controles rápidos">
             {canInstall && !isInstalled && (
-              <button type="button" className="console-mini-button" onClick={promptInstall}>
-                <Download className="size-4" />
+              <button type="button" className="console-mini-button" aria-label="Instalar aplicación" onClick={promptInstall}>
+                <Download className="size-4" aria-hidden="true" />
                 Instalar
               </button>
             )}
@@ -400,19 +401,21 @@ function App() {
             <button
               type="button"
               className={`console-mini-button ${isKidsMode ? 'console-mini-button-active' : ''}`}
+              aria-label={isKidsMode ? 'Desactivar modo niños' : 'Activar modo niños'}
+              aria-pressed={isKidsMode}
               onClick={() => setIsKidsMode((value) => !value)}
             >
-              <Sparkles className="size-4" />
+              <Sparkles className="size-4" aria-hidden="true" />
               Niños
             </button>
           </div>
 
-          <div className="console-status-bar">
-            <span className={`console-led console-led-red ${isScanning ? 'console-led-active' : ''}`} />
-            <span className={`console-led console-led-yellow ${isScanning ? 'console-led-active' : ''}`} />
-            <span className={`console-led console-led-green ${isScanning ? 'console-led-active' : ''}`} />
+          <div className="console-status-bar" role="status" aria-live="polite" aria-atomic="true">
+            <span className={`console-led console-led-red ${isScanning ? 'console-led-active' : ''}`} aria-hidden="true" />
+            <span className={`console-led console-led-yellow ${isScanning ? 'console-led-active' : ''}`} aria-hidden="true" />
+            <span className={`console-led console-led-green ${isScanning ? 'console-led-active' : ''}`} aria-hidden="true" />
             <span className="ml-auto flex items-center gap-2">
-              <CircleDot className="size-3 fill-white/70 text-white/70" />
+              <CircleDot className="size-3 fill-white/70 text-white/70" aria-hidden="true" />
               {isScanning ? 'Analizando...' : result ? 'Identificado' : lastScanLabel}
             </span>
           </div>
@@ -477,6 +480,7 @@ function App() {
         <AnimatePresence mode="wait">
           <ErrorBoundary message="No se pudo mostrar el Pokémon. Prueba buscando otro.">
             <ResultCard
+              id="main-result"
               collectionEntry={collectionEntry}
               feedback={result?.id ? scanFeedback[result.id] : null}
               key={result?.apiName ?? result?.id ?? (isScanning ? 'scanning' : 'empty')}

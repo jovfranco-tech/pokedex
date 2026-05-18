@@ -1,3 +1,4 @@
+import { m, useReducedMotion } from 'framer-motion'
 import { Loader2, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { formatPokemonNumber } from '../utils/formatPokemonNumber.js'
@@ -8,6 +9,7 @@ const GENERATIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 export function PokemonSearch({ index, isLoading, onSelect, variant = 'panel' }) {
   const [query, setQuery] = useState('')
   const [filterGen, setFilterGen] = useState(0)
+  const prefersReducedMotion = useReducedMotion()
 
   const filtered = useMemo(
     () => (filterGen ? index.filter((p) => p.generation === filterGen) : index),
@@ -46,10 +48,12 @@ export function PokemonSearch({ index, isLoading, onSelect, variant = 'panel' })
           </button>
         </form>
 
-        <div className="console-gen-filters">
+        <div className="console-gen-filters" role="group" aria-label="Filtrar por generación">
           <button
             type="button"
             className={`console-gen-chip ${filterGen === 0 ? 'console-gen-chip-active' : ''}`}
+            aria-pressed={filterGen === 0}
+            aria-label="Todas las generaciones"
             onClick={() => setFilterGen(0)}
           >
             Todos
@@ -59,6 +63,8 @@ export function PokemonSearch({ index, isLoading, onSelect, variant = 'panel' })
               key={gen}
               type="button"
               className={`console-gen-chip ${filterGen === gen ? 'console-gen-chip-active' : ''}`}
+              aria-pressed={filterGen === gen}
+              aria-label={`Generación ${gen}`}
               onClick={() => setFilterGen(filterGen === gen ? 0 : gen)}
             >
               {gen}
@@ -67,19 +73,25 @@ export function PokemonSearch({ index, isLoading, onSelect, variant = 'panel' })
         </div>
 
         {(query || filterGen > 0) && (
-          <div className="console-search-results">
+          <div className="console-search-results" role="listbox" aria-label="Resultados de búsqueda">
             {matches.length ? (
-              matches.slice(0, 5).map((pokemon) => (
-                <button
+              matches.slice(0, 5).map((pokemon, i) => (
+                <m.button
                   key={`${pokemon.name}-${pokemon.id}`}
                   type="button"
+                  role="option"
+                  aria-selected="false"
+                  aria-label={`${pokemon.displayName}, ${pokemon.displayNumber ?? formatPokemonNumber(pokemon.id)}`}
                   onClick={() => selectPokemon(pokemon)}
                   className="console-result-chip"
+                  initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.18, delay: i * 0.04 }}
                 >
-                  <img src={pokemon.sprite} alt="" className="size-7 object-contain" loading="lazy" />
+                  <img src={pokemon.sprite} alt="" className="size-7 object-contain" loading="lazy" aria-hidden="true" />
                   <span className="truncate">{pokemon.displayName}</span>
                   <span className="text-white/45">{pokemon.displayNumber ?? formatPokemonNumber(pokemon.id)}</span>
-                </button>
+                </m.button>
               ))
             ) : (
               <p className="console-help-text">No encontré ese Pokémon. Prueba con nombre en inglés o número.</p>
@@ -119,10 +131,11 @@ export function PokemonSearch({ index, isLoading, onSelect, variant = 'panel' })
           <button
             key={`${pokemon.name}-${pokemon.id}`}
             type="button"
+            aria-label={`Buscar ${pokemon.displayName}`}
             onClick={() => selectPokemon(pokemon)}
             className="pokopia-cell flex items-center gap-2 p-2 text-left"
           >
-            <img src={pokemon.sprite} alt="" className="size-12 shrink-0 object-contain" loading="lazy" />
+            <img src={pokemon.sprite} alt="" className="size-12 shrink-0 object-contain" loading="lazy" aria-hidden="true" />
             <span className="min-w-0">
               <span className="block text-xs font-black text-dex-ink/45">
                 {pokemon.displayNumber ?? formatPokemonNumber(pokemon.id)}

@@ -161,8 +161,8 @@ describe('App — orchestration', () => {
     const input = screen.getByPlaceholderText(/pikachu/i)
     await user.type(input, 'pikachu')
 
-    // Click the matching result
-    const resultBtn = await screen.findByRole('button', { name: /pikachu/i })
+    // Click the matching result (search results use role="option")
+    const resultBtn = await screen.findByRole('option', { name: /pikachu/i })
     await user.click(resultBtn)
 
     // fetchPokemonDetails should have been called
@@ -191,7 +191,7 @@ describe('App — orchestration', () => {
     const input = screen.getByPlaceholderText(/pikachu/i)
     await user.type(input, 'pikachu')
 
-    const resultBtn = await screen.findByRole('button', { name: /pikachu/i })
+    const resultBtn = await screen.findByRole('option', { name: /pikachu/i })
     await user.click(resultBtn)
 
     // An error message should appear somewhere in the console area
@@ -212,7 +212,7 @@ describe('App — orchestration', () => {
     const input = screen.getByPlaceholderText(/pikachu/i)
     await user.type(input, 'pikachu')
 
-    const resultBtn = await screen.findByRole('button', { name: /pikachu/i })
+    const resultBtn = await screen.findByRole('option', { name: /pikachu/i })
     await user.click(resultBtn)
 
     await waitFor(() => expect(fetchPokemonDetails).toHaveBeenCalled())

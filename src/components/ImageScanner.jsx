@@ -105,8 +105,8 @@ export function ImageScanner({
           </div>
           <div className="console-camera-scanline" aria-hidden="true" />
           <div className="console-camera-controls">
-            <button type="button" className="console-capture-button" onClick={handleCaptureFrame}>
-              <Camera className="size-4" />
+            <button type="button" className="console-capture-button" onClick={handleCaptureFrame} aria-label="Capturar fotograma">
+              <Camera className="size-4" aria-hidden="true" />
               Capturar
             </button>
             <button type="button" className="console-close-camera-button" onClick={stopCamera} aria-label="Cerrar cámara">
@@ -146,8 +146,9 @@ export function ImageScanner({
           type="button"
           onClick={handleStartCamera}
           className="console-action-button console-action-dark"
+          aria-label="Abrir cámara para escanear Pokémon"
         >
-          <Camera className="size-5" />
+          <Camera className="size-5" aria-hidden="true" />
           Cámara
         </button>
 
@@ -155,8 +156,9 @@ export function ImageScanner({
           type="button"
           onClick={() => galleryInputRef.current?.click()}
           className="console-action-button console-action-light"
+          aria-label="Subir imagen desde tu dispositivo"
         >
-          <UploadCloud className="size-5" />
+          <UploadCloud className="size-5" aria-hidden="true" />
           Subir
         </button>
       </div>

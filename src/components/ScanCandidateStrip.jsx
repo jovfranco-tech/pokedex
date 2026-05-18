@@ -18,9 +18,10 @@ export function ScanCandidateStrip({ candidates = [], onSelect }) {
             key={`${pokemon.apiName ?? pokemon.name}-${pokemon.id}`}
             type="button"
             className="scan-candidate-card"
+            aria-label={`Seleccionar ${pokemon.name} como resultado`}
             onClick={() => onSelect?.(pokemon)}
           >
-            <img src={pokemon.sprite} alt="" loading="lazy" />
+            <img src={pokemon.sprite} alt="" loading="lazy" aria-hidden="true" />
             <span>
               <strong>{pokemon.name}</strong>
               <small>
