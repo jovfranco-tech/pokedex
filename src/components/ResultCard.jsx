@@ -87,7 +87,7 @@ function getCategoryLabel(result) {
 }
 
 function buildQuickSummary(result) {
-  const types = result.type.map(typeLabel).join(' / ')
+  const types = (result.type ?? []).map(typeLabel).join(' / ')
   const stat = result.stats?.slice().sort((a, b) => b.value - a.value)[0]
   const statText = stat ? ` Su stat más alto es ${stat.name} (${stat.value}).` : ''
   return `${result.name} es un Pokémon ${getCategoryLabel(result)} de tipo ${types}, Gen. ${result.generation}.${statText}`
@@ -182,7 +182,7 @@ export function ResultCard({
           <h2>{result.name}</h2>
           {result.formLabel && <span className="profile-form-badge">{result.formLabel}</span>}
           <div className="flex flex-wrap gap-2">
-            {result.type.map((type) => (
+            {(result.type ?? []).map((type) => (
               <TypeBadge key={type} type={type} />
             ))}
             {result.isLegendary && <span className="profile-legendary-badge">Legendario</span>}
@@ -589,7 +589,7 @@ function StageTab({ result }) {
       </div>
       <div className="stage-data-row">
         <span>Movimientos</span>
-        <strong>{result.attacks.slice(0, 4).join(', ')}</strong>
+        <strong>{(result.attacks ?? []).slice(0, 4).join(', ')}</strong>
       </div>
     </div>
   )

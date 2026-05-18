@@ -807,6 +807,47 @@
   .empty-profile,
   .result-loading {
     min-height: 500px;
+    gap: 18px;
+  }
+
+  /* Desktop empty state — scale up visual content to fill the right pane */
+  .empty-profile {
+    background:
+      radial-gradient(circle at 50% 32%, rgba(238, 43, 33, 0.14), transparent 42%),
+      radial-gradient(circle at 78% 80%, rgba(255, 214, 67, 0.16), transparent 36%),
+      radial-gradient(circle at 18% 78%, rgba(54, 62, 168, 0.07), transparent 30%),
+      rgba(255, 255, 255, 0.94);
+  }
+
+  .empty-profile .pokedex-logo-large {
+    width: 148px;
+    height: 148px;
+    box-shadow:
+      0 16px 40px rgba(241, 18, 34, 0.22),
+      inset 0 0 0 5px rgba(255, 255, 255, 0.85);
+  }
+
+  .empty-profile .pokedex-logo-large::after {
+    width: 40px;
+    height: 40px;
+  }
+
+  .empty-profile h2 {
+    font-size: clamp(3rem, 5.5vw, 4.6rem);
+  }
+
+  .empty-profile .empty-tagline {
+    font-size: 1.15rem !important;
+  }
+
+  .empty-action-pills {
+    gap: 12px;
+    margin-top: 18px;
+  }
+
+  .empty-action-pills span {
+    padding: 0.65rem 1.2rem;
+    font-size: 1rem;
   }
 
   .pokemon-profile-card {
@@ -815,6 +856,18 @@
 
   .profile-info-grid {
     grid-template-columns: minmax(0, 1fr) minmax(220px, 260px);
+  }
+}
+
+@media (min-width: 1200px) {
+  .empty-profile .pokedex-logo-large {
+    width: 180px;
+    height: 180px;
+  }
+
+  .empty-profile .pokedex-logo-large::after {
+    width: 48px;
+    height: 48px;
   }
 }
 
