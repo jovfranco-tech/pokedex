@@ -80,6 +80,11 @@ export default defineConfig(({ mode }) => {
       port: 4174,
       ...(https ? { https } : {}),
     },
+    test: {
+      environment: 'jsdom',
+      setupFiles: ['./src/test/setup.js'],
+      globals: true,
+    },
     build: {
       rollupOptions: {
         output: {

@@ -15,6 +15,7 @@
     "eval:vision": "node scripts/vision-eval-samples.mjs",
     "eval:real-world": "node scripts/vision-eval-real-world.mjs",
     "test": "node --test src/utils/__tests__/*.test.mjs",
+    "test:components": "vitest run src/components/__tests__",
     "test:knowledge": "node scripts/pokemon-knowledge-smoke.mjs",
     "build": "vite build",
     "desktop:dev": "npm run build && electron .",
@@ -33,6 +34,10 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
@@ -43,10 +48,12 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.5.0",
+    "jsdom": "^29.1.1",
     "postcss": "^8.5.12",
     "tailwindcss": "^3.4.17",
     "vite": "^8.0.10",
-    "vite-plugin-pwa": "^1.2.0"
+    "vite-plugin-pwa": "^1.2.0",
+    "vitest": "^4.1.6"
   },
   "build": {
     "appId": "com.jovan.pokedexia",

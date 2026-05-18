@@ -1,4 +1,6 @@
-import { AnimatePresence, LazyMotion, domAnimation, m, useReducedMotion } from 'framer-motion'
+import { AnimatePresence, LazyMotion, m, useReducedMotion } from 'framer-motion'
+
+const loadMotionFeatures = () => import('framer-motion').then((mod) => mod.domAnimation)
 import { Bot, CircleDot, Download, Gamepad2, Mic, Sparkles, Volume2, X } from 'lucide-react'
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { CollectionStrip } from './components/CollectionStrip.jsx'
@@ -389,7 +391,7 @@ function App() {
   }
 
   return (
-    <LazyMotion features={domAnimation}>
+    <LazyMotion features={loadMotionFeatures}>
     <main className={`pokedex-stage min-h-svh px-2 py-2 text-dex-ink sm:px-5 sm:py-4 ${isKidsMode ? 'kids-mode' : ''}`}>
       <DeviceShell>
         <section className="pokedex-console-card">
