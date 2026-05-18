@@ -237,10 +237,11 @@
   color: rgba(255, 255, 255, 0.55);
 }
 
-.console-search-input:focus {
+.console-search-input:focus,
+.console-search-input:focus-visible {
   border-color: rgba(255, 255, 255, 0.72);
   background: rgba(255, 255, 255, 0.24);
-  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.11);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.25);
 }
 
 .console-go-button,
@@ -985,6 +986,11 @@
   color: #252637;
   font-size: 0.85rem;
   font-weight: 900;
+}
+
+.compare-search-row:focus-within {
+  border-color: rgba(47, 140, 255, 0.5);
+  box-shadow: 0 0 0 3px rgba(47, 140, 255, 0.18);
 }
 
 .compare-results {

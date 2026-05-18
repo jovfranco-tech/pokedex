@@ -371,11 +371,11 @@ button {
   box-shadow: none;
 }
 
-.dex-button:focus {
+.dex-button:focus-visible {
   outline: none;
   box-shadow:
     0 5px 0 #16171c,
-    0 0 0 4px rgba(47, 140, 255, 0.24);
+    0 0 0 4px rgba(47, 140, 255, 0.35);
 }
 
 .dex-button-primary {

@@ -36,6 +36,15 @@
   font-weight: 900;
 }
 
+.empty-tagline {
+  margin-top: -4px;
+  color: #9a6c00 !important;
+  font-family: Nunito, Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: 1.05rem !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.02em;
+}
+
 .empty-action-pills {
   display: flex;
   flex-wrap: wrap;
@@ -154,7 +163,7 @@
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.9);
   padding: 0.2rem 0.45rem;
-  color: #d89900;
+  color: #9a6c00;
   font-size: 0.76rem;
   font-weight: 1000;
 }
@@ -388,7 +397,7 @@
 
 .kids-info-hero svg {
   flex: 0 0 auto;
-  color: #d89900;
+  color: #9a6c00;
 }
 
 .kids-info-grid {

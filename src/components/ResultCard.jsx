@@ -150,6 +150,7 @@ export function ResultCard({
         <div className="pokedex-logo-large empty-pokeball" aria-hidden="true" />
         <h2>POKÉDEX IA</h2>
         <p>Generaciones I - IX · {pokemonTotal} Pokémon</p>
+        <p className="empty-tagline">¿Cuál encontrarás hoy?</p>
         <div className="empty-action-pills">
           <span>Escanear imagen</span>
           <span>Buscar por nombre</span>

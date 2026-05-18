@@ -1,0 +1,322 @@
+@media (prefers-color-scheme: dark) {
+  /* ── Page background ─────────────────────────────────────────── */
+  :root {
+    color: #e4e6f0;
+    background: #0f1117;
+  }
+
+  body {
+    background:
+      radial-gradient(circle at 50% 0%, rgba(30, 32, 48, 0.92), transparent 30%),
+      linear-gradient(180deg, #0d1020 0 31%, #0f1219 31% 63%, #0d1018 63% 78%, #0f1117 78% 100%),
+      repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 34px),
+      #0f1117;
+  }
+
+  body::before {
+    background:
+      linear-gradient(90deg, transparent 0 5%, rgba(255, 255, 255, 0.03) 5% 95%, transparent 95%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0));
+  }
+
+  /* ── Profile / result card ───────────────────────────────────── */
+  .pokemon-profile-card {
+    border-color: rgba(55, 60, 85, 0.7);
+    background:
+      radial-gradient(circle at 82% 14%, color-mix(in srgb, var(--type-color, #f4d23c) 12%, transparent), transparent 24%),
+      radial-gradient(circle at 16% 0%, color-mix(in srgb, var(--type-color-2, #f4d23c) 7%, transparent), transparent 28%),
+      rgba(18, 20, 30, 0.97);
+    box-shadow:
+      0 18px 44px rgba(0, 0, 0, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  .empty-profile {
+    background:
+      radial-gradient(circle at 50% 38%, rgba(200, 40, 30, 0.08), transparent 30%),
+      radial-gradient(circle at 70% 70%, rgba(255, 214, 67, 0.07), transparent 30%),
+      rgba(18, 20, 30, 0.97);
+  }
+
+  /* ── Primary text in card ────────────────────────────────────── */
+  .profile-title-group h2,
+  .empty-profile h2,
+  .result-loading h2 {
+    color: #e4e6f0;
+  }
+
+  .empty-profile p,
+  .result-loading p {
+    color: #8a8e9e;
+  }
+
+  .empty-tagline {
+    color: #c09030 !important;
+  }
+
+  .empty-action-pills span {
+    border-color: rgba(55, 62, 88, 0.8);
+    background: rgba(26, 29, 42, 0.9);
+    color: #8a8e9e;
+  }
+
+  /* ── Muted labels → lighter in dark ─────────────────────────── */
+  .profile-number,
+  .profile-mini-stat dt,
+  .kids-section-label,
+  .kids-evolution-note span,
+  .stat-row > span:first-child,
+  .matchup-row > span,
+  .stage-data-row span,
+  .profile-note > span,
+  .matchup-group h3,
+  .game-debut-row span,
+  .profile-muted,
+  .profile-feedback-row,
+  .profile-feedback-btn,
+  .profile-vision-reason,
+  .stage-loading {
+    color: #8a8e9e;
+  }
+
+  .profile-tab {
+    color: #8a8e9e;
+  }
+
+  .profile-description {
+    color: #b0b4c4;
+    background: rgba(22, 25, 36, 0.9);
+    border-color: rgba(55, 62, 88, 0.6);
+    border-left-color: var(--type-color, #f4d23c);
+  }
+
+  /* ── Surfaces ────────────────────────────────────────────────── */
+  .profile-mini-stat,
+  .profile-sound-button {
+    border-color: rgba(50, 55, 78, 0.7);
+    background: rgba(22, 25, 36, 0.9);
+    box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.2);
+  }
+
+  .profile-sound-button {
+    color: #8a8e9e;
+  }
+
+  .profile-mini-stat dd {
+    color: #e0e2ee;
+  }
+
+  .profile-divider {
+    background: linear-gradient(90deg, transparent, rgba(55, 62, 88, 0.7) 10% 90%, transparent);
+  }
+
+  .profile-tabs {
+    border-color: rgba(45, 50, 72, 0.7);
+    background: rgba(14, 16, 24, 0.8);
+  }
+
+  .profile-tab-active {
+    background: rgba(24, 27, 40, 0.95);
+    color: #d8dae8;
+  }
+
+  .profile-note,
+  .matchup-group,
+  .games-panel {
+    border-color: rgba(45, 50, 72, 0.6);
+    background: rgba(20, 22, 33, 0.85);
+  }
+
+  .profile-note strong,
+  .game-debut-row strong {
+    color: #d8dae8;
+  }
+
+  .chip-cloud span {
+    border-color: rgba(50, 55, 78, 0.7);
+    background: rgba(22, 25, 36, 0.9);
+    color: #8a8e9e;
+  }
+
+  .stat-track {
+    background: rgba(40, 45, 65, 0.8);
+  }
+
+  .stat-row strong,
+  .stage-data-row strong {
+    color: #b0b4c4;
+  }
+
+  .profile-quick-summary {
+    border-color: rgba(47, 100, 200, 0.2);
+    background: linear-gradient(180deg, rgba(20, 24, 38, 0.9), rgba(18, 22, 34, 0.9));
+    color: #b0b4c4;
+  }
+
+  .profile-collection-button {
+    border-color: rgba(50, 55, 78, 0.7);
+    background: rgba(22, 25, 36, 0.9);
+    color: #8a8e9e;
+  }
+
+  .profile-collection-button:hover,
+  .profile-collection-button-active {
+    border-color: rgba(47, 140, 255, 0.4);
+    background: rgba(20, 40, 80, 0.6);
+    color: #70aaff;
+  }
+
+  .stage-loading {
+    border-color: rgba(45, 50, 72, 0.5);
+    background: rgba(18, 20, 30, 0.9);
+  }
+
+  .evolution-chain-row {
+    border-color: rgba(45, 50, 72, 0.6);
+    background: rgba(18, 20, 30, 0.9);
+  }
+
+  .evolution-chain-item span {
+    color: #9a9eb0;
+  }
+
+  .evolution-chain-item-current {
+    background: rgba(255, 214, 67, 0.12);
+  }
+
+  .game-debut-row {
+    border-color: color-mix(in srgb, var(--type-color, #f4d23c) 22%, rgba(45, 50, 72, 0.7));
+    background: color-mix(in srgb, var(--type-color, #f4d23c) 6%, rgba(18, 20, 30, 0.9));
+  }
+
+  .game-generation-group .chip-cloud span {
+    background: rgba(22, 25, 36, 0.9);
+    color: #8a8e9e;
+  }
+
+  .stage-data-row {
+    border-color: rgba(45, 50, 72, 0.5);
+    background: rgba(18, 20, 30, 0.9);
+  }
+
+  .profile-feedback-btn {
+    border-color: rgba(50, 55, 78, 0.7);
+    background: rgba(22, 25, 36, 0.9);
+  }
+
+  .error-boundary-fallback {
+    border-color: rgba(45, 50, 72, 0.5);
+    background: rgba(16, 18, 27, 0.9);
+  }
+
+  .error-boundary-fallback p {
+    color: #8a8e9e;
+  }
+
+  .error-boundary-fallback button {
+    border-color: rgba(50, 55, 78, 0.7);
+    background: rgba(22, 25, 36, 0.9);
+    color: #b0b4c4;
+  }
+
+  .kids-info-hero {
+    border-color: rgba(255, 214, 67, 0.22);
+    background:
+      radial-gradient(circle at 12% 10%, rgba(255, 214, 67, 0.1), transparent 38%),
+      rgba(20, 22, 32, 0.9);
+    color: #b0b4c4;
+  }
+
+  .kids-moves-list {
+    border-color: rgba(45, 50, 72, 0.5);
+    background: rgba(18, 20, 30, 0.9);
+  }
+
+  .kids-move-pill {
+    background: rgba(26, 29, 42, 0.9);
+    color: #c8cad8;
+  }
+
+  .kids-evolution-note {
+    border-color: rgba(45, 50, 72, 0.5);
+    background: rgba(18, 20, 30, 0.9);
+  }
+
+  .kids-evolution-note strong {
+    color: #c8cad8;
+  }
+
+  .kids-category-banner {
+    border-color: rgba(255, 214, 67, 0.3);
+    background: linear-gradient(135deg, rgba(28, 24, 10, 0.9), rgba(24, 20, 8, 0.9));
+    color: #d4a030;
+  }
+
+  .loading-scan-bar {
+    background: rgba(30, 24, 8, 0.9);
+    color: #ff6060;
+  }
+
+  .profile-vision-reason {
+    border-color: rgba(47, 100, 200, 0.2);
+    background: rgba(20, 30, 60, 0.4);
+    color: #7898c8;
+  }
+
+  .matchup-danger h3 { color: #f87171; }
+  .matchup-safe h3   { color: #4ade80; }
+  .matchup-power h3  { color: #60a5fa; }
+
+  /* ── Compare panel (white → dark) ───────────────────────────── */
+  .compare-search-row {
+    border-color: rgba(55, 62, 88, 0.7);
+    background: rgba(20, 22, 32, 0.95);
+    color: #8a8e9e;
+  }
+
+  .compare-search-row input {
+    color: #e0e2ee;
+  }
+
+  .compare-search-row:focus-within {
+    border-color: rgba(47, 140, 255, 0.45);
+    box-shadow: 0 0 0 3px rgba(47, 140, 255, 0.14);
+  }
+
+  .compare-results {
+    border-color: rgba(55, 62, 88, 0.7);
+    background: rgba(18, 20, 30, 0.98);
+    box-shadow: 0 16px 30px rgba(0, 0, 0, 0.5);
+  }
+
+  .compare-results button {
+    color: #d8dae8;
+  }
+
+  .compare-results button:hover {
+    background: rgba(30, 34, 52, 0.8);
+  }
+
+  /* ── Profile art card ────────────────────────────────────────── */
+  .profile-art-card {
+    border-color: rgba(50, 55, 78, 0.6);
+    background:
+      radial-gradient(circle at 54% 58%, color-mix(in srgb, var(--type-color, #f4d23c) 18%, transparent), transparent 45%),
+      linear-gradient(145deg, #1a1c28, #16182240 54%, color-mix(in srgb, var(--type-soft, #fff8cc) 8%, #16181e));
+  }
+
+  .profile-confidence {
+    background: rgba(18, 20, 30, 0.9);
+    border-color: rgba(154, 108, 0, 0.5);
+  }
+
+  .profile-favorite-button {
+    background: rgba(18, 20, 30, 0.9);
+    border-color: rgba(229, 83, 97, 0.3);
+  }
+
+  .profile-favorite-button:hover,
+  .profile-favorite-button-active {
+    background: rgba(60, 20, 28, 0.8);
+  }
+}
