@@ -135,33 +135,38 @@ function scanCandidateSummaries(matches) {
 }
 
 async function identifyWithRealVision(file, index) {
-  const imageDataUrl = await fileToModelImageDataUrl(file)
-  const response = await fetch('/api/identify-pokemon', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
-      fileName: file.name,
-      imageDataUrl,
-      detail: 'high',
-      candidates: index.map((pokemon) => ({
-        id: pokemon.id,
-        name: pokemon.name,
-        displayName: pokemon.displayName,
-      })),
-    }),
-  })
+  try {
+    const imageDataUrl = await fileToModelImageDataUrl(file)
+    const response = await fetch('/api/identify-pokemon', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        fileName: file.name,
+        imageDataUrl,
+        detail: 'high',
+        candidates: index.map((pokemon) => ({
+          id: pokemon.id,
+          name: pokemon.name,
+          displayName: pokemon.displayName,
+        })),
+      }),
+    })
 
-  const payload = await response.json().catch(() => ({}))
+    const payload = await response.json().catch(() => ({}))
 
-  if (!response.ok) {
-    return {
-      unavailable: payload.code === 'missing_openai_key',
-      error: payload.error ?? 'La IA visual no está disponible.',
-      status: response.status,
+    if (!response.ok) {
+      return {
+        unavailable: payload.code === 'missing_openai_key',
+        error: payload.error ?? 'La IA visual no está disponible.',
+        status: response.status,
+      }
     }
-  }
 
-  return payload
+    return payload
+  } catch {
+    // Network failure (offline, DNS, timeout) — fall through to filename matching
+    return { networkError: true }
+  }
 }
 
 async function identifyWithFileName(file, index) {
@@ -196,7 +201,7 @@ export async function identifyPokemonFromImage(file, indexOverride) {
 
   let result = null
 
-  if (aiResult && !aiResult.unavailable && !aiResult.error) {
+  if (aiResult && !aiResult.networkError && !aiResult.unavailable && !aiResult.error) {
     const candidates = findAiCandidateMatches(aiResult, index)
     const match = candidates[0]
     if (match) {
