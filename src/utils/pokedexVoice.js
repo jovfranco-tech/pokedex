@@ -223,7 +223,7 @@ export function speakSyncAndWait(text, options = {}) {
 
   const utterance = new SpeechSynthesisUtterance(message)
   utterance.lang   = 'es-MX'
-  utterance.rate   = options.rate   ?? 0.88
+  utterance.rate   = options.rate   ?? 1.0
   utterance.pitch  = options.pitch  ?? 0.55
   utterance.volume = options.volume ?? 1
 
