@@ -1,4 +1,3 @@
-import pokemonCatalog from '../data/pokemonFullCatalog.json'
 import { pokemonAliases } from '../data/pokemonAliases.js'
 import { getPokemonCategoryFlags } from '../data/pokemonCategories.js'
 import { buildTypeMatchups } from '../data/typeChart.js'
@@ -450,8 +449,13 @@ function withSearchFields(item) {
   }
 }
 
-function fallbackIndex() {
-  return pokemonCatalog
+let _catalogCache = null
+async function fallbackIndex() {
+  if (!_catalogCache) {
+    const mod = await import('../data/pokemonFullCatalog.json')
+    _catalogCache = mod.default
+  }
+  return _catalogCache
 }
 
 function readCachedIndex(expectedSignature) {
@@ -563,7 +567,7 @@ export async function loadPokemonIndex() {
       writeCachedIndex(indexItems, cacheSignature)
       return indexItems
     } catch {
-      return readCachedIndex() ?? fallbackIndex()
+      return readCachedIndex() ?? await fallbackIndex()
     }
   })()
 

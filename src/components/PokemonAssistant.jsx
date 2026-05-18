@@ -82,7 +82,7 @@ export function PokemonAssistant({ pokemon }) {
   useEffect(() => {
     if (isAutoSpeak && visibleAnswer && visibleAnswer === answer && autoSpokeRef.current !== answer) {
       autoSpokeRef.current = answer
-      speakPokedexLine(answer, { rate: 0.88, pitch: 0.62, withBeep: false })
+      speakPokedexLine(answer, { rate: 1.0, pitch: 0.62, withBeep: false })
     }
   }, [visibleAnswer, answer, isAutoSpeak])
 
@@ -109,7 +109,7 @@ export function PokemonAssistant({ pokemon }) {
   }
 
   function handleSpeak(text = answer) {
-    speakPokedexLine(text, { rate: 0.88, pitch: 0.62, withBeep: true })
+    speakPokedexLine(text, { rate: 1.0, pitch: 0.62, withBeep: true })
   }
 
   function handleVoiceQuestion() {

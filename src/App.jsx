@@ -16,7 +16,6 @@ import { ScanCandidateStrip } from './components/ScanCandidateStrip.jsx'
 import { ScanHistoryStrip } from './components/ScanHistoryStrip.jsx'
 import { useAchievements } from './hooks/useAchievements.js'
 import { useFocusTrap } from './hooks/useFocusTrap.js'
-import pokemonCatalog from './data/pokemonFullCatalog.json'
 import { useImagePreview } from './hooks/useImagePreview.js'
 import { useLocalStorage } from './hooks/useLocalStorage.js'
 import { usePwaInstall } from './hooks/usePwaInstall.js'
@@ -79,7 +78,7 @@ function App() {
     // Not awaited intentionally: speak() must fire synchronously from
     // the user-gesture call stack (iOS Safari requirement).
     speakPokedexLine(announcement, {
-      rate: 0.82, pitch: 0.1, volume: 1, withBeep: true,
+      rate: 1.0, pitch: 0.1, volume: 1, withBeep: true,
       onEnd: () => setIsSpeaking(false),
     })
   }
@@ -443,7 +442,7 @@ function App() {
 
           <div className="console-stack">
             <PokemonSearch
-              index={pokemonIndex.length ? pokemonIndex : pokemonCatalog}
+              index={pokemonIndex}
               isLoading={isIndexLoading}
               onSelect={handlePokemonSelected}
               variant="console"
@@ -541,7 +540,7 @@ function App() {
               </summary>
               <PokemonCompare
                 key={result?.apiName ?? result?.id ?? 'compare-empty'}
-                index={pokemonIndex.length ? pokemonIndex : pokemonCatalog}
+                index={pokemonIndex}
                 initialPokemon={result}
               />
             </details>
@@ -629,7 +628,7 @@ function App() {
                     onClick={() => {
                       speakPokedexLine(
                         result ? `Hola. Soy tu Pokédex IA. Pregúntame sobre ${result.name}.` : 'Hola. Soy tu Pokédex IA.',
-                        { rate: 0.88, pitch: 0.1, withBeep: true },
+                        { rate: 1.0, pitch: 0.1, withBeep: true },
                       )
                     }}
                   >

@@ -16,6 +16,8 @@
     "eval:real-world": "node scripts/vision-eval-real-world.mjs",
     "test": "node --test src/utils/__tests__/*.test.mjs",
     "test:components": "vitest run src/components/__tests__",
+    "test:services": "vitest run src/services/__tests__",
+    "test:all": "node --test src/utils/__tests__/*.test.mjs && vitest run",
     "test:knowledge": "node scripts/pokemon-knowledge-smoke.mjs",
     "build": "vite build",
     "desktop:dev": "npm run build && electron .",

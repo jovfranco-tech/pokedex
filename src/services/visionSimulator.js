@@ -28,7 +28,7 @@ function fileNameTokens(fileName) {
     .filter((token) => token.length >= 3 && !ignoredImageTokens.has(token))
 }
 
-function scoreImageNameMatch(pokemon, tokens, compactName) {
+export function scoreImageNameMatch(pokemon, tokens, compactName) {
   const normalizedName = normalizePokemonText(pokemon.name)
   const normalizedDisplayName = normalizePokemonText(pokemon.displayName)
   const aliases = (Array.isArray(pokemon.aliases) ? pokemon.aliases : []).map(normalizePokemonText)

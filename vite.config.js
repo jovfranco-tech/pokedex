@@ -84,6 +84,7 @@ export default defineConfig(({ mode }) => {
       environment: 'jsdom',
       setupFiles: ['./src/test/setup.js'],
       globals: true,
+      include: ['src/**/*.test.{js,jsx,ts,tsx}'],  // exclude .test.mjs (node:test runner)
     },
     build: {
       rollupOptions: {
