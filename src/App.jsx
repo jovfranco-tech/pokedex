@@ -137,30 +137,16 @@ function App() {
     }
   }, [result, setResult])
 
+  // Auto-narrate when a new Pokémon loads (cry is played in fetchAndDisplay/handleAnalyze)
   useEffect(() => {
     if (!result?.id || isScanning) return
 
     const autoKey = `${result.id}-${result.scannedAt ?? 'auto'}`
     if (lastAutoSpeechKey.current === autoKey) return
     lastAutoSpeechKey.current = autoKey
-    lastAutoCryKey.current = autoKey
 
-    let cancelled = false
-
-    ;(async () => {
-      await new Promise((r) => window.setTimeout(r, 180))
-      if (cancelled) return
-
-      if (result.cryUrl) {
-        await playPokemonCry(result.cryUrl, 0.42)
-        await new Promise((r) => window.setTimeout(r, 350))
-      }
-
-      if (cancelled || !isAutoNarrate) return
-      narratePokemon(result)
-    })()
-
-    return () => { cancelled = true }
+    if (!isAutoNarrate) return
+    narratePokemon(result)
   }, [isScanning, result, isAutoNarrate])
 
   function handleImageSelected(file) {
@@ -284,6 +270,7 @@ function App() {
       setResult(detectedPokemon)
       rememberScan(detectedPokemon)
       updateCollection(detectedPokemon, 'seen')
+      if (detectedPokemon.cryUrl) playPokemonCry(detectedPokemon.cryUrl, 0.42)
     } catch (scanError) {
       setError(scanError?.message || '¡Ups! Algo salió mal. 😅 Prueba con otra foto o usa el buscador.')
     } finally {
@@ -299,7 +286,7 @@ function App() {
    * @param {boolean}       [keepCandidates=false] - Keep the current scanCandidates strip visible
    */
   async function fetchAndDisplay(id, meta, errorMsg, keepCandidates = false) {
-    unlockAudio() // unlock AudioContext synchronously inside the user-gesture handler
+    unlockAudio() // unlock AudioContext synchronously while the user gesture is still active
     setError('')
     if (!keepCandidates) setScanCandidates([])
     setIsScanning(true)
@@ -308,6 +295,10 @@ function App() {
       setResult(details)
       rememberScan(details)
       updateCollection(details, 'seen')
+      // Play cry here — AudioContext was unlocked before the first await above,
+      // and by this point (after the fetch) resume() has had time to resolve.
+      // We do NOT await so React can render the result immediately.
+      if (details.cryUrl) playPokemonCry(details.cryUrl, 0.42)
     } catch {
       setError(errorMsg)
     } finally {
