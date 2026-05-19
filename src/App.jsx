@@ -477,28 +477,30 @@ function App() {
           </div>
         </section>
 
-        {/* Skip-link target — always present so keyboard users can jump here */}
-        <div id="main-result" tabIndex={-1} style={{ outline: 'none' }} />
-        <AnimatePresence mode="wait">
-          <ErrorBoundary message="No se pudo mostrar el Pokémon. Prueba buscando otro.">
-            <ResultCard
-              collectionEntry={collectionEntry}
-              feedback={result?.id ? scanFeedback[result.id] : null}
-              key={result?.apiName ?? result?.id ?? (isScanning ? 'scanning' : 'empty')}
-              isFavorite={isCurrentFavorite}
-              isKidsMode={isKidsMode}
-              isSpeaking={isSpeaking}
-              isScanning={isScanning}
-              onFeedback={handleScanFeedback}
-              onMarkCaptured={(pokemon) => updateCollection(pokemon, 'captured')}
-              onMarkSeen={(pokemon) => updateCollection(pokemon, 'seen')}
-              onSpeakPokedex={narratePokemon}
-              onToggleFavorite={handleToggleFavorite}
-              pokemonTotal={pokemonTotal}
-              result={result}
-            />
-          </ErrorBoundary>
-        </AnimatePresence>
+        {/* Column 2: skip-link target + result card — wrapped so both share one grid cell */}
+        <div style={{ minWidth: 0 }}>
+          <div id="main-result" tabIndex={-1} style={{ outline: 'none' }} />
+          <AnimatePresence mode="wait">
+            <ErrorBoundary message="No se pudo mostrar el Pokémon. Prueba buscando otro.">
+              <ResultCard
+                collectionEntry={collectionEntry}
+                feedback={result?.id ? scanFeedback[result.id] : null}
+                key={result?.apiName ?? result?.id ?? (isScanning ? 'scanning' : 'empty')}
+                isFavorite={isCurrentFavorite}
+                isKidsMode={isKidsMode}
+                isSpeaking={isSpeaking}
+                isScanning={isScanning}
+                onFeedback={handleScanFeedback}
+                onMarkCaptured={(pokemon) => updateCollection(pokemon, 'captured')}
+                onMarkSeen={(pokemon) => updateCollection(pokemon, 'seen')}
+                onSpeakPokedex={narratePokemon}
+                onToggleFavorite={handleToggleFavorite}
+                pokemonTotal={pokemonTotal}
+                result={result}
+              />
+            </ErrorBoundary>
+          </AnimatePresence>
+        </div>
 
         {achievements.some((a) => a.unlocked) && (
           <section className="achievements-strip" aria-label="Logros">
