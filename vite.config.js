@@ -97,9 +97,18 @@ export default defineConfig(({ mode }) => {
     },
     test: {
       environment: 'jsdom',
-      setupFiles: ['./src/test/setup.js'],
+      setupFiles: ['./src/test/setup.ts'],
       globals: true,
-      include: ['src/**/*.test.{js,jsx,ts,tsx}'],  // exclude .test.mjs (node:test runner)
+      include: ['src/**/*.test.{ts,tsx}'],  // only TS files; .test.mjs uses node:test runner
+      coverage: {
+        provider: 'v8',
+        thresholds: {
+          lines: 70,
+          functions: 70,
+          branches: 60,
+          statements: 70,
+        },
+      },
     },
     build: {
       rollupOptions: {

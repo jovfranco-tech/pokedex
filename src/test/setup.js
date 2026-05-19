@@ -1,1 +1,1 @@
-import '@testing-library/jest-dom'
+// Migrated to setup.ts

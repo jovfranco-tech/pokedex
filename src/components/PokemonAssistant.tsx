@@ -91,7 +91,7 @@ export function PokemonAssistant({ pokemon }: PokemonAssistantProps) {
     }
 
     let index = 0
-    let timeoutId: ReturnType<typeof window.setTimeout>
+    let timeoutId: number | undefined
     const chunkSize = answer.length > 420 ? 16 : 10
 
     function revealNextChunk() {
