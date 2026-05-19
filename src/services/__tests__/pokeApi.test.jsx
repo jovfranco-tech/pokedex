@@ -10,7 +10,7 @@ vi.mock('../../data/pokemonFullCatalog.json', () => ({
 }))
 
 const { getGenerationFromId, formatPokemonName, loadPokemonIndex, POKEMON_DETAIL_SCHEMA_VERSION } =
-  await import('../../services/pokeApi.js')
+  await import('../../services/pokeApi')
 
 // ── Pure helpers ──────────────────────────────────────────────────────────────
 
