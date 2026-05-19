@@ -1,15 +1,29 @@
-const artworkUrl = (id) =>
+const artworkUrl = (id: number): string =>
   `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`
 
-export const pokemonCatalog = [
+export interface Gen1Pokemon {
+  id: number
+  name: string
+  type: string[]
+  height: string
+  weight: string
+  description: string
+  abilities: string[]
+  attacks: string[]
+  evolution: string
+  confidenceScore: number
+  sprite: string
+  keywords: string[]
+}
+
+export const pokemonCatalog: Gen1Pokemon[] = [
   {
     id: 38,
     name: 'Ninetales',
     type: ['Fire'],
     height: '1.1 m',
     weight: '19.9 kg',
-    description:
-      'Un Pokémon zorro con nueve colas doradas. Es elegante, veloz y aparece mucho en cartas y dibujos clásicos.',
+    description: 'Un Pokémon zorro con nueve colas doradas. Es elegante, veloz y aparece mucho en cartas y dibujos clásicos.',
     abilities: ['Absorbe fuego', 'Sequía'],
     attacks: ['Ascuas', 'Ataque rápido', 'Lanzallamas'],
     evolution: 'Vulpix -> Ninetales',
@@ -23,8 +37,7 @@ export const pokemonCatalog = [
     type: ['Electric'],
     height: '0.4 m',
     weight: '6.0 kg',
-    description:
-      'Un Pokémon eléctrico muy expresivo. Sus mejillas guardan energía y se ilumina cuando está emocionado.',
+    description: 'Un Pokémon eléctrico muy expresivo. Sus mejillas guardan energía y se ilumina cuando está emocionado.',
     abilities: ['Electricidad estática', 'Pararrayos'],
     attacks: ['Impactrueno', 'Ataque rápido', 'Rayo'],
     evolution: 'Pichu -> Pikachu -> Raichu',
@@ -38,8 +51,7 @@ export const pokemonCatalog = [
     type: ['Fire'],
     height: '0.6 m',
     weight: '8.5 kg',
-    description:
-      'Tiene una llama en la punta de la cola. Si la llama brilla fuerte, está lleno de energía.',
+    description: 'Tiene una llama en la punta de la cola. Si la llama brilla fuerte, está lleno de energía.',
     abilities: ['Mar llamas', 'Poder solar'],
     attacks: ['Ascuas', 'Arañazo', 'Lanzallamas'],
     evolution: 'Charmander -> Charmeleon -> Charizard',
@@ -53,8 +65,7 @@ export const pokemonCatalog = [
     type: ['Grass', 'Poison'],
     height: '0.7 m',
     weight: '6.9 kg',
-    description:
-      'Lleva una semilla en el lomo desde que nace. Es tranquilo y perfecto para aventuras de jardín.',
+    description: 'Lleva una semilla en el lomo desde que nace. Es tranquilo y perfecto para aventuras de jardín.',
     abilities: ['Espesura', 'Clorofila'],
     attacks: ['Látigo cepa', 'Hoja afilada', 'Somnífero'],
     evolution: 'Bulbasaur -> Ivysaur -> Venusaur',
@@ -68,8 +79,7 @@ export const pokemonCatalog = [
     type: ['Water'],
     height: '0.5 m',
     weight: '9.0 kg',
-    description:
-      'Se esconde en su caparazón y dispara chorros de agua con gran puntería.',
+    description: 'Se esconde en su caparazón y dispara chorros de agua con gran puntería.',
     abilities: ['Torrente', 'Cura lluvia'],
     attacks: ['Pistola agua', 'Burbuja', 'Placaje'],
     evolution: 'Squirtle -> Wartortle -> Blastoise',
@@ -83,8 +93,7 @@ export const pokemonCatalog = [
     type: ['Normal'],
     height: '0.3 m',
     weight: '6.5 kg',
-    description:
-      'Tiene un código genético muy flexible. Puede evolucionar de muchas formas distintas.',
+    description: 'Tiene un código genético muy flexible. Puede evolucionar de muchas formas distintas.',
     abilities: ['Fuga', 'Adaptable', 'Anticipación'],
     attacks: ['Ataque rápido', 'Mordisco', 'Rapidez'],
     evolution: 'Eevee -> Vaporeon / Jolteon / Flareon',
@@ -98,8 +107,7 @@ export const pokemonCatalog = [
     type: ['Psychic'],
     height: '2.0 m',
     weight: '122.0 kg',
-    description:
-      'Un Pokémon legendario con enorme poder psíquico. Su mirada parece leerlo todo.',
+    description: 'Un Pokémon legendario con enorme poder psíquico. Su mirada parece leerlo todo.',
     abilities: ['Presión', 'Nerviosismo'],
     attacks: ['Psíquico', 'Confusión', 'Recuperación'],
     evolution: 'No evoluciona',
@@ -113,8 +121,7 @@ export const pokemonCatalog = [
     type: ['Normal'],
     height: '2.1 m',
     weight: '460.0 kg',
-    description:
-      'Duerme muchísimo y despierta con hambre. Su calma lo hace inolvidable para cualquier familia.',
+    description: 'Duerme muchísimo y despierta con hambre. Su calma lo hace inolvidable para cualquier familia.',
     abilities: ['Sebo', 'Inmunidad', 'Gula'],
     attacks: ['Golpe cuerpo', 'Descanso', 'Cabezazo'],
     evolution: 'Munchlax -> Snorlax',
@@ -128,8 +135,7 @@ export const pokemonCatalog = [
     type: ['Ghost', 'Poison'],
     height: '1.5 m',
     weight: '40.5 kg',
-    description:
-      'Travieso y misterioso. Le encanta aparecer de sorpresa con una sonrisa enorme.',
+    description: 'Travieso y misterioso. Le encanta aparecer de sorpresa con una sonrisa enorme.',
     abilities: ['Cuerpo maldito'],
     attacks: ['Lengüetazo', 'Bola sombra', 'Hipnosis'],
     evolution: 'Gastly -> Haunter -> Gengar',
@@ -143,8 +149,7 @@ export const pokemonCatalog = [
     type: ['Normal', 'Fairy'],
     height: '0.5 m',
     weight: '5.5 kg',
-    description:
-      'Canta una canción suave que puede dormir a quien la escucha. Redondo, tierno y muy teatral.',
+    description: 'Canta una canción suave que puede dormir a quien la escucha. Redondo, tierno y muy teatral.',
     abilities: ['Gran encanto', 'Tenacidad', 'Compiescolta'],
     attacks: ['Canto', 'Doble bofetón', 'Voz cautivadora'],
     evolution: 'Igglybuff -> Jigglypuff -> Wigglytuff',
@@ -158,8 +163,7 @@ export const pokemonCatalog = [
     type: ['Water'],
     height: '0.8 m',
     weight: '19.6 kg',
-    description:
-      'Siempre parece confundido, pero cuando le duele la cabeza puede liberar una fuerza sorprendente.',
+    description: 'Siempre parece confundido, pero cuando le duele la cabeza puede liberar una fuerza sorprendente.',
     abilities: ['Humedad', 'Aclimatación', 'Nado rápido'],
     attacks: ['Arañazo', 'Pistola agua', 'Confusión'],
     evolution: 'Psyduck -> Golduck',
@@ -169,4 +173,5 @@ export const pokemonCatalog = [
   },
 ]
 
-export const getPokemonById = (id) => pokemonCatalog.find((pokemon) => pokemon.id === id)
+export const getPokemonById = (id: number): Gen1Pokemon | undefined =>
+  pokemonCatalog.find((pokemon) => pokemon.id === id)

@@ -2,7 +2,7 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 
 // Import the REAL shipped functions (no JSON catalog dependency)
-const { normalizePokemonText, searchPokemonIndex } = await import('../../utils/pokemonSearch.js')
+const { normalizePokemonText, searchPokemonIndex } = await import('../../utils/pokemonSearch.ts')
 
 function makeEntry(id, name, displayName, aliases = []) {
   return {
@@ -90,7 +90,7 @@ describe('searchPokemonIndex', () => {
 })
 
 // --- buildTypeMatchups (typeChart.js has no JSON deps) ---------------
-const { buildTypeMatchups } = await import('../../data/typeChart.js')
+const { buildTypeMatchups } = await import('../../data/typeChart.ts')
 
 describe('buildTypeMatchups', () => {
   it('returns vulnerabilities, resistances, immunities arrays', () => {

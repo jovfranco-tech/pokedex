@@ -1,7 +1,7 @@
 import { AnimatePresence, m, useReducedMotion } from 'framer-motion'
 import { Gamepad2, Heart, Info, Share2, Sparkles, Swords, ThumbsDown, ThumbsUp, Volume2 } from 'lucide-react'
-import { useMemo, useState } from 'react'
-import { TypeBadge } from '../TypeBadge.jsx'
+import { type ComponentType, useMemo, useState } from 'react'
+import { TypeBadge } from '../TypeBadge.js'
 import { getPokemonTypeTheme, getTypeMeta } from '../../data/typeColors.js'
 import { formatPokemonNumber } from '../../utils/formatPokemonNumber.js'
 import { playPokemonCry, unlockAudio } from '../../utils/playPokemonCry.js'
@@ -12,18 +12,33 @@ import {
   MiniStat,
   StageTab,
   TypeMatchups,
-} from './sub-components.jsx'
+} from './sub-components.js'
+import type { PokemonDetail } from '../../services/pokeApi.js'
+import type { CollectionEntry } from '../../hooks/useCollection.js'
 
-const typeLabel = (type) => getTypeMeta(type).label
+type FeedbackVote = 'correct' | 'wrong' | null
 
-const profileTabs = [
-  { id: 'info',     label: 'Info',     icon: Info },
+interface ProfileTabDef {
+  id: string
+  label: string
+  icon: ComponentType<{ className?: string }>
+}
+
+const typeLabel = (type: string) => getTypeMeta(type).label
+
+const profileTabs: ProfileTabDef[] = [
+  { id: 'info',     label: 'Info',    icon: Info },
   { id: 'matchups', label: 'Matchups', icon: Swords },
-  { id: 'games',    label: 'Juegos',   icon: Gamepad2 },
-  { id: 'stage',    label: '3D',       icon: Sparkles },
+  { id: 'games',    label: 'Juegos',  icon: Gamepad2 },
+  { id: 'stage',    label: '3D',      icon: Sparkles },
 ]
 
-function getSpecialBadges(result) {
+interface SpecialBadge {
+  label: string
+  tone: string
+}
+
+function getSpecialBadges(result: PokemonDetail): SpecialBadge[] {
   return [
     result.isMega       && { label: 'Mega',       tone: 'mega' },
     result.isPrimal     && { label: 'Primigenio',  tone: 'primal' },
@@ -32,24 +47,40 @@ function getSpecialBadges(result) {
     result.isUltraBeast && { label: 'Ultraente',   tone: 'ultra' },
     result.isParadox    && { label: 'Paradoja',    tone: 'paradox' },
     result.isBaby       && { label: 'Bebé',        tone: 'baby' },
-  ].filter(Boolean)
+  ].filter((b): b is SpecialBadge => Boolean(b))
 }
 
-function getCategoryLabel(result) {
-  if (result.isMythical)  return 'mítico'
-  if (result.isLegendary) return 'legendario'
+function getCategoryLabel(result: PokemonDetail): string {
+  if (result.isMythical)   return 'mítico'
+  if (result.isLegendary)  return 'legendario'
   if (result.isUltraBeast) return 'ultraente'
-  if (result.isParadox)   return 'paradoja'
-  if (result.isStarter)   return 'inicial'
-  if (result.isBaby)      return 'bebé'
+  if (result.isParadox)    return 'paradoja'
+  if (result.isStarter)    return 'inicial'
+  if (result.isBaby)       return 'bebé'
   return 'registrado'
 }
 
-function buildQuickSummary(result) {
+function buildQuickSummary(result: PokemonDetail): string {
   const types = (result.type ?? []).map(typeLabel).join(' / ')
   const stat = result.stats?.slice().sort((a, b) => b.value - a.value)[0]
   const statText = stat ? ` Su stat más alto es ${stat.name} (${stat.value}).` : ''
   return `${result.name} es un Pokémon ${getCategoryLabel(result)} de tipo ${types}, Gen. ${result.generation}.${statText}`
+}
+
+interface ResultCardProps {
+  collectionEntry?: CollectionEntry | null
+  feedback?: FeedbackVote
+  isFavorite?: boolean
+  isKidsMode?: boolean
+  isSpeaking?: boolean
+  isScanning?: boolean
+  onFeedback?: (vote: FeedbackVote) => void
+  onMarkCaptured?: (pokemon: PokemonDetail) => void
+  onMarkSeen?: (pokemon: PokemonDetail) => void
+  onSpeakPokedex?: (pokemon: PokemonDetail) => void
+  onToggleFavorite?: () => void
+  pokemonTotal?: number
+  result?: PokemonDetail | null
 }
 
 export function ResultCard({
@@ -66,7 +97,7 @@ export function ResultCard({
   onToggleFavorite,
   pokemonTotal = 1025,
   result,
-}) {
+}: ResultCardProps) {
   const prefersReducedMotion = useReducedMotion()
   const [activeTab, setActiveTab] = useState('info')
   const [isSharing, setIsSharing] = useState(false)
@@ -121,13 +152,13 @@ export function ResultCard({
 
   async function handleShare() {
     setIsSharing(true)
-    try { await sharePokemonCard(result) } catch { /* user cancelled or unsupported */ }
+    try { await sharePokemonCard(result!) } catch { /* user cancelled or unsupported */ }
     finally { setIsSharing(false) }
   }
 
   const motionProps = prefersReducedMotion
     ? { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }, transition: { duration: 0.15 } }
-    : { initial: { opacity: 0, y: 20, scale: 0.95 }, animate: { opacity: 1, y: 0, scale: 1 }, exit: { opacity: 0, scale: 0.95 }, transition: { duration: 0.4, type: 'spring', bounce: 0.3 } }
+    : { initial: { opacity: 0, y: 20, scale: 0.95 }, animate: { opacity: 1, y: 0, scale: 1 }, exit: { opacity: 0, scale: 0.95 }, transition: { duration: 0.4, type: 'spring' as const, bounce: 0.3 } }
 
   return (
     <m.section
@@ -180,7 +211,7 @@ export function ResultCard({
       <div className="profile-audio-row">
         <button
           type="button"
-          onClick={() => { unlockAudio(); playPokemonCry(result.cryUrl) }}
+          onClick={() => { unlockAudio(); void playPokemonCry(result.cryUrl ?? '') }}
           disabled={!result.cryUrl}
           className="profile-sound-button"
         >
@@ -262,7 +293,7 @@ export function ResultCard({
         className="profile-tabs"
         role="tablist"
         aria-label="Datos del Pokémon"
-        style={{ '--tab-count': visibleTabs.length }}
+        style={{ '--tab-count': visibleTabs.length } as React.CSSProperties}
       >
         {visibleTabs.map((tab) => {
           const Icon = tab.icon

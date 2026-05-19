@@ -6,18 +6,19 @@
  */
 import { m, useReducedMotion } from 'framer-motion'
 import { ShieldAlert, Sparkles } from 'lucide-react'
-import { Suspense, lazy } from 'react'
+import { type CSSProperties, Suspense, lazy } from 'react'
 import { getTypeMeta } from '../../data/typeColors.js'
-import { ErrorBoundary } from '../ErrorBoundary.jsx'
+import { ErrorBoundary } from '../ErrorBoundary.js'
 import { gameGroups, gameLabels, kidsTypeEmojis } from './data.js'
+import type { PokemonDetail, TypeMatchups } from '../../services/pokeApi.js'
 
-const Pokemon3DStage = lazy(() => import('../Pokemon3DStage.jsx').then((m) => ({ default: m.Pokemon3DStage })))
+const Pokemon3DStage = lazy(() => import('../Pokemon3DStage.js').then((m) => ({ default: m.Pokemon3DStage })))
 
-const typeLabel = (type) => getTypeMeta(type).label
+const typeLabel = (type: string) => getTypeMeta(type).label
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-function getKidsCategory(result) {
+function getKidsCategory(result: PokemonDetail): string | null {
   if (result.isMythical)  return '✨ ¡Es un Pokémon mítico! Muy raro de encontrar.'
   if (result.isLegendary) return '⭐ ¡Es un Pokémon legendario!'
   if (result.isStarter)   return '🌟 ¡Es un Pokémon inicial!'
@@ -27,7 +28,12 @@ function getKidsCategory(result) {
 
 // ── Shared mini-components ───────────────────────────────────────────────────
 
-export function MiniList({ title, values = [] }) {
+interface MiniListProps {
+  title: string
+  values?: string[]
+}
+
+export function MiniList({ title, values = [] }: MiniListProps) {
   return (
     <div className="profile-note">
       <span>{title}</span>
@@ -40,7 +46,12 @@ export function MiniList({ title, values = [] }) {
   )
 }
 
-export function MiniStat({ label, value }) {
+interface MiniStatProps {
+  label: string
+  value: string | number | null | undefined
+}
+
+export function MiniStat({ label, value }: MiniStatProps) {
   return (
     <div className="profile-mini-stat">
       <dt>{label}</dt>
@@ -51,7 +62,18 @@ export function MiniStat({ label, value }) {
 
 // ── Evolution ────────────────────────────────────────────────────────────────
 
-export function EvolutionChainRow({ chain = [], currentId }) {
+interface EvolutionEntry {
+  id: number
+  name: string
+  sprite: string
+}
+
+interface EvolutionChainRowProps {
+  chain?: EvolutionEntry[]
+  currentId: number
+}
+
+export function EvolutionChainRow({ chain = [], currentId }: EvolutionChainRowProps) {
   if (chain.length <= 1) return null
   return (
     <div className="evolution-chain-row">
@@ -70,7 +92,17 @@ export function EvolutionChainRow({ chain = [], currentId }) {
 
 // ── Stats ────────────────────────────────────────────────────────────────────
 
-export function StatsPanel({ stats = [] }) {
+interface Stat {
+  key: string
+  name: string
+  value: number
+}
+
+interface StatsPanelProps {
+  stats?: Stat[]
+}
+
+export function StatsPanel({ stats = [] }: StatsPanelProps) {
   const prefersReducedMotion = useReducedMotion()
   if (!stats.length) {
     return <p className="profile-muted">Stats no disponibles.</p>
@@ -102,7 +134,12 @@ export function StatsPanel({ stats = [] }) {
 
 // ── Info tab ─────────────────────────────────────────────────────────────────
 
-export function InfoTab({ isKidsMode, result }) {
+interface InfoTabProps {
+  isKidsMode?: boolean
+  result: PokemonDetail
+}
+
+export function InfoTab({ isKidsMode, result }: InfoTabProps) {
   if (isKidsMode) return <KidsInfoTab result={result} />
 
   return (
@@ -124,7 +161,11 @@ export function InfoTab({ isKidsMode, result }) {
   )
 }
 
-export function KidsInfoTab({ result }) {
+interface KidsInfoTabProps {
+  result: PokemonDetail
+}
+
+export function KidsInfoTab({ result }: KidsInfoTabProps) {
   const categoryNote = getKidsCategory(result)
   const topAttacks = result.attacks?.slice(0, 4) ?? []
   const topAbilities = result.abilities?.slice(0, 2) ?? []
@@ -177,13 +218,22 @@ export function KidsInfoTab({ result }) {
 
 // ── Type matchups tab ─────────────────────────────────────────────────────────
 
-function TypeChip({ item }) {
+interface TypeMatchupItem {
+  type: string
+  multiplier: number
+}
+
+interface TypeChipProps {
+  item: TypeMatchupItem
+}
+
+function TypeChip({ item }: TypeChipProps) {
   const meta = getTypeMeta(item.type)
 
   return (
     <span
       className="type-chip"
-      style={{ '--chip-color': meta.color, '--chip-text': meta.text }}
+      style={{ '--chip-color': meta.color, '--chip-text': meta.text } as CSSProperties}
     >
       {meta.label}
       {item.multiplier !== 1 ? ` x${item.multiplier}` : ''}
@@ -191,7 +241,19 @@ function TypeChip({ item }) {
   )
 }
 
-function MatchupGroup({ emptyText, rows = [], title, tone }) {
+interface MatchupRow {
+  label: string
+  items: TypeMatchupItem[]
+}
+
+interface MatchupGroupProps {
+  emptyText: string
+  rows?: MatchupRow[]
+  title: string
+  tone: string
+}
+
+function MatchupGroup({ emptyText, rows = [], title, tone }: MatchupGroupProps) {
   const visibleRows = rows.filter((row) => row.items?.length)
 
   return (
@@ -214,7 +276,11 @@ function MatchupGroup({ emptyText, rows = [], title, tone }) {
   )
 }
 
-export function TypeMatchups({ matchups }) {
+interface TypeMatchupsProps {
+  matchups: TypeMatchups | null | undefined
+}
+
+export function TypeMatchups({ matchups }: TypeMatchupsProps) {
   if (!matchups) return <p className="profile-muted">Datos de combate no disponibles.</p>
 
   return (
@@ -253,7 +319,11 @@ export function TypeMatchups({ matchups }) {
 
 // ── Games tab ─────────────────────────────────────────────────────────────────
 
-export function GameAppearances({ games = [] }) {
+interface GameAppearancesProps {
+  games?: string[]
+}
+
+export function GameAppearances({ games = [] }: GameAppearancesProps) {
   const presentGames = new Set(games)
   const groups = gameGroups
     .map((group) => ({
@@ -272,7 +342,7 @@ export function GameAppearances({ games = [] }) {
       {groups.length ? (
         <div className="game-generation-list">
           {groups.map((group) => (
-            <section key={group.id} className="game-generation-group" style={{ '--gen-color': group.color }}>
+            <section key={group.id} className="game-generation-group" style={{ '--gen-color': group.color } as CSSProperties}>
               <h3>{group.label}</h3>
               <div className="chip-cloud">
                 {group.games.map((game) => (
@@ -291,7 +361,11 @@ export function GameAppearances({ games = [] }) {
 
 // ── 3D stage tab ──────────────────────────────────────────────────────────────
 
-export function StageTab({ result }) {
+interface StageTabProps {
+  result: PokemonDetail
+}
+
+export function StageTab({ result }: StageTabProps) {
   return (
     <div className="stage-tab-panel">
       <ErrorBoundary message="La escena 3D no pudo cargarse.">

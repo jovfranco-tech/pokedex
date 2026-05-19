@@ -2,7 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { inject } from '@vercel/analytics'
 import './index.css'
-import App from './App.jsx'
+import App from './App.tsx'
 import { registerServiceWorker } from './utils/registerServiceWorker.js'
 
 // Inject Vercel Analytics only on Vercel deployments.

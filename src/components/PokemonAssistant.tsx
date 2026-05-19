@@ -2,6 +2,30 @@ import { Bot, Mic, Send, Trash2, Volume2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { askPokemonAssistant } from '../services/pokemonAiChat.js'
 import { speakPokedexLine } from '../utils/pokedexVoice.js'
+import type { PokemonDetail } from '../services/pokeApi.js'
+import type { ChatSource } from '../services/pokemonAiChat.js'
+
+// --- Non-standard SpeechRecognition API ---
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList
+}
+interface SpeechRecognitionInstance extends EventTarget {
+  lang: string
+  interimResults: boolean
+  maxAlternatives: number
+  onstart: (() => void) | null
+  onend: (() => void) | null
+  onerror: (() => void) | null
+  onresult: ((event: SpeechRecognitionEvent) => void) | null
+  start(): void
+  stop(): void
+}
+declare global {
+  interface Window {
+    SpeechRecognition?: new () => SpeechRecognitionInstance
+    webkitSpeechRecognition?: new () => SpeechRecognitionInstance
+  }
+}
 
 const fallbackQuestions = [
   '¿Este Pokémon es legendario?',
@@ -13,7 +37,7 @@ const fallbackQuestions = [
   '¿Qué Pokémon evolucionan con piedra?',
 ]
 
-function getAnswerParagraphs(text = '') {
+function getAnswerParagraphs(text = ''): string[] {
   const cleanText = text.trim()
   if (!cleanText) return []
 
@@ -23,7 +47,7 @@ function getAnswerParagraphs(text = '') {
   if (cleanText.length < 220) return [cleanText]
 
   const sentences = cleanText.match(/[^.!?]+[.!?]+(?:\s|$)|[^.!?]+$/g)?.map((part) => part.trim()) ?? [cleanText]
-  const paragraphs = []
+  const paragraphs: string[] = []
   let current = ''
 
   sentences.forEach((sentence) => {
@@ -40,17 +64,21 @@ function getAnswerParagraphs(text = '') {
   return paragraphs
 }
 
-export function PokemonAssistant({ pokemon }) {
+interface PokemonAssistantProps {
+  pokemon: PokemonDetail | null
+}
+
+export function PokemonAssistant({ pokemon }: PokemonAssistantProps) {
   const [question, setQuestion] = useState('')
   const [lastQuestion, setLastQuestion] = useState('')
   const [answer, setAnswer] = useState('')
   const [visibleAnswer, setVisibleAnswer] = useState('')
-  const [source, setSource] = useState('local')
+  const [source, setSource] = useState<ChatSource>('local')
   const [isThinking, setIsThinking] = useState(false)
   const [isListening, setIsListening] = useState(false)
   const [isAutoSpeak, setIsAutoSpeak] = useState(false)
   const [speechError, setSpeechError] = useState('')
-  const recognitionRef = useRef(null)
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null)
   const autoSpokeRef = useRef('')
 
   useEffect(() => {
@@ -63,7 +91,7 @@ export function PokemonAssistant({ pokemon }) {
     }
 
     let index = 0
-    let timeoutId
+    let timeoutId: ReturnType<typeof window.setTimeout>
     const chunkSize = answer.length > 420 ? 16 : 10
 
     function revealNextChunk() {
@@ -86,7 +114,7 @@ export function PokemonAssistant({ pokemon }) {
     }
   }, [visibleAnswer, answer, isAutoSpeak])
 
-  async function submitQuestion(value) {
+  async function submitQuestion(value: string) {
     const trimmedQuestion = value.trim()
     if (!trimmedQuestion) return
 
@@ -103,7 +131,7 @@ export function PokemonAssistant({ pokemon }) {
     setIsThinking(false)
   }
 
-  function handleSubmit(event) {
+  function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
     submitQuestion(question)
   }

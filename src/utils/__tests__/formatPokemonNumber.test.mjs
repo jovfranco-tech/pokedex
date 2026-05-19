@@ -1,6 +1,6 @@
 import { strict as assert } from 'node:assert'
 import { describe, it } from 'node:test'
-import { formatPokemonNumber } from '../formatPokemonNumber.js'
+import { formatPokemonNumber } from '../formatPokemonNumber.ts'
 
 describe('formatPokemonNumber', () => {
   it('pads single-digit IDs to three digits', () => {

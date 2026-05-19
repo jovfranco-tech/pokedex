@@ -1,16 +1,16 @@
 const MAX_IMAGE_SIDE = 1280
 const JPEG_QUALITY = 0.86
 
-function readFileAsDataUrl(file) {
+function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
-    reader.onload = () => resolve(reader.result)
+    reader.onload = () => resolve(reader.result as string)
     reader.onerror = reject
     reader.readAsDataURL(file)
   })
 }
 
-function loadImage(dataUrl) {
+function loadImage(dataUrl: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const image = new Image()
     image.onload = () => resolve(image)
@@ -19,7 +19,7 @@ function loadImage(dataUrl) {
   })
 }
 
-export async function fileToModelImageDataUrl(file) {
+export async function fileToModelImageDataUrl(file: File): Promise<string> {
   const originalDataUrl = await readFileAsDataUrl(file)
 
   try {
@@ -33,7 +33,7 @@ export async function fileToModelImageDataUrl(file) {
     canvas.height = height
 
     const context = canvas.getContext('2d')
-    context.drawImage(image, 0, 0, width, height)
+    context?.drawImage(image, 0, 0, width, height)
 
     return canvas.toDataURL('image/jpeg', JPEG_QUALITY)
   } catch {

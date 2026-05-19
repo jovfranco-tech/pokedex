@@ -4,27 +4,34 @@ import { useMemo, useState } from 'react'
 import { fetchPokemonDetails, searchPokemonIndex } from '../services/pokeApi.js'
 import { getTypeMeta } from '../data/typeColors.js'
 import { getAttackMultiplier } from '../data/typeChart.js'
+import type { PokemonDetail, PokemonIndexItem } from '../services/pokeApi.js'
 
-function statTotal(pokemon) {
+function statTotal(pokemon: PokemonDetail | null): number {
   return pokemon?.stats?.reduce((total, stat) => total + stat.value, 0) ?? 0
 }
 
-function topStat(pokemon) {
+function topStat(pokemon: PokemonDetail | null): { name: string; value: number } | undefined {
   return pokemon?.stats?.slice().sort((a, b) => b.value - a.value)[0]
 }
 
-function getStat(pokemon, name) {
+function getStat(pokemon: PokemonDetail | null, name: string): number {
   return pokemon?.stats?.find((stat) => stat.name === name)?.value ?? 0
 }
 
-function bestTypeMultiplier(attacker, defender) {
+function bestTypeMultiplier(attacker: PokemonDetail | null, defender: PokemonDetail | null): number {
   const attackTypes = attacker?.type ?? []
   const defenderTypes = defender?.type ?? []
   if (!attackTypes.length || !defenderTypes.length) return 1
   return Math.max(...attackTypes.map((attackType) => getAttackMultiplier(attackType, defenderTypes)))
 }
 
-function buildBattleScore(pokemon, opponent) {
+interface BattleScore {
+  score: number
+  ownBestHit: number
+  opponentBestHit: number
+}
+
+function buildBattleScore(pokemon: PokemonDetail | null, opponent: PokemonDetail | null): BattleScore {
   const total = statTotal(pokemon)
   const hp = getStat(pokemon, 'PS')
   const speed = getStat(pokemon, 'Velocidad')
@@ -53,7 +60,7 @@ function buildBattleScore(pokemon, opponent) {
   return { score, ownBestHit, opponentBestHit }
 }
 
-function toWinRate(firstScore, secondScore) {
+function toWinRate(firstScore: number, secondScore: number): { firstRate: number; secondRate: number } {
   const firstPositive = Math.max(firstScore, 1)
   const secondPositive = Math.max(secondScore, 1)
   const total = firstPositive + secondPositive
@@ -61,7 +68,7 @@ function toWinRate(firstScore, secondScore) {
   return { firstRate, secondRate: 100 - firstRate }
 }
 
-function advantageText(multiplier) {
+function advantageText(multiplier: number): string {
   if (multiplier >= 4) return 'súper fuerte'
   if (multiplier > 1) return 'fuerte'
   if (multiplier === 1) return 'normal'
@@ -69,11 +76,18 @@ function advantageText(multiplier) {
   return 'no le hace daño'
 }
 
-function ComparePicker({ index, label, onSelect, selected }) {
+interface ComparePickerProps {
+  index: PokemonIndexItem[]
+  label: string
+  onSelect: (pokemon: PokemonIndexItem) => void
+  selected: PokemonDetail | null
+}
+
+function ComparePicker({ index, label, onSelect, selected }: ComparePickerProps) {
   const [query, setQuery] = useState('')
   const matches = useMemo(() => searchPokemonIndex(index, query, 5), [index, query])
 
-  function choose(pokemon) {
+  function choose(pokemon: PokemonIndexItem) {
     setQuery('')
     onSelect(pokemon)
   }
@@ -111,7 +125,12 @@ function ComparePicker({ index, label, onSelect, selected }) {
   )
 }
 
-function CompareCard({ pokemon, side }) {
+interface CompareCardProps {
+  pokemon: PokemonDetail | null
+  side: 'left' | 'right'
+}
+
+function CompareCard({ pokemon, side }: CompareCardProps) {
   const prefersReducedMotion = useReducedMotion()
   const xOffset = side === 'left' ? -24 : 24
 
@@ -140,10 +159,15 @@ function CompareCard({ pokemon, side }) {
   )
 }
 
-export function PokemonCompare({ index = [], initialPokemon }) {
+interface PokemonCompareProps {
+  index?: PokemonIndexItem[]
+  initialPokemon?: PokemonDetail | null
+}
+
+export function PokemonCompare({ index = [], initialPokemon }: PokemonCompareProps) {
   const prefersReducedMotion = useReducedMotion()
-  const [firstPokemon, setFirstPokemon] = useState(initialPokemon ?? null)
-  const [secondPokemon, setSecondPokemon] = useState(null)
+  const [firstPokemon, setFirstPokemon] = useState<PokemonDetail | null>(initialPokemon ?? null)
+  const [secondPokemon, setSecondPokemon] = useState<PokemonDetail | null>(null)
 
   const battle = useMemo(() => {
     if (!firstPokemon || !secondPokemon) return null
@@ -159,7 +183,7 @@ export function PokemonCompare({ index = [], initialPokemon }) {
     return { winner, winnerScore, winnerRate, loserRate }
   }, [firstPokemon, secondPokemon])
 
-  async function selectPokemon(setter, pokemon) {
+  async function selectPokemon(setter: (p: PokemonDetail) => void, pokemon: PokemonIndexItem) {
     const details = await fetchPokemonDetails(pokemon.apiName ?? pokemon.name)
     setter(details)
   }

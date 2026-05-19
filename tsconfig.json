@@ -23,18 +23,8 @@
     "checkJs": false
   },
   "include": [
-    "src/services/pokeApi.ts",
-    "src/services/visionSimulator.ts",
-    "src/services/pokemonAssistant.ts",
-    "src/services/pokemonKnowledge.ts",
-    "src/services/pokemonAiChat.ts",
-    "src/hooks/useLocalStorage.ts",
-    "src/hooks/useFocusTrap.ts",
-    "src/hooks/useImagePreview.ts",
-    "src/hooks/usePwaInstall.ts",
-    "src/hooks/useAchievements.ts",
-    "src/hooks/useCollection.ts",
-    "src/hooks/usePokemonFetch.ts"
+    "src/**/*.ts",
+    "src/**/*.tsx"
   ],
   "exclude": ["node_modules", "dist", "storybook-static"]
 }

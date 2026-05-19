@@ -1,7 +1,13 @@
 import { Clock3 } from 'lucide-react'
 import { formatPokemonNumber } from '../utils/formatPokemonNumber.js'
+import type { ScanHistoryEntry } from '../hooks/useCollection.js'
 
-export function ScanHistoryStrip({ history = [], onSelect }) {
+interface ScanHistoryStripProps {
+  history?: ScanHistoryEntry[]
+  onSelect?: (item: ScanHistoryEntry) => void
+}
+
+export function ScanHistoryStrip({ history = [], onSelect }: ScanHistoryStripProps) {
   const visibleHistory = Array.isArray(history) ? history.slice(0, 6) : []
   if (!visibleHistory.length) return null
 

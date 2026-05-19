@@ -3,10 +3,18 @@ import { Loader2, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { formatPokemonNumber } from '../utils/formatPokemonNumber.js'
 import { searchPokemonIndex } from '../services/pokeApi.js'
+import type { PokemonIndexItem } from '../services/pokeApi.js'
 
 const GENERATIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
-export function PokemonSearch({ index, isLoading, onSelect, variant = 'panel' }) {
+interface PokemonSearchProps {
+  index: PokemonIndexItem[]
+  isLoading: boolean
+  onSelect: (pokemon: PokemonIndexItem) => void
+  variant?: 'panel' | 'console'
+}
+
+export function PokemonSearch({ index, isLoading, onSelect, variant = 'panel' }: PokemonSearchProps) {
   const [query, setQuery] = useState('')
   const [filterGen, setFilterGen] = useState(0)
   const prefersReducedMotion = useReducedMotion()
@@ -18,12 +26,12 @@ export function PokemonSearch({ index, isLoading, onSelect, variant = 'panel' })
 
   const matches = useMemo(() => searchPokemonIndex(filtered, query, 8), [filtered, query])
 
-  function selectPokemon(pokemon) {
+  function selectPokemon(pokemon: PokemonIndexItem) {
     setQuery('')
     onSelect(pokemon)
   }
 
-  function handleSubmit(event) {
+  function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
     if (matches[0]) selectPokemon(matches[0])
   }

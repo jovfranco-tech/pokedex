@@ -1,7 +1,13 @@
 import { SearchCheck } from 'lucide-react'
 import { formatPokemonNumber } from '../utils/formatPokemonNumber.js'
+import type { ScanCandidate } from '../services/visionSimulator.js'
 
-export function ScanCandidateStrip({ candidates = [], onSelect }) {
+interface ScanCandidateStripProps {
+  candidates?: ScanCandidate[]
+  onSelect?: (pokemon: ScanCandidate) => void
+}
+
+export function ScanCandidateStrip({ candidates = [], onSelect }: ScanCandidateStripProps) {
   const visibleCandidates = Array.isArray(candidates) ? candidates.slice(0, 3) : []
   if (!visibleCandidates.length) return null
 

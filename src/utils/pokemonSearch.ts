@@ -1,4 +1,4 @@
-export function normalizePokemonText(value = '') {
+export function normalizePokemonText(value = ''): string {
   return String(value)
     .toLowerCase()
     .normalize('NFD')
@@ -9,7 +9,19 @@ export function normalizePokemonText(value = '') {
     .trim()
 }
 
-export function searchPokemonIndex(index, query, limit = 12) {
+export interface SearchablePokemon {
+  id: number
+  name: string
+  displayName: string
+  aliases?: string[]
+  searchText?: string
+}
+
+export function searchPokemonIndex<T extends SearchablePokemon>(
+  index: T[],
+  query: string,
+  limit = 12,
+): (T & { score: number })[] {
   const normalizedQuery = normalizePokemonText(query)
   if (!normalizedQuery) return []
 

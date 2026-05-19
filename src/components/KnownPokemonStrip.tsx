@@ -1,7 +1,13 @@
 import { Sparkles } from 'lucide-react'
 import { formatPokemonNumber } from '../utils/formatPokemonNumber.js'
+import type { PokemonIndexItem } from '../services/pokeApi.js'
 
-export function KnownPokemonStrip({ onSelect, pokemon }) {
+interface KnownPokemonStripProps {
+  onSelect?: (item: PokemonIndexItem) => void
+  pokemon: PokemonIndexItem[]
+}
+
+export function KnownPokemonStrip({ onSelect, pokemon }: KnownPokemonStripProps) {
   return (
     <section className="mt-4 rounded-lg border border-dex-shell/10 bg-white/75 p-3 shadow-[0_10px_30px_rgba(22,23,28,0.08)] backdrop-blur">
       <div className="mb-3 flex items-center justify-between gap-2">

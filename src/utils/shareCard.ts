@@ -1,6 +1,7 @@
 import { getTypeMeta } from '../data/typeColors.js'
+import type { PokemonDetail } from '../services/pokeApi.js'
 
-function loadImage(src) {
+function loadImage(src: string): Promise<HTMLImageElement | null> {
   return new Promise((resolve) => {
     const img = new Image()
     img.crossOrigin = 'anonymous'
@@ -10,7 +11,7 @@ function loadImage(src) {
   })
 }
 
-function roundRect(ctx, x, y, w, h, r) {
+function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number): void {
   ctx.beginPath()
   ctx.moveTo(x + r, y)
   ctx.lineTo(x + w - r, y)
@@ -24,13 +25,13 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath()
 }
 
-export async function sharePokemonCard(result) {
+export async function sharePokemonCard(result: PokemonDetail): Promise<void> {
   const canvas = document.createElement('canvas')
   const W = 480
   const H = 240
   canvas.width = W
   canvas.height = H
-  const ctx = canvas.getContext('2d')
+  const ctx = canvas.getContext('2d')!
 
   const primary = getTypeMeta(result.type?.[0])
 

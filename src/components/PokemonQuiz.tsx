@@ -1,28 +1,39 @@
 import { AnimatePresence, m, useReducedMotion } from 'framer-motion'
 import { X } from 'lucide-react'
 import { useState } from 'react'
+import type { PokemonIndexItem } from '../services/pokeApi.js'
 
-function pickQuizPokemon(index) {
+interface Question {
+  pokemon: PokemonIndexItem | null
+  options: PokemonIndexItem[]
+}
+
+function pickQuizPokemon(index: PokemonIndexItem[]): PokemonIndexItem | null {
   const pool = index.filter((p) => !p.isMega && !p.isPrimal && p.id <= 1025)
   if (!pool.length) return null
   return pool[Math.floor(Math.random() * pool.length)]
 }
 
-function buildOptions(index, correct) {
+function buildOptions(index: PokemonIndexItem[], correct: PokemonIndexItem): PokemonIndexItem[] {
   const pool = index.filter((p) => !p.isMega && !p.isPrimal && p.id !== correct.id)
   const shuffled = [...pool].sort(() => Math.random() - 0.5).slice(0, 3)
   return [...shuffled, correct].sort(() => Math.random() - 0.5)
 }
 
-function makeQuestion(index) {
+function makeQuestion(index: PokemonIndexItem[]): Question {
   const pokemon = pickQuizPokemon(index)
   return { pokemon, options: pokemon ? buildOptions(index, pokemon) : [] }
 }
 
-export function PokemonQuiz({ index, onClose }) {
+interface PokemonQuizProps {
+  index: PokemonIndexItem[]
+  onClose: () => void
+}
+
+export function PokemonQuiz({ index, onClose }: PokemonQuizProps) {
   const prefersReducedMotion = useReducedMotion()
-  const [{ pokemon, options }, setQuestion] = useState(() => makeQuestion(index))
-  const [selected, setSelected] = useState(null)
+  const [{ pokemon, options }, setQuestion] = useState<Question>(() => makeQuestion(index))
+  const [selected, setSelected] = useState<PokemonIndexItem | null>(null)
   const [score, setScore] = useState(0)
   const [total, setTotal] = useState(0)
   const [questionKey, setQuestionKey] = useState(0)
@@ -33,11 +44,11 @@ export function PokemonQuiz({ index, onClose }) {
     setQuestionKey((k) => k + 1)
   }
 
-  function handleAnswer(option) {
+  function handleAnswer(option: PokemonIndexItem) {
     if (selected !== null) return
     setSelected(option)
     setTotal((t) => t + 1)
-    if (option.id === pokemon.id) setScore((s) => s + 1)
+    if (option.id === pokemon?.id) setScore((s) => s + 1)
   }
 
   if (!pokemon) return null
@@ -91,10 +102,10 @@ export function PokemonQuiz({ index, onClose }) {
       >
         {options.map((option, i) => {
           let cls = 'quiz-option'
-          let ariaCurrent
+          let ariaCurrent: 'true' | undefined
           if (revealed) {
             if (option.id === pokemon.id) { cls += ' quiz-option-correct'; ariaCurrent = 'true' }
-            else if (option.id === selected.id) cls += ' quiz-option-wrong'
+            else if (option.id === selected?.id) cls += ' quiz-option-wrong'
             else cls += ' quiz-option-dim'
           }
           return (

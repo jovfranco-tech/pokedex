@@ -1,7 +1,13 @@
 import { Heart } from 'lucide-react'
 import { formatPokemonNumber } from '../utils/formatPokemonNumber.js'
+import type { FavoriteEntry } from '../hooks/useCollection.js'
 
-export function FavoritesStrip({ favorites = [], onSelect }) {
+interface FavoritesStripProps {
+  favorites?: FavoriteEntry[]
+  onSelect?: (pokemon: FavoriteEntry) => void
+}
+
+export function FavoritesStrip({ favorites = [], onSelect }: FavoritesStripProps) {
   const safeFavorites = Array.isArray(favorites) ? favorites : []
 
   if (!safeFavorites.length) {

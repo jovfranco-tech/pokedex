@@ -3,17 +3,17 @@ import { AnimatePresence, LazyMotion, m, useReducedMotion } from 'framer-motion'
 const loadMotionFeatures = () => import('framer-motion').then((mod) => mod.domAnimation)
 import { Bot, CircleDot, Download, Gamepad2, Mic, Sparkles, Volume2, X } from 'lucide-react'
 import { Suspense, lazy, useCallback, useEffect, useState } from 'react'
-import { CollectionStrip } from './components/CollectionStrip.jsx'
-import { DeviceShell } from './components/DeviceShell.jsx'
-import { ErrorBoundary } from './components/ErrorBoundary.jsx'
-import { FavoritesStrip } from './components/FavoritesStrip.jsx'
-import { ImageScanner } from './components/ImageScanner.jsx'
-import { PokemonCompare } from './components/PokemonCompare.jsx'
-import { PokemonQuiz } from './components/PokemonQuiz.jsx'
-import { PokemonSearch } from './components/PokemonSearch.jsx'
-import { ResultCard } from './components/ResultCard.jsx'
-import { ScanCandidateStrip } from './components/ScanCandidateStrip.jsx'
-import { ScanHistoryStrip } from './components/ScanHistoryStrip.jsx'
+import { CollectionStrip } from './components/CollectionStrip.js'
+import { DeviceShell } from './components/DeviceShell.js'
+import { ErrorBoundary } from './components/ErrorBoundary.js'
+import { FavoritesStrip } from './components/FavoritesStrip.js'
+import { ImageScanner } from './components/ImageScanner.js'
+import { PokemonCompare } from './components/PokemonCompare.js'
+import { PokemonQuiz } from './components/PokemonQuiz.js'
+import { PokemonSearch } from './components/PokemonSearch.js'
+import { ResultCard } from './components/ResultCard.js'
+import { ScanCandidateStrip } from './components/ScanCandidateStrip.js'
+import { ScanHistoryStrip } from './components/ScanHistoryStrip.js'
 import { useAchievements } from './hooks/useAchievements.js'
 import { useCollection } from './hooks/useCollection.js'
 import { useFocusTrap } from './hooks/useFocusTrap.js'
@@ -28,8 +28,9 @@ import {
   loadPokemonIndex,
 } from './services/pokeApi.js'
 import { buildPokedexAnnouncement, speakPokedexLine } from './utils/pokedexVoice.js'
+import type { PokemonDetail, PokemonIndexItem } from './services/pokeApi.js'
 
-const PokemonAssistant = lazy(() => import('./components/PokemonAssistant.jsx').then((module) => ({ default: module.PokemonAssistant })))
+const PokemonAssistant = lazy(() => import('./components/PokemonAssistant.js').then((module) => ({ default: module.PokemonAssistant })))
 
 const LAST_RESULT_KEY = 'pokedex-visual-gen1:last-result'
 const SCAN_HISTORY_KEY = 'pokedex-visual-gen1:scan-history'
@@ -41,17 +42,17 @@ const SCAN_FEEDBACK_KEY = 'pokedex-visual-gen1:scan-feedback'
 
 function App() {
   const { imageFile, previewUrl, setImageFile, clearImage } = useImagePreview()
-  const [result, setResult] = useLocalStorage(LAST_RESULT_KEY, null)
-  const [isKidsMode, setIsKidsMode] = useLocalStorage(KIDS_MODE_KEY, false)
-  const [isAutoNarrate, setIsAutoNarrate] = useLocalStorage(AUTO_NARRATE_KEY, true)
-  const [scanFeedback, setScanFeedback] = useLocalStorage(SCAN_FEEDBACK_KEY, {})
+  const [result, setResult] = useLocalStorage<PokemonDetail | null>(LAST_RESULT_KEY, null)
+  const [isKidsMode, setIsKidsMode] = useLocalStorage<boolean>(KIDS_MODE_KEY, false)
+  const [isAutoNarrate, setIsAutoNarrate] = useLocalStorage<boolean>(AUTO_NARRATE_KEY, true)
+  const [scanFeedback, setScanFeedback] = useLocalStorage<Record<number, string>>(SCAN_FEEDBACK_KEY, {})
   const [isSpeaking, setIsSpeaking] = useState(false)
   const prefersReducedMotion = useReducedMotion()
   const [isAssistantOpen, setIsAssistantOpen] = useState(false)
   const [isQuizOpen, setIsQuizOpen] = useState(false)
   const quizTrapRef = useFocusTrap(isQuizOpen)
   const assistantTrapRef = useFocusTrap(isAssistantOpen)
-  const [pokemonIndex, setPokemonIndex] = useState([])
+  const [pokemonIndex, setPokemonIndex] = useState<PokemonIndexItem[]>([])
   const [isIndexLoading, setIsIndexLoading] = useState(true)
   const pokemonTotal = pokemonIndex.length || DEFAULT_POKEMON_SPECIES_COUNT
   const { canInstall, isInstalled, promptInstall } = usePwaInstall()
@@ -101,7 +102,7 @@ function App() {
     : 'Listo para escanear'
 
   // ── Narration ──────────────────────────────────────────────────────────────
-  const narratePokemon = useCallback((pokemon) => {
+  const narratePokemon = useCallback((pokemon: PokemonDetail) => {
     const announcement = buildPokedexAnnouncement(pokemon)
     if (!announcement) return
     setIsSpeaking(true)
@@ -138,7 +139,7 @@ function App() {
     ) return
 
     let isActive = true
-    fetchPokemonDetails(result.apiName ?? result.id, {
+    fetchPokemonDetails(result.apiName ?? String(result.id), {
       confidenceScore: result.confidenceScore ?? 100,
       scannedAt: result.scannedAt,
       scanMode: result.scanMode ?? 'datos actualizados PokéAPI',
@@ -155,14 +156,14 @@ function App() {
    * Narration fires here — in the same call stack as the user gesture that
    * triggered the fetch — so no reactive effect or setTimeout hack needed.
    */
-  function onFetchSuccess(details) {
+  function onFetchSuccess(details: PokemonDetail) {
     setResult(details)
     rememberScan(details)
     updateCollection(details, 'seen')
     if (isAutoNarrate) narratePokemon(details)
   }
 
-  function handleImageSelected(file) {
+  function handleImageSelected(file: File | null) {
     setError('')
     if (!file) return
     if (!file.type.startsWith('image/')) {
@@ -176,7 +177,7 @@ function App() {
     })
   }
 
-  function handlePokemonSelected(pokemon) {
+  function handlePokemonSelected(pokemon: PokemonIndexItem) {
     return fetchAndDisplay(
       pokemon.id ?? pokemon.name,
       { confidenceScore: 100, scannedAt: new Date().toISOString(), scanMode: 'búsqueda por texto Gen 1-9' },
@@ -185,7 +186,7 @@ function App() {
     )
   }
 
-  function handleHistorySelected(pokemon) {
+  function handleHistorySelected(pokemon: { apiName?: string; id: number; confidenceScore?: number }) {
     return fetchAndDisplay(
       pokemon.apiName ?? pokemon.id,
       { confidenceScore: pokemon.confidenceScore ?? 100, scannedAt: new Date().toISOString(), scanMode: 'historial familiar' },
@@ -194,7 +195,7 @@ function App() {
     )
   }
 
-  function handleFavoriteSelected(pokemon) {
+  function handleFavoriteSelected(pokemon: { apiName?: string; id: number }) {
     return fetchAndDisplay(
       pokemon.apiName ?? pokemon.id,
       { confidenceScore: 100, scannedAt: new Date().toISOString(), scanMode: 'favorito familiar' },
@@ -203,7 +204,7 @@ function App() {
     )
   }
 
-  function handleScanCandidateSelected(pokemon) {
+  function handleScanCandidateSelected(pokemon: { apiName?: string; id: number; confidenceScore?: number; reason?: string }) {
     return fetchAndDisplay(
       pokemon.apiName ?? pokemon.id,
       {
@@ -225,8 +226,8 @@ function App() {
     setScanCandidates([])
   }
 
-  function handleScanFeedback(vote) {
-    if (!result?.id) return
+  function handleScanFeedback(vote: 'correct' | 'wrong' | null) {
+    if (!result?.id || !vote) return
     setScanFeedback((prev) => ({ ...prev, [result.id]: vote }))
   }
 
@@ -350,7 +351,7 @@ function App() {
             <ErrorBoundary message="No se pudo mostrar el Pokémon. Prueba buscando otro.">
               <ResultCard
                 collectionEntry={collectionEntry}
-                feedback={result?.id ? scanFeedback[result.id] : null}
+                feedback={result?.id ? (scanFeedback[result.id] as 'correct' | 'wrong' | null ?? null) : null}
                 key={result?.apiName ?? result?.id ?? (isScanning ? 'scanning' : 'empty')}
                 isFavorite={isCurrentFavorite}
                 isKidsMode={isKidsMode}
@@ -360,7 +361,7 @@ function App() {
                 onMarkCaptured={(pokemon) => updateCollection(pokemon, 'captured')}
                 onMarkSeen={(pokemon) => updateCollection(pokemon, 'seen')}
                 onSpeakPokedex={narratePokemon}
-                onToggleFavorite={() => toggleFavorite(result)}
+                onToggleFavorite={() => toggleFavorite(result!)}
                 pokemonTotal={pokemonTotal}
                 result={result}
               />
@@ -434,7 +435,6 @@ function App() {
                 role="dialog"
                 aria-modal="true"
                 aria-label="Quiz Pokémon"
-                onTrapEscape={() => setIsQuizOpen(false)}
                 onKeyDown={(e) => e.key === 'Escape' && setIsQuizOpen(false)}
               >
                 <ErrorBoundary message="El quiz tuvo un problema. Prueba cerrándolo y volviéndolo a abrir.">
@@ -505,7 +505,7 @@ function App() {
                 </header>
                 <Suspense fallback={<div className="assistant-loading">Cargando asistente...</div>}>
                   <ErrorBoundary message="El asistente tuvo un problema. Prueba recargando.">
-                    <PokemonAssistant pokemon={result} />
+                    <PokemonAssistant pokemon={result ?? null} />
                   </ErrorBoundary>
                 </Suspense>
               </m.section>

@@ -1,6 +1,15 @@
 import { Camera, RotateCcw, UploadCloud, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
+interface ImageScannerProps {
+  error: string
+  imageFile: File | null
+  isScanning: boolean
+  onImageSelected: (file: File | null) => void
+  onReset: () => void
+  previewUrl: string
+}
+
 export function ImageScanner({
   error,
   imageFile,
@@ -8,11 +17,11 @@ export function ImageScanner({
   onImageSelected,
   onReset,
   previewUrl,
-}) {
-  const cameraInputRef = useRef(null)
-  const galleryInputRef = useRef(null)
-  const streamRef = useRef(null)
-  const videoRef = useRef(null)
+}: ImageScannerProps) {
+  const cameraInputRef = useRef<HTMLInputElement>(null)
+  const galleryInputRef = useRef<HTMLInputElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
   const [isCameraLive, setIsCameraLive] = useState(false)
   const [cameraError, setCameraError] = useState('')
 
@@ -28,7 +37,7 @@ export function ImageScanner({
     }
   }, [])
 
-  function handleInputChange(event) {
+  function handleInputChange(event: React.ChangeEvent<HTMLInputElement>) {
     stopCamera()
     onImageSelected(event.target.files?.[0] ?? null)
     event.target.value = ''
@@ -78,7 +87,7 @@ export function ImageScanner({
     canvas.width = video.videoWidth
     canvas.height = video.videoHeight
     const context = canvas.getContext('2d')
-    context.drawImage(video, 0, 0, canvas.width, canvas.height)
+    context?.drawImage(video, 0, 0, canvas.width, canvas.height)
 
     canvas.toBlob((blob) => {
       if (!blob) {

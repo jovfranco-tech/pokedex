@@ -1,17 +1,24 @@
-import { getTypeMeta } from '../data/typeColors.js'
+import { getTypeMeta } from '../data/typeColors.ts'
+import type { PokemonDetail } from '../services/pokeApi.js'
 
-function normalize(text = '') {
+declare global {
+  interface Window {
+    webkitAudioContext?: typeof AudioContext
+  }
+}
+
+function normalize(text = ''): string {
   return String(text).replace(/\s+/g, ' ').trim()
 }
 
-function wait(ms) {
+function wait(ms: number): Promise<void> {
   return new Promise((resolve) => window.setTimeout(resolve, ms))
 }
 
 // --- Shared AudioContext ----------------------------------------------
-let _audioCtx = null
+let _audioCtx: AudioContext | null = null
 
-function getAudioContext() {
+function getAudioContext(): AudioContext | null {
   if (_audioCtx) return _audioCtx
   const AudioCtx = window.AudioContext || window.webkitAudioContext
   if (!AudioCtx) return null
@@ -20,9 +27,9 @@ function getAudioContext() {
 }
 
 // --- Pre-unlocked Audio element (iOS requires play() from a gesture) --
-let _audioEl = null
+let _audioEl: HTMLAudioElement | null = null
 
-function getAudioEl() {
+function getAudioEl(): HTMLAudioElement | null {
   if (_audioEl) return _audioEl
   if (typeof window === 'undefined') return null
   _audioEl = new Audio()
@@ -31,9 +38,9 @@ function getAudioEl() {
 }
 
 // --- Synchronous voice cache (fallback Web Speech API) ---------------
-let _voices = []
+let _voices: SpeechSynthesisVoice[] = []
 
-function syncVoices() {
+function syncVoices(): void {
   const v = window.speechSynthesis?.getVoices?.() ?? []
   if (v.length) _voices = v
 }
@@ -43,7 +50,7 @@ if (typeof window !== 'undefined' && window.speechSynthesis) {
   window.speechSynthesis.addEventListener('voiceschanged', syncVoices)
 }
 
-function chooseRoboticVoice() {
+function chooseRoboticVoice(): SpeechSynthesisVoice | null {
   syncVoices()
   if (!_voices.length) return null
   const spanishVoices = _voices.filter((v) => /^es(-|$)/i.test(v.lang))
@@ -56,7 +63,7 @@ function chooseRoboticVoice() {
 }
 
 // --- Unlock on first gesture ------------------------------------------
-function unlockAll() {
+function unlockAll(): void {
   // Web Audio
   const ctx = getAudioContext()
   if (ctx?.state === 'suspended') ctx.resume().catch(() => {})
@@ -84,7 +91,7 @@ if (typeof window !== 'undefined') {
 
 // --- Beep (Dexter computer style) ------------------------------------
 
-function scheduleTone(ctx, freq, startSec, durationSec, gain = 0.22) {
+function scheduleTone(ctx: AudioContext, freq: number, startSec: number, durationSec: number, gain = 0.22): void {
   const osc = ctx.createOscillator()
   const g = ctx.createGain()
   osc.type = 'square'
@@ -97,7 +104,7 @@ function scheduleTone(ctx, freq, startSec, durationSec, gain = 0.22) {
   osc.stop(ctx.currentTime + startSec + durationSec)
 }
 
-export function playPokedexBeep() {
+export function playPokedexBeep(): Promise<void> {
   if (typeof window === 'undefined') return Promise.resolve()
   try {
     const ctx = getAudioContext()
@@ -120,14 +127,14 @@ export function playPokedexBeep() {
 const TTS_DB_NAME = 'pokedex-tts-v1'
 const TTS_STORE = 'audio'
 const TTS_CACHE_MAX = 50
-const _ttsMemCache = new Map() // text → Blob (session-level, fast)
+const _ttsMemCache = new Map<string, Blob>() // text → Blob (session-level, fast)
 
-function openTtsDb() {
+function openTtsDb(): Promise<IDBDatabase | null> {
   if (typeof indexedDB === 'undefined') return Promise.resolve(null)
   return new Promise((resolve) => {
     const req = indexedDB.open(TTS_DB_NAME, 1)
     req.onupgradeneeded = (e) => {
-      const db = e.target.result
+      const db = (e.target as IDBOpenDBRequest).result
       if (!db.objectStoreNames.contains(TTS_STORE)) {
         db.createObjectStore(TTS_STORE, { keyPath: 'key' })
       }
@@ -137,27 +144,35 @@ function openTtsDb() {
   })
 }
 
-async function idbGetBlob(key) {
+async function idbGetBlob(key: string): Promise<Blob | null> {
   try {
     const db = await openTtsDb()
     if (!db) return null
     return new Promise((resolve) => {
       const req = db.transaction(TTS_STORE, 'readonly').objectStore(TTS_STORE).get(key)
-      req.onsuccess = () => resolve(req.result?.blob ?? null)
+      req.onsuccess = () => resolve((req.result as { blob?: Blob })?.blob ?? null)
       req.onerror = () => resolve(null)
     })
   } catch { return null }
 }
 
-async function idbSetBlob(key, blob) {
+async function idbSetBlob(key: string, blob: Blob): Promise<void> {
   try {
     const db = await openTtsDb()
     if (!db) return
     const tx = db.transaction(TTS_STORE, 'readwrite')
     const store = tx.objectStore(TTS_STORE)
-    const count = await new Promise((r) => { const q = store.count(); q.onsuccess = () => r(q.result); q.onerror = () => r(0) })
+    const count = await new Promise<number>((r) => {
+      const q = store.count()
+      q.onsuccess = () => r(q.result)
+      q.onerror = () => r(0)
+    })
     if (count >= TTS_CACHE_MAX) {
-      const cursor = await new Promise((r) => { const q = store.openCursor(); q.onsuccess = (e) => r(e.target.result); q.onerror = () => r(null) })
+      const cursor = await new Promise<IDBCursorWithValue | null>((r) => {
+        const q = store.openCursor()
+        q.onsuccess = (e) => r((e.target as IDBRequest<IDBCursorWithValue | null>).result)
+        q.onerror = () => r(null)
+      })
       cursor?.delete()
     }
     store.put({ key, blob })
@@ -166,7 +181,7 @@ async function idbSetBlob(key, blob) {
   }
 }
 
-function playBlob(blob) {
+function playBlob(blob: Blob): Promise<void> {
   const url = URL.createObjectURL(blob)
   const audio = getAudioEl() ?? new Audio()
   return new Promise((resolve) => {
@@ -181,16 +196,21 @@ function playBlob(blob) {
   })
 }
 
-async function fetchAndPlayTTS(text) {
+interface TtsErrorResult {
+  unavailable?: boolean
+  error?: string
+}
+
+async function fetchAndPlayTTS(text: string): Promise<TtsErrorResult | undefined> {
   const key = text.trim()
 
   // 1. Memory cache (fast, current session)
   const memBlob = _ttsMemCache.get(key)
-  if (memBlob) return playBlob(memBlob)
+  if (memBlob) { await playBlob(memBlob); return undefined }
 
   // 2. IndexedDB cache (persisted across sessions)
   const idbBlob = await idbGetBlob(key)
-  if (idbBlob) { _ttsMemCache.set(key, idbBlob); return playBlob(idbBlob) }
+  if (idbBlob) { _ttsMemCache.set(key, idbBlob); await playBlob(idbBlob); return undefined }
 
   // 3. Fetch from OpenAI TTS API
   const response = await fetch('/api/narrate', {
@@ -200,23 +220,35 @@ async function fetchAndPlayTTS(text) {
   })
 
   if (!response.ok) {
-    const data = await response.json().catch(() => ({}))
+    const data = await response.json().catch(() => ({})) as { code?: string; error?: string }
     return { unavailable: data.code === 'missing_openai_key', error: data.error }
   }
 
   const blob = await response.blob()
 
   // Evict oldest memory entry if full
-  if (_ttsMemCache.size >= TTS_CACHE_MAX) _ttsMemCache.delete(_ttsMemCache.keys().next().value)
+  if (_ttsMemCache.size >= TTS_CACHE_MAX) {
+    const oldestKey = _ttsMemCache.keys().next().value
+    if (oldestKey !== undefined) _ttsMemCache.delete(oldestKey)
+  }
   _ttsMemCache.set(key, blob)
-  idbSetBlob(key, blob) // persist in background (no await)
+  void idbSetBlob(key, blob) // persist in background (no await)
 
-  return playBlob(blob)
+  await playBlob(blob)
+  return undefined
 }
 
 // --- Web Speech API fallback ------------------------------------------
 
-export function speakSyncAndWait(text, options = {}) {
+export interface SpeakOptions {
+  withBeep?: boolean
+  rate?: number
+  pitch?: number
+  volume?: number
+  onEnd?: () => void
+}
+
+export function speakSyncAndWait(text: string, options: SpeakOptions = {}): Promise<void> {
   if (!text || typeof window === 'undefined' || !window.speechSynthesis) return Promise.resolve()
   const message = normalize(text)
   if (!message) return Promise.resolve()
@@ -246,7 +278,7 @@ export function speakSyncAndWait(text, options = {}) {
 // Tries OpenAI TTS (onyx voice). If unavailable, falls back to Web
 // Speech API. Beep always plays via AudioContext before the voice.
 // options.onEnd() is called after speech finishes (useful for UI indicators).
-export async function speakPokedexLine(text, options = {}) {
+export async function speakPokedexLine(text: string, options: SpeakOptions = {}): Promise<void> {
   if (!text) return
   const withBeep = options.withBeep !== false
 
@@ -275,12 +307,12 @@ export async function speakPokedexLine(text, options = {}) {
   options.onEnd?.()
 }
 
-export async function speakWithPokedexVoice(text, options = {}) {
+export async function speakWithPokedexVoice(text: string, options: SpeakOptions = {}): Promise<void> {
   return speakSyncAndWait(text, options)
 }
 
 // --- Announcement text -----------------------------------------------
-export function buildPokedexAnnouncement(pokemon) {
+export function buildPokedexAnnouncement(pokemon: PokemonDetail | null): string {
   if (!pokemon) return ''
   const types = pokemon.type?.map((t) => getTypeMeta(t).label).join(' y ') ?? ''
   const description = pokemon.description ?? ''

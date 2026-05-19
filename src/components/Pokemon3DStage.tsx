@@ -1,45 +1,58 @@
 import { useState } from 'react'
+import type { CSSProperties } from 'react'
+import type { PokemonDetail } from '../services/pokeApi.js'
 
-const neutralTilt = {
+interface TiltState {
+  x: string
+  y: string
+  lightX: string
+  lightY: string
+}
+
+const neutralTilt: TiltState = {
   x: '-7deg',
   y: '10deg',
   lightX: '58%',
   lightY: '34%',
 }
 
-const stageMotionByType = {
-  bug: 'stage-motion-nature',
-  dark: 'stage-motion-mystic',
-  dragon: 'stage-motion-air',
+const stageMotionByType: Record<string, string> = {
+  bug:      'stage-motion-nature',
+  dark:     'stage-motion-mystic',
+  dragon:   'stage-motion-air',
   electric: 'stage-motion-electric',
-  fairy: 'stage-motion-mystic',
+  fairy:    'stage-motion-mystic',
   fighting: 'stage-motion-heavy',
-  fire: 'stage-motion-fire',
-  flying: 'stage-motion-air',
-  ghost: 'stage-motion-mystic',
-  grass: 'stage-motion-nature',
-  ground: 'stage-motion-heavy',
-  ice: 'stage-motion-water',
-  normal: 'stage-motion-heavy',
-  poison: 'stage-motion-mystic',
-  psychic: 'stage-motion-mystic',
-  rock: 'stage-motion-heavy',
-  steel: 'stage-motion-heavy',
-  water: 'stage-motion-water',
+  fire:     'stage-motion-fire',
+  flying:   'stage-motion-air',
+  ghost:    'stage-motion-mystic',
+  grass:    'stage-motion-nature',
+  ground:   'stage-motion-heavy',
+  ice:      'stage-motion-water',
+  normal:   'stage-motion-heavy',
+  poison:   'stage-motion-mystic',
+  psychic:  'stage-motion-mystic',
+  rock:     'stage-motion-heavy',
+  steel:    'stage-motion-heavy',
+  water:    'stage-motion-water',
 }
 
 const stageParticles = Array.from({ length: 10 }, (_, index) => index)
 const typeBurstItems = Array.from({ length: 8 }, (_, index) => index)
 
-export function Pokemon3DStage({ pokemon }) {
-  const [tilt, setTilt] = useState(neutralTilt)
+interface Pokemon3DStageProps {
+  pokemon: PokemonDetail
+}
+
+export function Pokemon3DStage({ pokemon }: Pokemon3DStageProps) {
+  const [tilt, setTilt] = useState<TiltState>(neutralTilt)
   const modelSprite = pokemon.sprite
   const motionSprite = pokemon.animatedSprite
   const stageSprite = motionSprite || modelSprite
   const primaryType = (pokemon.type?.[0] ?? 'normal').toLowerCase().replace(/[^a-z0-9]/g, '')
   const motionClass = stageMotionByType[primaryType] ?? 'stage-motion-mystic'
 
-  function handlePointerMove(event) {
+  function handlePointerMove(event: React.PointerEvent<HTMLDivElement>) {
     const rect = event.currentTarget.getBoundingClientRect()
     const x = (event.clientX - rect.left) / rect.width - 0.5
     const y = (event.clientY - rect.top) / rect.height - 0.5
@@ -55,7 +68,7 @@ export function Pokemon3DStage({ pokemon }) {
   return (
     <div
       className={`pokemon-3d-shell pokemon-3d-${primaryType} ${motionClass}`}
-      style={{ '--tilt-x': tilt.x, '--tilt-y': tilt.y, '--light-x': tilt.lightX, '--light-y': tilt.lightY }}
+      style={{ '--tilt-x': tilt.x, '--tilt-y': tilt.y, '--light-x': tilt.lightX, '--light-y': tilt.lightY } as CSSProperties}
       aria-label={`Animación 3D de ${pokemon.name}`}
       onPointerMove={handlePointerMove}
       onPointerLeave={() => setTilt(neutralTilt)}

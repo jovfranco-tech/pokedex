@@ -1,11 +1,21 @@
-import { Component } from 'react'
+import { Component, type ReactNode, type ErrorInfo } from 'react'
+
+interface ErrorBoundaryProps {
+  children?: ReactNode
+  fallback?: ReactNode
+  message?: string
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean
+}
 
 /**
  * Send error telemetry to the Vercel function log (no external service needed).
  * Uses sendBeacon so it never blocks the main thread and survives page unload.
  * Only fires in production to avoid noise during development.
  */
-function reportError(error, info) {
+function reportError(error: Error, info: ErrorInfo): void {
   if (typeof window === 'undefined') return
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') return
 
@@ -23,22 +33,22 @@ function reportError(error, info) {
   }
 }
 
-export class ErrorBoundary extends Component {
-  constructor(props) {
+export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
     super(props)
     this.state = { hasError: false }
   }
 
-  static getDerivedStateFromError() {
+  static getDerivedStateFromError(): ErrorBoundaryState {
     return { hasError: true }
   }
 
-  componentDidCatch(error, info) {
+  componentDidCatch(error: Error, info: ErrorInfo): void {
     console.error('[ErrorBoundary]', error, info)
     reportError(error, info)
   }
 
-  render() {
+  render(): ReactNode {
     if (this.state.hasError) {
       return this.props.fallback ?? (
         <div className="error-boundary-fallback">

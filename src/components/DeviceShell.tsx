@@ -1,6 +1,11 @@
 import { m } from 'framer-motion'
+import type { ReactNode } from 'react'
 
-export function DeviceShell({ children }) {
+interface DeviceShellProps {
+  children: ReactNode
+}
+
+export function DeviceShell({ children }: DeviceShellProps) {
   return (
     <m.section
       initial={{ opacity: 0, y: 20, scale: 0.98 }}

@@ -27,7 +27,7 @@ export default defineConfig([
 
   // ── TypeScript ─────────────────────────────────────────────────────────────
   {
-    files: ['src/**/*.ts'],
+    files: ['src/**/*.ts', 'src/**/*.tsx'],
     extends: [
       ...tseslint.configs.recommended,
     ],

@@ -1,7 +1,13 @@
 import { CheckCircle2 } from 'lucide-react'
 import { formatPokemonNumber } from '../utils/formatPokemonNumber.js'
+import type { CollectionEntry } from '../hooks/useCollection.js'
 
-export function CollectionStrip({ collection = [], onSelect }) {
+interface CollectionStripProps {
+  collection?: CollectionEntry[]
+  onSelect?: (pokemon: CollectionEntry) => void
+}
+
+export function CollectionStrip({ collection = [], onSelect }: CollectionStripProps) {
   const items = Array.isArray(collection) ? collection : []
   const seen = items.filter((item) => item.seenAt)
   const captured = items.filter((item) => item.capturedAt)

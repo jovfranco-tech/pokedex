@@ -11,7 +11,7 @@ globalThis.window = {
   webkitAudioContext: undefined,
 }
 
-const { buildPokedexAnnouncement } = await import('../pokedexVoice.js')
+const { buildPokedexAnnouncement } = await import('../pokedexVoice.ts')
 
 describe('buildPokedexAnnouncement', () => {
   it('returns empty string for null', () => {
