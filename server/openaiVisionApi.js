@@ -20,7 +20,18 @@ function isAllowedOrigin(request, env) {
 }
 
 // --- Rate limiter (per-IP sliding window) --------------------------------
-const _rateWindows = new Map() // ip → [timestamp, ...]
+//
+// Stored on globalThis so the Map survives module reloads within the same
+// process instance (e.g. hot-reload in dev, warm re-invocations in prod).
+//
+// ⚠️ Limitation: Vercel scales horizontally — each concurrent instance has its
+// own memory space. An attacker who spreads requests across instances will not
+// be throttled globally. For true distributed rate limiting, replace this Map
+// with Vercel KV or Upstash Redis (both have free tiers):
+//   npm i @upstash/ratelimit @upstash/redis
+//   const ratelimit = new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(25, '60s') })
+//
+const _rateWindows = (globalThis._pokedexRateWindows ??= new Map())
 
 function getClientIp(request) {
   return (
@@ -36,6 +47,12 @@ function isRateLimited(ip, limit, windowMs = 60_000) {
   if (timestamps.length >= limit) return true
   timestamps.push(now)
   _rateWindows.set(ip, timestamps)
+  // Evict fully-expired entries when the map grows large (memory hygiene)
+  if (_rateWindows.size > 2_000) {
+    for (const [k, v] of _rateWindows) {
+      if (v.every((t) => now - t > windowMs)) _rateWindows.delete(k)
+    }
+  }
   return false
 }
 

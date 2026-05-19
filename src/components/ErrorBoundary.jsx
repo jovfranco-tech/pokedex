@@ -1,5 +1,28 @@
 import { Component } from 'react'
 
+/**
+ * Send error telemetry to the Vercel function log (no external service needed).
+ * Uses sendBeacon so it never blocks the main thread and survives page unload.
+ * Only fires in production to avoid noise during development.
+ */
+function reportError(error, info) {
+  if (typeof window === 'undefined') return
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') return
+
+  try {
+    const payload = JSON.stringify({
+      error: error?.message ?? String(error),
+      stack: error?.stack?.slice(0, 600),
+      componentStack: info?.componentStack?.slice(0, 600),
+      url: window.location.href,
+      time: new Date().toISOString(),
+    })
+    navigator.sendBeacon?.('/api/report-error', payload)
+  } catch {
+    // sendBeacon failure is non-critical — silently ignore
+  }
+}
+
 export class ErrorBoundary extends Component {
   constructor(props) {
     super(props)
@@ -12,6 +35,7 @@ export class ErrorBoundary extends Component {
 
   componentDidCatch(error, info) {
     console.error('[ErrorBoundary]', error, info)
+    reportError(error, info)
   }
 
   render() {

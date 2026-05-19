@@ -2,7 +2,7 @@ import { AnimatePresence, LazyMotion, m, useReducedMotion } from 'framer-motion'
 
 const loadMotionFeatures = () => import('framer-motion').then((mod) => mod.domAnimation)
 import { Bot, CircleDot, Download, Gamepad2, Mic, Sparkles, Volume2, X } from 'lucide-react'
-import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useState } from 'react'
 import { CollectionStrip } from './components/CollectionStrip.jsx'
 import { DeviceShell } from './components/DeviceShell.jsx'
 import { ErrorBoundary } from './components/ErrorBoundary.jsx'
@@ -54,7 +54,6 @@ function App() {
   const [pokemonIndex, setPokemonIndex] = useState([])
   const [isIndexLoading, setIsIndexLoading] = useState(true)
   const pokemonTotal = pokemonIndex.length || DEFAULT_POKEMON_SPECIES_COUNT
-  const lastAutoSpeechKey = useRef('')
   const { canInstall, isInstalled, promptInstall } = usePwaInstall()
 
   // ── Collection (history, favorites, Pokédex) ───────────────────────────────
@@ -149,27 +148,18 @@ function App() {
     return () => { isActive = false }
   }, [result, setResult])
 
-  // Auto-narrate when a new Pokémon loads
-  useEffect(() => {
-    if (!result?.id || isScanning) return
-
-    const autoKey = `${result.id}-${result.scannedAt ?? 'auto'}`
-    if (lastAutoSpeechKey.current === autoKey) return
-    lastAutoSpeechKey.current = autoKey
-
-    if (!isAutoNarrate) return
-    // Defer to avoid calling setState synchronously inside an effect body.
-    const timer = window.setTimeout(() => narratePokemon(result), 0)
-    return () => window.clearTimeout(timer)
-  }, [isScanning, result, isAutoNarrate, narratePokemon])
-
   // ── Handlers ───────────────────────────────────────────────────────────────
 
-  /** Common onSuccess callback for all fetch actions */
+  /**
+   * Common onSuccess callback for all fetch actions.
+   * Narration fires here — in the same call stack as the user gesture that
+   * triggered the fetch — so no reactive effect or setTimeout hack needed.
+   */
   function onFetchSuccess(details) {
     setResult(details)
     rememberScan(details)
     updateCollection(details, 'seen')
+    if (isAutoNarrate) narratePokemon(details)
   }
 
   function handleImageSelected(file) {

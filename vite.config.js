@@ -66,6 +66,21 @@ export default defineConfig(({ mode }) => {
                 },
               },
             },
+            {
+              // Cache Pokémon cries (.ogg) for offline playback and instant re-play
+              urlPattern: /^https:\/\/raw\.githubusercontent\.com\/PokeAPI\/cries\/.*/i,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'pokemon-cries-cache',
+                expiration: {
+                  maxEntries: 600,
+                  maxAgeSeconds: 60 * 60 * 24 * 365, // 1 año (cries son estáticos)
+                },
+                cacheableResponse: {
+                  statuses: [0, 200, 206], // 206 = range request (audio streaming)
+                },
+              },
+            },
           ],
         },
       }),
