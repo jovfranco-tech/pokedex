@@ -643,12 +643,17 @@ async function fetchEvolution(species) {
 export async function fetchPokemonDetails(nameOrId, options = {}) {
   const cacheKey = String(nameOrId).toLowerCase()
   if (detailsCache.has(cacheKey) && !options.confidenceScore) {
-    return detailsCache.get(cacheKey)
+    const memory = detailsCache.get(cacheKey)
+    return options.scannedAt ? { ...memory, scannedAt: options.scannedAt } : memory
   }
 
   if (!options.confidenceScore) {
     const persisted = readCachedDetail(cacheKey)
-    if (persisted) { detailsCache.set(cacheKey, persisted); return persisted }
+    if (persisted) {
+      const detail = options.scannedAt ? { ...persisted, scannedAt: options.scannedAt } : persisted
+      detailsCache.set(cacheKey, persisted)
+      return detail
+    }
   }
 
   const pokemonResponse = await apiFetch(`${API_BASE}/pokemon/${cacheKey}`)
