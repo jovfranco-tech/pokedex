@@ -1,81 +1,106 @@
 /**
- * Web Audio API – single persistent AudioContext for the whole session.
+ * Pokémon cry playback.
  *
- * Key design:
- *  - unlockAudio() MUST be called synchronously at the top of every user-gesture
- *    handler (before any await). It fires ctx.resume() and plays a silent buffer
- *    so the context becomes 'running' immediately on all browsers (incl. Safari).
- *    The resulting promise is stored so playPokemonCry can await it safely from
- *    outside the gesture window without hanging.
+ * Two modes:
+ *  1. Direct (button click) — new Audio() is the most reliable for a real
+ *     user gesture; no AudioContext needed.
+ *  2. Auto (useEffect after search) — needs a pre-unlocked AudioContext
+ *     because the gesture window is already closed.
  *
- *  - playPokemonCry() never calls ctx.resume() itself (that would hang outside a
- *    gesture). Instead it awaits the stored promise with a 2-second safety cap.
+ * Call unlockAudio() synchronously at the top of every gesture handler
+ * (before any await) so the AudioContext is running by the time the
+ * useEffect fires.
  */
 
 let _ctx = null
-let _readyPromise = null  // Promise<void> created inside a gesture — safe to await later
+let _unlocked = false
 
 function getCtx() {
-  if (!_ctx) _ctx = new (window.AudioContext || window.webkitAudioContext)()
+  if (!_ctx) {
+    _ctx = new (window.AudioContext || window.webkitAudioContext)()
+  }
   return _ctx
 }
 
 /**
- * Call this synchronously at the TOP of any user-gesture handler
- * (button onClick, form onSubmit, etc.) BEFORE any await.
- *
- * Unlocks the AudioContext for the rest of the session by:
- *  1. Playing a zero-duration silent buffer (immediately makes ctx 'running' in Chrome/Safari)
- *  2. Calling ctx.resume() within the gesture and storing the promise for later use
+ * Unlock the AudioContext. Call synchronously inside every user-gesture
+ * handler (onClick, onSubmit…) BEFORE any await.
  */
 export function unlockAudio() {
   try {
     const c = getCtx()
-    if (c.state === 'running') return  // already unlocked
-
-    // Play a silent 1-sample buffer — this immediately counts as audio
-    // activity and satisfies the browser's autoplay requirement on all browsers
-    const silentBuf = c.createBuffer(1, 1, 22050)
+    if (_unlocked) return
+    // Resume within the gesture and play a silent buffer — both are needed
+    // for reliable unlock on Chrome + Safari
+    c.resume().then(() => { _unlocked = true }).catch(() => {})
+    const buf = c.createBuffer(1, 1, 22050)
     const src = c.createBufferSource()
-    src.buffer = silentBuf
+    src.buffer = buf
     src.connect(c.destination)
     src.start(0)
-
-    // Store the resume promise so we can await it from non-gesture code later
-    _readyPromise = c.resume().catch(() => {})
-  } catch { /* ignore — SSR, old browser, etc. */ }
+    src.onended = () => { _unlocked = true }
+  } catch (e) {
+    console.warn('[unlockAudio] error:', e.message)
+  }
 }
 
 /**
- * Fetch, decode and play a Pokémon cry via the Web Audio API.
- * Returns a Promise that resolves when the cry ends (or on any error).
- *
- * Requires unlockAudio() to have been called within a user gesture earlier
- * in the same session.
+ * Play a Pokémon cry.
+ * - When called from a button click (gesture), it tries new Audio() first
+ *   because that's the simplest and most reliable in a gesture context.
+ * - When called from auto-play (useEffect), it uses the pre-unlocked
+ *   AudioContext so it can play without a live gesture.
  *
  * @param {string} cryUrl
  * @param {number} [volume=0.55]
+ * @param {{ direct?: boolean }} [opts]  direct=true skips the AudioContext path
  */
-export async function playPokemonCry(cryUrl, volume = 0.55) {
-  if (!cryUrl) return
+export async function playPokemonCry(cryUrl, volume = 0.55, opts = {}) {
+  if (!cryUrl) {
+    console.warn('[playPokemonCry] no cryUrl')
+    return
+  }
 
+  // ── Direct path (button click with live gesture) ──────────────────────────
+  if (opts.direct) {
+    return new Promise((resolve) => {
+      const audio = new Audio(cryUrl)
+      audio.volume = volume
+      const guard = window.setTimeout(resolve, 8_000)
+      const done = () => { window.clearTimeout(guard); resolve() }
+      audio.addEventListener('ended', done, { once: true })
+      audio.addEventListener('error', (e) => {
+        console.warn('[playPokemonCry] direct audio error:', e.message ?? e.type)
+        done()
+      }, { once: true })
+      audio.play().catch((e) => {
+        console.warn('[playPokemonCry] direct play() rejected:', e.message)
+        done()
+      })
+    })
+  }
+
+  // ── AudioContext path (auto-play from useEffect) ──────────────────────────
   try {
     const c = getCtx()
 
-    // If the context isn't running yet, wait for the resume promise that was
-    // kicked off in unlockAudio() (inside a gesture). Cap at 2 s to avoid hanging.
     if (c.state !== 'running') {
-      if (_readyPromise) {
-        await Promise.race([
-          _readyPromise,
-          new Promise((_, reject) => window.setTimeout(() => reject(new Error('unlock timeout')), 2_000)),
-        ])
+      // Wait up to 1.5 s for the gesture-triggered resume to complete
+      const deadline = Date.now() + 1_500
+      while (c.state !== 'running' && Date.now() < deadline) {
+        await new Promise((r) => window.setTimeout(r, 50))
       }
-      if (c.state !== 'running') return  // give up — context never unlocked
+      if (c.state !== 'running') {
+        console.warn('[playPokemonCry] AudioContext still', c.state, '— skipping cry')
+        return
+      }
     }
 
     const resp = await fetch(cryUrl)
-    if (!resp.ok) return
+    if (!resp.ok) {
+      console.warn('[playPokemonCry] fetch failed:', resp.status)
+      return
+    }
 
     const arrayBuf = await resp.arrayBuffer()
     const decoded = await c.decodeAudioData(arrayBuf)
@@ -89,9 +114,11 @@ export async function playPokemonCry(cryUrl, volume = 0.55) {
     gain.connect(c.destination)
 
     return new Promise((resolve) => {
-      const guard = window.setTimeout(resolve, 8_000) // safety cap
+      const guard = window.setTimeout(resolve, 8_000)
       source.onended = () => { window.clearTimeout(guard); resolve() }
       source.start()
     })
-  } catch { /* swallow — NotAllowedError, decode error, network error, etc. */ }
+  } catch (e) {
+    console.warn('[playPokemonCry] AudioContext path error:', e.message)
+  }
 }

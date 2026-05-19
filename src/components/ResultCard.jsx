@@ -221,7 +221,7 @@ export function ResultCard({
       <div className="profile-audio-row">
         <button
           type="button"
-          onClick={() => { unlockAudio(); playPokemonCry(result.cryUrl) }}
+          onClick={() => { unlockAudio(); playPokemonCry(result.cryUrl, 0.55, { direct: true }) }}
           disabled={!result.cryUrl}
           className="profile-sound-button"
         >
