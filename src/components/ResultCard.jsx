@@ -5,7 +5,7 @@ import { TypeBadge } from './TypeBadge.jsx'
 import { getPokemonTypeTheme, getTypeMeta } from '../data/typeColors.js'
 import { formatPokemonNumber } from '../utils/formatPokemonNumber.js'
 import { ErrorBoundary } from './ErrorBoundary.jsx'
-import { playPokemonCry } from '../utils/playPokemonCry.js'
+import { playPokemonCry, unlockAudio } from '../utils/playPokemonCry.js'
 import { sharePokemonCard } from '../utils/shareCard.js'
 
 const Pokemon3DStage = lazy(() => import('./Pokemon3DStage.jsx').then((module) => ({ default: module.Pokemon3DStage })))
@@ -221,7 +221,7 @@ export function ResultCard({
       <div className="profile-audio-row">
         <button
           type="button"
-          onClick={() => playPokemonCry(result.cryUrl)}
+          onClick={() => { unlockAudio(); playPokemonCry(result.cryUrl) }}
           disabled={!result.cryUrl}
           className="profile-sound-button"
         >

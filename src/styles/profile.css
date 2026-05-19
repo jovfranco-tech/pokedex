@@ -212,9 +212,14 @@
 }
 
 .profile-audio-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  display: flex;
+  flex-wrap: wrap;
   gap: 9px;
+}
+
+.profile-audio-row > .profile-sound-button {
+  flex: 1 1 90px; /* grow/shrink but never collapse below 90px */
+  min-width: 90px;
 }
 
 .profile-mini-stat,

@@ -26,7 +26,7 @@ import {
   loadPokemonIndex,
 } from './services/pokeApi.js'
 import { identifyPokemonFromImage } from './services/visionSimulator.js'
-import { playPokemonCry } from './utils/playPokemonCry.js'
+import { playPokemonCry, unlockAudio } from './utils/playPokemonCry.js'
 import { buildPokedexAnnouncement, speakPokedexLine } from './utils/pokedexVoice.js'
 
 const PokemonAssistant = lazy(() => import('./components/PokemonAssistant.jsx').then((module) => ({ default: module.PokemonAssistant })))
@@ -266,6 +266,7 @@ function App() {
       return
     }
 
+    unlockAudio() // unlock AudioContext synchronously inside the user-gesture handler
     setError('')
     setIsScanning(true)
 
@@ -298,6 +299,7 @@ function App() {
    * @param {boolean}       [keepCandidates=false] - Keep the current scanCandidates strip visible
    */
   async function fetchAndDisplay(id, meta, errorMsg, keepCandidates = false) {
+    unlockAudio() // unlock AudioContext synchronously inside the user-gesture handler
     setError('')
     if (!keepCandidates) setScanCandidates([])
     setIsScanning(true)
