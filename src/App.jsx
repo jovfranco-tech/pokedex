@@ -2,7 +2,7 @@ import { AnimatePresence, LazyMotion, m, useReducedMotion } from 'framer-motion'
 
 const loadMotionFeatures = () => import('framer-motion').then((mod) => mod.domAnimation)
 import { Bot, CircleDot, Download, Gamepad2, Mic, Sparkles, Volume2, X } from 'lucide-react'
-import { Suspense, lazy, useEffect, useRef, useState } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react'
 import { CollectionStrip } from './components/CollectionStrip.jsx'
 import { DeviceShell } from './components/DeviceShell.jsx'
 import { ErrorBoundary } from './components/ErrorBoundary.jsx'
@@ -61,7 +61,6 @@ function App() {
   const [pokemonIndex, setPokemonIndex] = useState([])
   const [isIndexLoading, setIsIndexLoading] = useState(true)
   const pokemonTotal = pokemonIndex.length || DEFAULT_POKEMON_SPECIES_COUNT
-  const lastAutoCryKey = useRef('')
   const lastAutoSpeechKey = useRef('')
   const { canInstall, isInstalled, promptInstall } = usePwaInstall()
   const isCurrentFavorite = Boolean(
@@ -71,7 +70,7 @@ function App() {
     ? collection.find((pokemon) => pokemon.apiName === result.apiName || pokemon.id === result.id)
     : null
 
-  function narratePokemon(pokemon) {
+  const narratePokemon = useCallback((pokemon) => {
     const announcement = buildPokedexAnnouncement(pokemon)
     if (!announcement) return
     setIsSpeaking(true)
@@ -81,7 +80,7 @@ function App() {
       rate: 1.0, pitch: 0.1, volume: 1, withBeep: true,
       onEnd: () => setIsSpeaking(false),
     })
-  }
+  }, [])
 
   const lastScanLabel = result?.scannedAt
     ? new Intl.DateTimeFormat('es-MX', {
@@ -146,8 +145,10 @@ function App() {
     lastAutoSpeechKey.current = autoKey
 
     if (!isAutoNarrate) return
-    narratePokemon(result)
-  }, [isScanning, result, isAutoNarrate])
+    // Defer to avoid calling setState synchronously inside an effect body.
+    const timer = window.setTimeout(() => narratePokemon(result), 0)
+    return () => window.clearTimeout(timer)
+  }, [isScanning, result, isAutoNarrate, narratePokemon])
 
   function handleImageSelected(file) {
     setError('')

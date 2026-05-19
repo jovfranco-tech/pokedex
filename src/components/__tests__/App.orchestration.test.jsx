@@ -71,6 +71,7 @@ vi.mock('../../utils/pokedexVoice.js', () => ({
 
 vi.mock('../../utils/playPokemonCry.js', () => ({
   playPokemonCry: vi.fn().mockResolvedValue(undefined),
+  unlockAudio: vi.fn(),
 }))
 
 vi.mock('../../utils/registerServiceWorker.js', () => ({ registerServiceWorker: vi.fn() }))
