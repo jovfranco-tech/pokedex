@@ -564,7 +564,7 @@ function App() {
                 animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
                 exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 20, scale: 0.95 }}
                 transition={prefersReducedMotion ? { duration: 0.15 } : { type: 'spring', bounce: 0.25 }}
-                className="assistant-modal"
+                className="assistant-modal quiz-modal"
                 role="dialog"
                 aria-modal="true"
                 aria-label="Quiz Pokémon"

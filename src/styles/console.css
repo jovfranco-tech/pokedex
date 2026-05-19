@@ -1130,9 +1130,9 @@
   padding: 10px;
 }
 
-@media (min-width: 940px) {
+@media (min-width: 768px) {
   .pokedex-app-frame {
-    grid-template-columns: minmax(320px, 390px) minmax(0, 1fr);
+    grid-template-columns: minmax(300px, 370px) minmax(0, 1fr);
     align-items: start;
     gap: 16px;
   }
@@ -1166,7 +1166,7 @@
   }
 }
 
-@media (max-width: 939px) {
+@media (max-width: 767px) {
   .pokedex-app-frame {
     gap: 12px;
   }

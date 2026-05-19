@@ -1741,3 +1741,9 @@
 }
 
 .quiz-next-button:hover { background: rgba(255, 214, 67, 0.28); }
+
+/* Quiz modal — dark red background so white text / yellow accents are visible */
+.quiz-modal {
+  background: linear-gradient(160deg, #c9000a 0%, #8a0006 100%);
+  overflow-y: auto;
+}
