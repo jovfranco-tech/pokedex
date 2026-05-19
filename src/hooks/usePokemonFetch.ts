@@ -9,26 +9,62 @@
  *     usePokemonFetch({ pokemonIndex })
  */
 import { useState } from 'react'
-import { fetchPokemonDetails } from '../services/pokeApi.js'
-import { identifyPokemonFromImage } from '../services/visionSimulator.js'
+import {
+  type FetchPokemonOptions,
+  type PokemonDetail,
+  type PokemonIndexItem,
+  fetchPokemonDetails,
+} from '../services/pokeApi.js'
+import { type ScanCandidate, identifyPokemonFromImage } from '../services/visionSimulator.js'
 import { playPokemonCry, unlockAudio } from '../utils/playPokemonCry.js'
 
-export function usePokemonFetch({ pokemonIndex }) {
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+interface FetchAndDisplayOptions {
+  onSuccess?: (details: PokemonDetail) => void
+  keepCandidates?: boolean
+}
+
+interface HandleAnalyzeOptions {
+  onSuccess?: (result: PokemonDetail & { scanCandidates?: ScanCandidate[] }) => void
+  onNotFound?: () => void
+}
+
+export interface UsePokemonFetchResult {
+  error: string
+  setError: React.Dispatch<React.SetStateAction<string>>
+  isScanning: boolean
+  scanCandidates: ScanCandidate[]
+  setScanCandidates: React.Dispatch<React.SetStateAction<ScanCandidate[]>>
+  fetchAndDisplay: (
+    id: string | number,
+    meta: FetchPokemonOptions,
+    errorMsg: string,
+    options?: FetchAndDisplayOptions,
+  ) => Promise<void>
+  handleAnalyze: (file: File | null, options?: HandleAnalyzeOptions) => Promise<void>
+}
+
+// ── Hook ──────────────────────────────────────────────────────────────────────
+
+export function usePokemonFetch({
+  pokemonIndex,
+}: {
+  pokemonIndex: PokemonIndexItem[]
+}): UsePokemonFetchResult {
   const [error, setError] = useState('')
   const [isScanning, setIsScanning] = useState(false)
-  const [scanCandidates, setScanCandidates] = useState([])
+  const [scanCandidates, setScanCandidates] = useState<ScanCandidate[]>([])
 
   /**
    * Fetch a Pokémon by name/id and display it.
-   *
-   * @param {string|number} id          - Name or numeric id
-   * @param {object}        meta        - Scan metadata (scanMode, confidenceScore, …)
-   * @param {string}        errorMsg    - User-facing message shown on failure
-   * @param {object}        [options]
-   * @param {function}      [options.onSuccess]      - Called with the details on success
-   * @param {boolean}       [options.keepCandidates] - Keep the candidates strip visible
    */
-  async function fetchAndDisplay(id, meta, errorMsg, options = {}) {
+  async function fetchAndDisplay(
+    id: string | number,
+    meta: FetchPokemonOptions,
+    errorMsg: string,
+    options: FetchAndDisplayOptions = {},
+  ): Promise<void> {
     const { onSuccess, keepCandidates = false } = options
 
     unlockAudio() // unlock AudioContext synchronously while gesture is still active
@@ -50,13 +86,11 @@ export function usePokemonFetch({ pokemonIndex }) {
 
   /**
    * Identify a Pokémon from an image file and display it.
-   *
-   * @param {File}     file       - Image file from the scanner
-   * @param {object}   [options]
-   * @param {function} [options.onSuccess]  - Called with details on success
-   * @param {function} [options.onNotFound] - Called when image yields no match
    */
-  async function handleAnalyze(file, options = {}) {
+  async function handleAnalyze(
+    file: File | null,
+    options: HandleAnalyzeOptions = {},
+  ): Promise<void> {
     if (!file) {
       setError('Elige una imagen o toma una foto para empezar.')
       return
@@ -82,7 +116,8 @@ export function usePokemonFetch({ pokemonIndex }) {
       onSuccess?.(detected)
       if (detected.cryUrl) playPokemonCry(detected.cryUrl, 0.42)
     } catch (scanError) {
-      setError(scanError?.message || '¡Ups! Algo salió mal. 😅 Prueba con otra foto o usa el buscador.')
+      const msg = scanError instanceof Error ? scanError.message : '¡Ups! Algo salió mal. 😅 Prueba con otra foto o usa el buscador.'
+      setError(msg)
     } finally {
       setIsScanning(false)
     }

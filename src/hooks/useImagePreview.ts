@@ -1,17 +1,24 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-export function useImagePreview() {
-  const [imageFile, setImageFile] = useState(null)
+export interface ImagePreviewState {
+  imageFile: File | null
+  previewUrl: string
+  setImageFile: (file: File | null) => void
+  clearImage: () => void
+}
+
+export function useImagePreview(): ImagePreviewState {
+  const [imageFile, setImageFileState] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState('')
   const objectUrlRef = useRef('')
 
-  const updateImageFile = useCallback((file) => {
+  const updateImageFile = useCallback((file: File | null): void => {
     if (objectUrlRef.current) {
       URL.revokeObjectURL(objectUrlRef.current)
       objectUrlRef.current = ''
     }
 
-    setImageFile(file)
+    setImageFileState(file)
 
     if (file) {
       const nextUrl = URL.createObjectURL(file)
@@ -30,7 +37,7 @@ export function useImagePreview() {
     }
   }, [])
 
-  function clearImage() {
+  function clearImage(): void {
     updateImageFile(null)
   }
 

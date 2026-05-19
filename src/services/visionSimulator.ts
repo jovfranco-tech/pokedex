@@ -1,6 +1,8 @@
 import { ignoredImageTokens } from '../data/pokemonAliases.js'
 import { fileToModelImageDataUrl } from '../utils/imageDataUrl.js'
 import {
+  type PokemonDetail,
+  type PokemonIndexItem,
   fetchPokemonDetails,
   loadPokemonIndex,
   normalizePokemonText,
@@ -11,31 +13,78 @@ const SCAN_DELAY_MS = 650
 const MIN_IMAGE_MATCH_SCORE = 72
 const MIN_AI_CONFIDENCE_SCORE = 38
 
-const wait = (ms) => new Promise((resolve) => globalThis.setTimeout(resolve, ms))
+const wait = (ms: number): Promise<void> => new Promise((resolve) => globalThis.setTimeout(resolve, ms))
 
 // Session-level cache keyed by file fingerprint (avoids re-calling OpenAI for same photo)
-const _visionCache = new Map()
+const _visionCache = new Map<string, ScanResult>()
 const VISION_CACHE_MAX = 20
 
-function fileFingerprint(file) {
+// ── Domain types ──────────────────────────────────────────────────────────────
+
+export interface ScanCandidate {
+  id: number
+  apiName: string
+  name: string
+  displayNumber: string
+  sprite: string
+  confidenceScore: number
+  reason: string
+}
+
+export type ScanResult = PokemonDetail & { scanCandidates: ScanCandidate[] }
+
+interface ScanMatch {
+  pokemon: PokemonIndexItem
+  score: number
+  reason: string
+}
+
+interface AiCandidate {
+  pokemonName: string
+  pokemonId?: number
+  confidenceScore?: number
+  reason?: string
+}
+
+interface AiResult {
+  isPokemon?: boolean
+  pokemonName?: string
+  pokemonId?: number
+  confidenceScore?: number
+  reason?: string
+  candidates?: AiCandidate[]
+  model?: string
+  unavailable?: boolean
+  networkError?: boolean
+  error?: string
+  status?: number
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function fileFingerprint(file: File): string {
   return `${file.name}|${file.size}|${file.lastModified}`
 }
 
-function fileNameTokens(fileName) {
+function fileNameTokens(fileName: string): string[] {
   const withoutExtension = fileName.replace(/\.[^.]+$/, '')
   return normalizePokemonText(withoutExtension)
     .split(' ')
-    .filter((token) => token.length >= 3 && !ignoredImageTokens.has(token))
+    .filter((token) => token.length >= 3 && !(ignoredImageTokens as Set<string>).has(token))
 }
 
-export function scoreImageNameMatch(pokemon, tokens, compactName) {
+export function scoreImageNameMatch(
+  pokemon: PokemonIndexItem,
+  tokens: string[],
+  compactName: string,
+): number {
   const normalizedName = normalizePokemonText(pokemon.name)
   const normalizedDisplayName = normalizePokemonText(pokemon.displayName)
   const aliases = (Array.isArray(pokemon.aliases) ? pokemon.aliases : []).map(normalizePokemonText)
   let score = 0
 
-  if (compactName.includes(normalizedName.replaceAll(' ', ''))) score = Math.max(score, 98)
-  if (compactName.includes(normalizedDisplayName.replaceAll(' ', ''))) score = Math.max(score, 98)
+  if (compactName.includes(normalizedName.replace(/ /g, ''))) score = Math.max(score, 98)
+  if (compactName.includes(normalizedDisplayName.replace(/ /g, ''))) score = Math.max(score, 98)
 
   for (const token of tokens) {
     if (token === normalizedName || token === normalizedDisplayName) score = Math.max(score, 99)
@@ -48,7 +97,7 @@ export function scoreImageNameMatch(pokemon, tokens, compactName) {
   return score
 }
 
-function findImageNameMatches(file, index, limit = 3) {
+function findImageNameMatches(file: File, index: PokemonIndexItem[], limit = 3): ScanMatch[] {
   const tokens = fileNameTokens(file.name)
   const compactName = tokens.join('')
 
@@ -65,7 +114,7 @@ function findImageNameMatches(file, index, limit = 3) {
 
   if (directMatches.length) return directMatches.slice(0, limit)
 
-  const textMatches = searchPokemonIndex(index, tokens.join(' '), limit)
+  const textMatches = searchPokemonIndex(index, tokens.join(' '), limit) as Array<PokemonIndexItem & { score: number }>
   if (!textMatches.length) return []
 
   return textMatches.map((pokemon) => ({
@@ -75,10 +124,13 @@ function findImageNameMatches(file, index, limit = 3) {
   }))
 }
 
-function findAiCandidateMatch(candidate, index) {
+function findAiCandidateMatch(
+  candidate: AiCandidate,
+  index: PokemonIndexItem[],
+): PokemonIndexItem | null {
   if (!candidate?.pokemonName && !candidate?.pokemonId) return null
 
-  const nameMatch = searchPokemonIndex(index, candidate.pokemonName, 1)[0]
+  const nameMatch = (searchPokemonIndex(index, candidate.pokemonName ?? '', 1) as PokemonIndexItem[])[0]
   if (nameMatch) return nameMatch
 
   if (candidate.pokemonId) {
@@ -89,12 +141,15 @@ function findAiCandidateMatch(candidate, index) {
   return null
 }
 
-function findAiCandidateMatches(aiResult, index) {
-  if (!aiResult?.isPokemon || aiResult.confidenceScore < MIN_AI_CONFIDENCE_SCORE) return []
+function findAiCandidateMatches(
+  aiResult: AiResult,
+  index: PokemonIndexItem[],
+): ScanMatch[] {
+  if (!aiResult?.isPokemon || (aiResult.confidenceScore ?? 0) < MIN_AI_CONFIDENCE_SCORE) return []
 
-  const rawCandidates = [
+  const rawCandidates: AiCandidate[] = [
     {
-      pokemonName: aiResult.pokemonName,
+      pokemonName: aiResult.pokemonName ?? '',
       pokemonId: aiResult.pokemonId,
       confidenceScore: aiResult.confidenceScore,
       reason: aiResult.reason,
@@ -102,27 +157,27 @@ function findAiCandidateMatches(aiResult, index) {
     ...(Array.isArray(aiResult.candidates) ? aiResult.candidates : []),
   ]
 
-  const seen = new Set()
+  const seen = new Set<string>()
   return rawCandidates
-    .map((candidate) => {
+    .map((candidate): ScanMatch | null => {
       const pokemon = findAiCandidateMatch(candidate, index)
       if (!pokemon) return null
 
-      const key = pokemon.apiName ?? pokemon.name ?? pokemon.id
+      const key = pokemon.apiName ?? pokemon.name ?? String(pokemon.id)
       if (seen.has(key)) return null
       seen.add(key)
 
       return {
         pokemon,
-        score: Math.max(MIN_AI_CONFIDENCE_SCORE, Math.min(99, candidate.confidenceScore ?? aiResult.confidenceScore)),
+        score: Math.max(MIN_AI_CONFIDENCE_SCORE, Math.min(99, candidate.confidenceScore ?? aiResult.confidenceScore ?? MIN_AI_CONFIDENCE_SCORE)),
         reason: candidate.reason || aiResult.reason || 'Coincidencia visual sugerida por IA.',
       }
     })
-    .filter(Boolean)
+    .filter((match): match is ScanMatch => match !== null)
     .slice(0, 3)
 }
 
-function scanCandidateSummaries(matches) {
+function scanCandidateSummaries(matches: ScanMatch[]): ScanCandidate[] {
   return matches.map(({ pokemon, reason, score }) => ({
     id: pokemon.id,
     apiName: pokemon.apiName ?? pokemon.name,
@@ -134,15 +189,17 @@ function scanCandidateSummaries(matches) {
   }))
 }
 
+// ── Vision API ────────────────────────────────────────────────────────────────
+
 /** Timeout for the vision API call — images can be large, so allow 20s */
 const VISION_FETCH_TIMEOUT_MS = 20_000
 
-async function identifyWithRealVision(file, index) {
+async function identifyWithRealVision(file: File, index: PokemonIndexItem[]): Promise<AiResult> {
   const controller = new AbortController()
   const timerId = globalThis.setTimeout(() => controller.abort(), VISION_FETCH_TIMEOUT_MS)
 
   try {
-    const imageDataUrl = await fileToModelImageDataUrl(file)
+    const imageDataUrl = await (fileToModelImageDataUrl as (f: File) => Promise<string>)(file)
     const response = await fetch('/api/identify-pokemon', {
       method: 'POST',
       signal: controller.signal,
@@ -159,7 +216,7 @@ async function identifyWithRealVision(file, index) {
       }),
     })
 
-    const payload = await response.json().catch(() => ({}))
+    const payload = await response.json().catch(() => ({})) as AiResult & { code?: string; error?: string }
 
     if (!response.ok) {
       return {
@@ -178,7 +235,10 @@ async function identifyWithRealVision(file, index) {
   }
 }
 
-async function identifyWithFileName(file, index) {
+async function identifyWithFileName(
+  file: File,
+  index: PokemonIndexItem[],
+): Promise<ScanResult | null> {
   const matches = findImageNameMatches(file, index)
   const match = matches[0]
   if (!match) return null
@@ -198,7 +258,10 @@ async function identifyWithFileName(file, index) {
   }
 }
 
-export async function identifyPokemonFromImage(file, indexOverride) {
+export async function identifyPokemonFromImage(
+  file: File,
+  indexOverride?: PokemonIndexItem[],
+): Promise<ScanResult | null> {
   const fp = fileFingerprint(file)
   const cached = _visionCache.get(fp)
   if (cached) return cached
@@ -208,7 +271,7 @@ export async function identifyPokemonFromImage(file, indexOverride) {
   const index = indexOverride?.length ? indexOverride : await loadPokemonIndex()
   const aiResult = await identifyWithRealVision(file, index)
 
-  let result = null
+  let result: ScanResult | null = null
 
   if (aiResult && !aiResult.networkError && !aiResult.unavailable && !aiResult.error) {
     const candidates = findAiCandidateMatches(aiResult, index)
@@ -217,7 +280,7 @@ export async function identifyPokemonFromImage(file, indexOverride) {
       const detail = await fetchPokemonDetails(match.pokemon.name, {
         confidenceScore: match.score,
         scannedAt: new Date().toISOString(),
-        scanMode: `IA visual real (${aiResult.model})`,
+        scanMode: `IA visual real (${aiResult.model ?? 'unknown'})`,
         visualReason: aiResult.reason,
       })
       result = { ...detail, scanCandidates: scanCandidateSummaries(candidates) }
@@ -227,7 +290,10 @@ export async function identifyPokemonFromImage(file, indexOverride) {
   if (!result) result = await identifyWithFileName(file, index)
 
   if (result) {
-    if (_visionCache.size >= VISION_CACHE_MAX) _visionCache.delete(_visionCache.keys().next().value)
+    if (_visionCache.size >= VISION_CACHE_MAX) {
+      const oldestKey = _visionCache.keys().next().value
+      if (oldestKey !== undefined) _visionCache.delete(oldestKey)
+    }
     _visionCache.set(fp, result)
     return result
   }

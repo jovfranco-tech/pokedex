@@ -1,9 +1,29 @@
+import type { PokemonDetail } from './pokeApi.js'
 import { answerPokemonQuestion, shouldUseLocalPokemonAnswer } from './pokemonAssistant.js'
 import { tryAnswerStructuredPokemonQuestion } from './pokemonKnowledge.js'
 
 const CHAT_TIMEOUT_MS = 5200
 
-export async function askPokemonAssistant(question, pokemon) {
+export type ChatSource = 'local' | 'local-fallback' | 'openai'
+
+export interface ChatResponse {
+  answer: string
+  source: ChatSource
+  model?: string
+  error?: string
+}
+
+interface ApiChatPayload {
+  answer?: string
+  model?: string
+  code?: string
+  error?: string
+}
+
+export async function askPokemonAssistant(
+  question: string,
+  pokemon: PokemonDetail | null,
+): Promise<ChatResponse> {
   const localAnswer = answerPokemonQuestion(question, pokemon)
   const structuredAnswer = await tryAnswerStructuredPokemonQuestion(question, pokemon)
 
@@ -33,7 +53,7 @@ export async function askPokemonAssistant(question, pokemon) {
     })
     window.clearTimeout(timeoutId)
 
-    const payload = await response.json().catch(() => ({}))
+    const payload = await response.json().catch(() => ({})) as ApiChatPayload
 
     if (!response.ok) {
       return {
@@ -44,7 +64,7 @@ export async function askPokemonAssistant(question, pokemon) {
     }
 
     return {
-      answer: payload.answer,
+      answer: payload.answer ?? localAnswer,
       source: 'openai',
       model: payload.model,
     }
@@ -54,7 +74,9 @@ export async function askPokemonAssistant(question, pokemon) {
     return {
       answer: localAnswer,
       source: 'local-fallback',
-      error: error.name === 'AbortError' ? 'La IA tardó demasiado; usé la respuesta local.' : error.message,
+      error: error instanceof Error && error.name === 'AbortError'
+        ? 'La IA tardó demasiado; usé la respuesta local.'
+        : (error instanceof Error ? error.message : 'Error desconocido'),
     }
   }
 }

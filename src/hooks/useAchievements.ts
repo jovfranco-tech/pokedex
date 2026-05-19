@@ -1,4 +1,29 @@
-const DEFINITIONS = [
+interface CollectionItem {
+  seenAt?: string
+  capturedAt?: string
+}
+
+interface FavoriteItem {
+  id: number
+}
+
+interface AchievementDefinition {
+  id: string
+  emoji: string
+  label: string
+  desc: string
+  check: (state: { collection: CollectionItem[]; favorites: FavoriteItem[] }) => boolean
+}
+
+export interface Achievement {
+  id: string
+  emoji: string
+  label: string
+  desc: string
+  unlocked: boolean
+}
+
+const DEFINITIONS: AchievementDefinition[] = [
   {
     id: 'first_seen',
     emoji: '🎯',
@@ -50,7 +75,13 @@ const DEFINITIONS = [
   },
 ]
 
-export function useAchievements({ collection = [], favorites = [] }) {
+export function useAchievements({
+  collection = [],
+  favorites = [],
+}: {
+  collection?: CollectionItem[]
+  favorites?: FavoriteItem[]
+}): Achievement[] {
   return DEFINITIONS.map((def) => ({
     ...def,
     unlocked: def.check({ collection, favorites }),

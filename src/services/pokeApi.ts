@@ -839,7 +839,7 @@ export async function fetchPokemonDetails(
 ): Promise<PokemonDetail> {
   const cacheKey = String(nameOrId).toLowerCase()
   if (detailsCache.has(cacheKey) && !options.confidenceScore) {
-    const memory = detailsCache.get(cacheKey)!
+    const memory = detailsCache.get(cacheKey) as PokemonDetail
     return options.scannedAt ? { ...memory, scannedAt: options.scannedAt } : memory
   }
 

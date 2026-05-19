@@ -17,14 +17,24 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "exactOptionalPropertyTypes": false,
 
-    /* JS interop — only the .ts file is type-checked; .js files are skipped */
+    /* JS interop — only .ts files are type-checked; .js files are inferred */
     "allowJs": true,
     "checkJs": false
   },
   "include": [
-    "src/services/pokeApi.ts"
+    "src/services/pokeApi.ts",
+    "src/services/visionSimulator.ts",
+    "src/services/pokemonAssistant.ts",
+    "src/services/pokemonKnowledge.ts",
+    "src/services/pokemonAiChat.ts",
+    "src/hooks/useLocalStorage.ts",
+    "src/hooks/useFocusTrap.ts",
+    "src/hooks/useImagePreview.ts",
+    "src/hooks/usePwaInstall.ts",
+    "src/hooks/useAchievements.ts",
+    "src/hooks/useCollection.ts",
+    "src/hooks/usePokemonFetch.ts"
   ],
   "exclude": ["node_modules", "dist", "storybook-static"]
 }

@@ -9,9 +9,9 @@ const FOCUSABLE = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(', ')
 
-export function useFocusTrap(isOpen) {
-  const ref = useRef(null)
-  const previousFocus = useRef(null)
+export function useFocusTrap(isOpen: boolean): React.RefObject<HTMLElement | null> {
+  const ref = useRef<HTMLElement | null>(null)
+  const previousFocus = useRef<Element | null>(null)
 
   useEffect(() => {
     if (!isOpen) return
@@ -20,11 +20,11 @@ export function useFocusTrap(isOpen) {
 
     // Focus the first focusable element inside the trap
     const frame = window.requestAnimationFrame(() => {
-      const first = ref.current?.querySelector(FOCUSABLE)
+      const first = ref.current?.querySelector<HTMLElement>(FOCUSABLE)
       first?.focus()
     })
 
-    function onKeyDown(event) {
+    function onKeyDown(event: KeyboardEvent): void {
       if (!ref.current) return
 
       if (event.key === 'Escape') {
@@ -36,7 +36,7 @@ export function useFocusTrap(isOpen) {
 
       if (event.key !== 'Tab') return
 
-      const focusable = Array.from(ref.current.querySelectorAll(FOCUSABLE))
+      const focusable = Array.from(ref.current.querySelectorAll<HTMLElement>(FOCUSABLE))
       if (!focusable.length) return
 
       const first = focusable[0]
@@ -60,7 +60,7 @@ export function useFocusTrap(isOpen) {
     return () => {
       window.cancelAnimationFrame(frame)
       document.removeEventListener('keydown', onKeyDown)
-      previousFocus.current?.focus()
+      ;(previousFocus.current as HTMLElement | null)?.focus()
     }
   }, [isOpen])
 

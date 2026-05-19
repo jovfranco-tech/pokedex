@@ -1,16 +1,19 @@
 import { useEffect, useState } from 'react'
 
-function readStoredValue(key, fallbackValue) {
+function readStoredValue<T>(key: string, fallbackValue: T): T {
   try {
     const storedValue = window.localStorage.getItem(key)
-    return storedValue ? JSON.parse(storedValue) : fallbackValue
+    return storedValue ? (JSON.parse(storedValue) as T) : fallbackValue
   } catch {
     return fallbackValue
   }
 }
 
-export function useLocalStorage(key, fallbackValue) {
-  const [value, setValue] = useState(() => readStoredValue(key, fallbackValue))
+export function useLocalStorage<T>(
+  key: string,
+  fallbackValue: T,
+): [T, React.Dispatch<React.SetStateAction<T>>] {
+  const [value, setValue] = useState<T>(() => readStoredValue(key, fallbackValue))
 
   useEffect(() => {
     try {

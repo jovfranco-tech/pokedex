@@ -4,16 +4,77 @@
  * All three lists live in localStorage via useLocalStorage.
  * Pure data operations (no fetch, no audio, no narration).
  */
+import type { PokemonDetail } from '../services/pokeApi.js'
 import { useLocalStorage } from './useLocalStorage.js'
 
-export function useCollection({ historyKey, favoritesKey, collectionKey }) {
-  const [scanHistory, setScanHistory] = useLocalStorage(historyKey, [])
-  const [favorites, setFavorites] = useLocalStorage(favoritesKey, [])
-  const [collection, setCollection] = useLocalStorage(collectionKey, [])
+// ── Domain types ──────────────────────────────────────────────────────────────
+
+export interface ScanHistoryEntry {
+  id: number
+  speciesId: number
+  apiName: string
+  name: string
+  displayNumber: string
+  sprite: string
+  type: string
+  confidenceScore: number
+  scannedAt: string
+  scanMode: string
+}
+
+export interface CollectionEntry {
+  id: number
+  speciesId: number
+  apiName: string
+  name: string
+  displayNumber: string
+  sprite: string
+  type: string
+  seenAt?: string
+  capturedAt?: string
+}
+
+export interface FavoriteEntry {
+  id: number
+  speciesId: number
+  apiName: string
+  name: string
+  displayNumber: string
+  sprite: string
+  type: string
+  formLabel: string
+  savedAt: string
+}
+
+interface UseCollectionKeys {
+  historyKey: string
+  favoritesKey: string
+  collectionKey: string
+}
+
+export interface UseCollectionResult {
+  scanHistory: ScanHistoryEntry[]
+  favorites: FavoriteEntry[]
+  collection: CollectionEntry[]
+  rememberScan: (pokemon: PokemonDetail) => void
+  updateCollection: (pokemon: PokemonDetail, action?: 'seen' | 'captured') => void
+  toggleFavorite: (result: PokemonDetail) => void
+}
+
+// ── Hook ──────────────────────────────────────────────────────────────────────
+
+export function useCollection({
+  historyKey,
+  favoritesKey,
+  collectionKey,
+}: UseCollectionKeys): UseCollectionResult {
+  const [scanHistory, setScanHistory] = useLocalStorage<ScanHistoryEntry[]>(historyKey, [])
+  const [favorites, setFavorites] = useLocalStorage<FavoriteEntry[]>(favoritesKey, [])
+  const [collection, setCollection] = useLocalStorage<CollectionEntry[]>(collectionKey, [])
 
   // ── Internal helpers ──────────────────────────────────────────────────────
 
-  function historyEntry(pokemon) {
+  function historyEntry(pokemon: PokemonDetail): ScanHistoryEntry {
     return {
       id: pokemon.id,
       speciesId: pokemon.speciesId,
@@ -28,7 +89,10 @@ export function useCollection({ historyKey, favoritesKey, collectionKey }) {
     }
   }
 
-  function collectionEntryFromPokemon(pokemon, existing = {}) {
+  function collectionEntryFromPokemon(
+    pokemon: PokemonDetail,
+    existing: Partial<CollectionEntry> = {},
+  ): CollectionEntry {
     return {
       ...existing,
       id: pokemon.id,
@@ -41,7 +105,7 @@ export function useCollection({ historyKey, favoritesKey, collectionKey }) {
     }
   }
 
-  function favoriteEntry(pokemon) {
+  function favoriteEntry(pokemon: PokemonDetail): FavoriteEntry {
     return {
       id: pokemon.id,
       speciesId: pokemon.speciesId,
@@ -57,7 +121,7 @@ export function useCollection({ historyKey, favoritesKey, collectionKey }) {
 
   // ── Public API ────────────────────────────────────────────────────────────
 
-  function rememberScan(pokemon) {
+  function rememberScan(pokemon: PokemonDetail): void {
     if (!pokemon?.id) return
     setScanHistory((current) => {
       const safe = Array.isArray(current) ? current : []
@@ -66,11 +130,11 @@ export function useCollection({ historyKey, favoritesKey, collectionKey }) {
     })
   }
 
-  function updateCollection(pokemon, action = 'seen') {
+  function updateCollection(pokemon: PokemonDetail, action: 'seen' | 'captured' = 'seen'): void {
     if (!pokemon?.id) return
     setCollection((current) => {
       const safe = Array.isArray(current) ? current : []
-      const existing = safe.find((item) => item.apiName === pokemon.apiName || item.id === pokemon.id) ?? {}
+      const existing: Partial<CollectionEntry> = safe.find((item) => item.apiName === pokemon.apiName || item.id === pokemon.id) ?? {}
       const entry = collectionEntryFromPokemon(pokemon, existing)
 
       if (action === 'captured') {
@@ -84,11 +148,7 @@ export function useCollection({ historyKey, favoritesKey, collectionKey }) {
     })
   }
 
-  /**
-   * Toggle a Pokémon in/out of favorites.
-   * @param {object} result - the currently displayed Pokémon
-   */
-  function toggleFavorite(result) {
+  function toggleFavorite(result: PokemonDetail): void {
     if (!result?.id) return
     setFavorites((current) => {
       const safe = Array.isArray(current) ? current : []
