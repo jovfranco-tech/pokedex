@@ -15,9 +15,11 @@ import { ResultCard } from './components/ResultCard.jsx'
 import { ScanCandidateStrip } from './components/ScanCandidateStrip.jsx'
 import { ScanHistoryStrip } from './components/ScanHistoryStrip.jsx'
 import { useAchievements } from './hooks/useAchievements.js'
+import { useCollection } from './hooks/useCollection.js'
 import { useFocusTrap } from './hooks/useFocusTrap.js'
 import { useImagePreview } from './hooks/useImagePreview.js'
 import { useLocalStorage } from './hooks/useLocalStorage.js'
+import { usePokemonFetch } from './hooks/usePokemonFetch.js'
 import { usePwaInstall } from './hooks/usePwaInstall.js'
 import {
   DEFAULT_POKEMON_SPECIES_COUNT,
@@ -25,8 +27,6 @@ import {
   fetchPokemonDetails,
   loadPokemonIndex,
 } from './services/pokeApi.js'
-import { identifyPokemonFromImage } from './services/visionSimulator.js'
-import { playPokemonCry, unlockAudio } from './utils/playPokemonCry.js'
 import { buildPokedexAnnouncement, speakPokedexLine } from './utils/pokedexVoice.js'
 
 const PokemonAssistant = lazy(() => import('./components/PokemonAssistant.jsx').then((module) => ({ default: module.PokemonAssistant })))
@@ -42,45 +42,55 @@ const SCAN_FEEDBACK_KEY = 'pokedex-visual-gen1:scan-feedback'
 function App() {
   const { imageFile, previewUrl, setImageFile, clearImage } = useImagePreview()
   const [result, setResult] = useLocalStorage(LAST_RESULT_KEY, null)
-  const [scanHistory, setScanHistory] = useLocalStorage(SCAN_HISTORY_KEY, [])
-  const [favorites, setFavorites] = useLocalStorage(FAVORITES_KEY, [])
-  const [collection, setCollection] = useLocalStorage(COLLECTION_KEY, [])
   const [isKidsMode, setIsKidsMode] = useLocalStorage(KIDS_MODE_KEY, false)
   const [isAutoNarrate, setIsAutoNarrate] = useLocalStorage(AUTO_NARRATE_KEY, true)
   const [scanFeedback, setScanFeedback] = useLocalStorage(SCAN_FEEDBACK_KEY, {})
-  const [error, setError] = useState('')
-  const [isScanning, setIsScanning] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
   const prefersReducedMotion = useReducedMotion()
-  const achievements = useAchievements({ collection, favorites })
   const [isAssistantOpen, setIsAssistantOpen] = useState(false)
   const [isQuizOpen, setIsQuizOpen] = useState(false)
   const quizTrapRef = useFocusTrap(isQuizOpen)
   const assistantTrapRef = useFocusTrap(isAssistantOpen)
-  const [scanCandidates, setScanCandidates] = useState([])
   const [pokemonIndex, setPokemonIndex] = useState([])
   const [isIndexLoading, setIsIndexLoading] = useState(true)
   const pokemonTotal = pokemonIndex.length || DEFAULT_POKEMON_SPECIES_COUNT
   const lastAutoSpeechKey = useRef('')
   const { canInstall, isInstalled, promptInstall } = usePwaInstall()
+
+  // ── Collection (history, favorites, Pokédex) ───────────────────────────────
+  const {
+    scanHistory,
+    favorites,
+    collection,
+    rememberScan,
+    updateCollection,
+    toggleFavorite,
+  } = useCollection({
+    historyKey: SCAN_HISTORY_KEY,
+    favoritesKey: FAVORITES_KEY,
+    collectionKey: COLLECTION_KEY,
+  })
+
+  // ── Fetch state ────────────────────────────────────────────────────────────
+  const {
+    error,
+    setError,
+    isScanning,
+    scanCandidates,
+    setScanCandidates,
+    fetchAndDisplay,
+    handleAnalyze: runAnalyze,
+  } = usePokemonFetch({ pokemonIndex })
+
+  // ── Derived ────────────────────────────────────────────────────────────────
+  const achievements = useAchievements({ collection, favorites })
+
   const isCurrentFavorite = Boolean(
-    result && Array.isArray(favorites) && favorites.some((pokemon) => pokemon.apiName === result.apiName || pokemon.id === result.id),
+    result && Array.isArray(favorites) && favorites.some((p) => p.apiName === result.apiName || p.id === result.id),
   )
   const collectionEntry = result && Array.isArray(collection)
-    ? collection.find((pokemon) => pokemon.apiName === result.apiName || pokemon.id === result.id)
+    ? collection.find((p) => p.apiName === result.apiName || p.id === result.id)
     : null
-
-  const narratePokemon = useCallback((pokemon) => {
-    const announcement = buildPokedexAnnouncement(pokemon)
-    if (!announcement) return
-    setIsSpeaking(true)
-    // Not awaited intentionally: speak() must fire synchronously from
-    // the user-gesture call stack (iOS Safari requirement).
-    speakPokedexLine(announcement, {
-      rate: 1.0, pitch: 0.1, volume: 1, withBeep: true,
-      onEnd: () => setIsSpeaking(false),
-    })
-  }, [])
 
   const lastScanLabel = result?.scannedAt
     ? new Intl.DateTimeFormat('es-MX', {
@@ -91,22 +101,30 @@ function App() {
     }).format(new Date(result.scannedAt))
     : 'Listo para escanear'
 
-  useEffect(() => {
-    let isActive = true
-
-    loadPokemonIndex()
-      .then((index) => {
-        if (isActive) setPokemonIndex(index)
-      })
-      .finally(() => {
-        if (isActive) setIsIndexLoading(false)
-      })
-
-    return () => {
-      isActive = false
-    }
+  // ── Narration ──────────────────────────────────────────────────────────────
+  const narratePokemon = useCallback((pokemon) => {
+    const announcement = buildPokedexAnnouncement(pokemon)
+    if (!announcement) return
+    setIsSpeaking(true)
+    // Not awaited: speak() must fire synchronously from the gesture call stack (iOS Safari).
+    speakPokedexLine(announcement, {
+      rate: 1.0, pitch: 0.1, volume: 1, withBeep: true,
+      onEnd: () => setIsSpeaking(false),
+    })
   }, [])
 
+  // ── Effects ────────────────────────────────────────────────────────────────
+
+  // Load Pokémon index on mount
+  useEffect(() => {
+    let isActive = true
+    loadPokemonIndex()
+      .then((index) => { if (isActive) setPokemonIndex(index) })
+      .finally(() => { if (isActive) setIsIndexLoading(false) })
+    return () => { isActive = false }
+  }, [])
+
+  // Re-fetch stale results that are missing schema fields
   useEffect(() => {
     if (
       !result?.id ||
@@ -126,17 +144,12 @@ function App() {
       scannedAt: result.scannedAt,
       scanMode: result.scanMode ?? 'datos actualizados PokéAPI',
     })
-      .then((details) => {
-        if (isActive) setResult(details)
-      })
+      .then((details) => { if (isActive) setResult(details) })
       .catch(() => {})
-
-    return () => {
-      isActive = false
-    }
+    return () => { isActive = false }
   }, [result, setResult])
 
-  // Auto-narrate when a new Pokémon loads (cry is played in fetchAndDisplay/handleAnalyze)
+  // Auto-narrate when a new Pokémon loads
   useEffect(() => {
     if (!result?.id || isScanning) return
 
@@ -150,161 +163,27 @@ function App() {
     return () => window.clearTimeout(timer)
   }, [isScanning, result, isAutoNarrate, narratePokemon])
 
+  // ── Handlers ───────────────────────────────────────────────────────────────
+
+  /** Common onSuccess callback for all fetch actions */
+  function onFetchSuccess(details) {
+    setResult(details)
+    rememberScan(details)
+    updateCollection(details, 'seen')
+  }
+
   function handleImageSelected(file) {
     setError('')
-
     if (!file) return
-
     if (!file.type.startsWith('image/')) {
       setError('Ese archivo no parece una imagen. Prueba con una foto o captura.')
       return
     }
-
     setImageFile(file)
-    handleAnalyze(file)
-  }
-
-  function rememberScan(pokemon) {
-    if (!pokemon?.id) return
-
-    const entry = {
-      id: pokemon.id,
-      speciesId: pokemon.speciesId,
-      apiName: pokemon.apiName,
-      name: pokemon.name,
-      displayNumber: pokemon.displayNumber,
-      sprite: pokemon.sprite,
-      type: pokemon.type?.[0] ?? '',
-      confidenceScore: pokemon.confidenceScore,
-      scannedAt: pokemon.scannedAt ?? new Date().toISOString(),
-      scanMode: pokemon.scanMode,
-    }
-
-    setScanHistory((currentHistory) => {
-      const safeHistory = Array.isArray(currentHistory) ? currentHistory : []
-      return [entry, ...safeHistory.filter((item) => item.id !== entry.id)].slice(0, 8)
+    runAnalyze(file, {
+      onSuccess: onFetchSuccess,
+      onNotFound: () => setResult(null),
     })
-  }
-
-  function collectionEntryFromPokemon(pokemon, existing = {}) {
-    return {
-      ...existing,
-      id: pokemon.id,
-      speciesId: pokemon.speciesId,
-      apiName: pokemon.apiName,
-      name: pokemon.name,
-      displayNumber: pokemon.displayNumber,
-      sprite: pokemon.sprite,
-      type: pokemon.type?.[0] ?? existing.type ?? '',
-    }
-  }
-
-  function updateCollection(pokemon, action = 'seen') {
-    if (!pokemon?.id) return
-
-    setCollection((currentCollection) => {
-      const safeCollection = Array.isArray(currentCollection) ? currentCollection : []
-      const existing = safeCollection.find((item) => item.apiName === pokemon.apiName || item.id === pokemon.id) ?? {}
-      const entry = collectionEntryFromPokemon(pokemon, existing)
-
-      if (action === 'captured') {
-        entry.seenAt = entry.seenAt ?? new Date().toISOString()
-        entry.capturedAt = existing.capturedAt ? '' : new Date().toISOString()
-      } else {
-        entry.seenAt = entry.seenAt ?? new Date().toISOString()
-      }
-
-      return [entry, ...safeCollection.filter((item) => item.apiName !== entry.apiName && item.id !== entry.id)].slice(0, 60)
-    })
-  }
-
-  function favoriteEntry(pokemon) {
-    return {
-      id: pokemon.id,
-      speciesId: pokemon.speciesId,
-      apiName: pokemon.apiName,
-      name: pokemon.name,
-      displayNumber: pokemon.displayNumber,
-      sprite: pokemon.sprite,
-      type: pokemon.type?.[0] ?? '',
-      formLabel: pokemon.formLabel,
-      savedAt: new Date().toISOString(),
-    }
-  }
-
-  function handleToggleFavorite() {
-    if (!result?.id) return
-
-    setFavorites((currentFavorites) => {
-      const safeFavorites = Array.isArray(currentFavorites) ? currentFavorites : []
-      const exists = safeFavorites.some((pokemon) => pokemon.apiName === result.apiName || pokemon.id === result.id)
-
-      if (exists) {
-        return safeFavorites.filter((pokemon) => pokemon.apiName !== result.apiName && pokemon.id !== result.id)
-      }
-
-      return [favoriteEntry(result), ...safeFavorites].slice(0, 18)
-    })
-  }
-
-  async function handleAnalyze(fileOverride = imageFile) {
-    if (!fileOverride) {
-      setError('Elige una imagen o toma una foto para empezar.')
-      return
-    }
-
-    unlockAudio() // unlock AudioContext synchronously inside the user-gesture handler
-    setError('')
-    setIsScanning(true)
-
-    try {
-      const detectedPokemon = await identifyPokemonFromImage(fileOverride, pokemonIndex)
-
-      if (!detectedPokemon) {
-        setError('No pude reconocerlo. 🔍 Prueba con otra foto o búscalo por nombre en el buscador.')
-        setResult(null)
-        setScanCandidates([])
-        return
-      }
-
-      setScanCandidates(detectedPokemon.scanCandidates ?? [])
-      setResult(detectedPokemon)
-      rememberScan(detectedPokemon)
-      updateCollection(detectedPokemon, 'seen')
-      if (detectedPokemon.cryUrl) playPokemonCry(detectedPokemon.cryUrl, 0.42)
-    } catch (scanError) {
-      setError(scanError?.message || '¡Ups! Algo salió mal. 😅 Prueba con otra foto o usa el buscador.')
-    } finally {
-      setIsScanning(false)
-    }
-  }
-
-  /**
-   * Shared core for all "load a Pokémon and display it" actions.
-   * @param {string|number} id          - Name or numeric id passed to fetchPokemonDetails
-   * @param {object}        meta        - Scan metadata (scanMode, confidenceScore, …)
-   * @param {string}        errorMsg    - User-facing message on failure
-   * @param {boolean}       [keepCandidates=false] - Keep the current scanCandidates strip visible
-   */
-  async function fetchAndDisplay(id, meta, errorMsg, keepCandidates = false) {
-    unlockAudio() // unlock AudioContext synchronously while the user gesture is still active
-    setError('')
-    if (!keepCandidates) setScanCandidates([])
-    setIsScanning(true)
-    try {
-      const details = await fetchPokemonDetails(id, meta)
-      setResult(details)
-      rememberScan(details)
-      updateCollection(details, 'seen')
-      // Play cry here — AudioContext was unlocked before the first await above,
-      // and by this point (after the fetch) resume() has had time to resolve.
-      // We do NOT await so React can render the result immediately.
-      if (details.cryUrl) playPokemonCry(details.cryUrl, 0.42)
-    } catch {
-      setError(errorMsg)
-    } finally {
-      setIsScanning(false)
-    }
   }
 
   function handlePokemonSelected(pokemon) {
@@ -312,6 +191,7 @@ function App() {
       pokemon.id ?? pokemon.name,
       { confidenceScore: 100, scannedAt: new Date().toISOString(), scanMode: 'búsqueda por texto Gen 1-9' },
       'No encontré ese Pokémon. 🤔 Prueba con el nombre en inglés o el número de Pokédex.',
+      { onSuccess: onFetchSuccess },
     )
   }
 
@@ -320,6 +200,7 @@ function App() {
       pokemon.apiName ?? pokemon.id,
       { confidenceScore: pokemon.confidenceScore ?? 100, scannedAt: new Date().toISOString(), scanMode: 'historial familiar' },
       'No pude abrir ese escaneo. 📋 Búscalo por nombre.',
+      { onSuccess: onFetchSuccess },
     )
   }
 
@@ -328,6 +209,7 @@ function App() {
       pokemon.apiName ?? pokemon.id,
       { confidenceScore: 100, scannedAt: new Date().toISOString(), scanMode: 'favorito familiar' },
       'No pude abrir ese favorito. ⭐ Búscalo por nombre.',
+      { onSuccess: onFetchSuccess },
     )
   }
 
@@ -341,13 +223,11 @@ function App() {
         visualReason: pokemon.reason,
       },
       'No pude abrir ese Pokémon. Búscalo por nombre.',
-      true, // keep the candidates strip visible while loading
+      { onSuccess: onFetchSuccess, keepCandidates: true },
     )
   }
 
-  function handleCollectionSelected(pokemon) {
-    return handleFavoriteSelected(pokemon)
-  }
+  const handleCollectionSelected = handleFavoriteSelected
 
   function handleReset() {
     clearImage()
@@ -359,6 +239,8 @@ function App() {
     if (!result?.id) return
     setScanFeedback((prev) => ({ ...prev, [result.id]: vote }))
   }
+
+  // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <LazyMotion features={loadMotionFeatures}>
@@ -488,7 +370,7 @@ function App() {
                 onMarkCaptured={(pokemon) => updateCollection(pokemon, 'captured')}
                 onMarkSeen={(pokemon) => updateCollection(pokemon, 'seen')}
                 onSpeakPokedex={narratePokemon}
-                onToggleFavorite={handleToggleFavorite}
+                onToggleFavorite={() => toggleFavorite(result)}
                 pokemonTotal={pokemonTotal}
                 result={result}
               />
@@ -582,7 +464,7 @@ function App() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="assistant-modal-backdrop" 
+              className="assistant-modal-backdrop"
               role="presentation"
             >
               <m.section
