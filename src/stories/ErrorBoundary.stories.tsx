@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react-vite'
 import { ErrorBoundary } from '../components/ErrorBoundary.tsx'
 
 /** Helper that throws on render — used to trigger the boundary. */

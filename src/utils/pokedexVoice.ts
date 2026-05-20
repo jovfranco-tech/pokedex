@@ -69,9 +69,11 @@ function unlockAll(): void {
   if (ctx?.state === 'suspended') ctx.resume().catch(() => {})
 
   // Audio element (iOS: play() from gesture unlocks it for later use)
+  // play() returns void in some envs (older Safari, jsdom) → guard the Promise call.
   const audio = getAudioEl()
   if (audio) {
-    audio.play().catch(() => {})
+    const playResult = audio.play()
+    if (playResult && typeof playResult.catch === 'function') playResult.catch(() => {})
     audio.pause()
   }
 

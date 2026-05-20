@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react-vite'
 import { fn } from '@storybook/test'
 import { PokemonSearch } from '../components/PokemonSearch.tsx'
 import type { PokemonIndexItem } from '../services/pokeApi.ts'

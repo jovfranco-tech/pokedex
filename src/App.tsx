@@ -21,6 +21,7 @@ import { useImagePreview } from './hooks/useImagePreview.js'
 import { useLocalStorage } from './hooks/useLocalStorage.js'
 import { usePokemonFetch } from './hooks/usePokemonFetch.js'
 import { usePwaInstall } from './hooks/usePwaInstall.js'
+import { useScanActions } from './hooks/useScanActions.js'
 import {
   DEFAULT_POKEMON_SPECIES_COUNT,
   POKEMON_DETAIL_SCHEMA_VERSION,
@@ -151,80 +152,27 @@ function App() {
 
   // ── Handlers ───────────────────────────────────────────────────────────────
 
-  /**
-   * Common onSuccess callback for all fetch actions.
-   * Narration fires here — in the same call stack as the user gesture that
-   * triggered the fetch — so no reactive effect or setTimeout hack needed.
-   */
-  function onFetchSuccess(details: PokemonDetail) {
-    setResult(details)
-    rememberScan(details)
-    updateCollection(details, 'seen')
-    if (isAutoNarrate) narratePokemon(details)
-  }
-
-  function handleImageSelected(file: File | null) {
-    setError('')
-    if (!file) return
-    if (!file.type.startsWith('image/')) {
-      setError('Ese archivo no parece una imagen. Prueba con una foto o captura.')
-      return
-    }
-    setImageFile(file)
-    runAnalyze(file, {
-      onSuccess: onFetchSuccess,
-      onNotFound: () => setResult(null),
-    })
-  }
-
-  function handlePokemonSelected(pokemon: PokemonIndexItem) {
-    return fetchAndDisplay(
-      pokemon.id ?? pokemon.name,
-      { confidenceScore: 100, scannedAt: new Date().toISOString(), scanMode: 'búsqueda por texto Gen 1-9' },
-      'No encontré ese Pokémon. 🤔 Prueba con el nombre en inglés o el número de Pokédex.',
-      { onSuccess: onFetchSuccess },
-    )
-  }
-
-  function handleHistorySelected(pokemon: { apiName?: string; id: number; confidenceScore?: number }) {
-    return fetchAndDisplay(
-      pokemon.apiName ?? pokemon.id,
-      { confidenceScore: pokemon.confidenceScore ?? 100, scannedAt: new Date().toISOString(), scanMode: 'historial familiar' },
-      'No pude abrir ese escaneo. 📋 Búscalo por nombre.',
-      { onSuccess: onFetchSuccess },
-    )
-  }
-
-  function handleFavoriteSelected(pokemon: { apiName?: string; id: number }) {
-    return fetchAndDisplay(
-      pokemon.apiName ?? pokemon.id,
-      { confidenceScore: 100, scannedAt: new Date().toISOString(), scanMode: 'favorito familiar' },
-      'No pude abrir ese favorito. ⭐ Búscalo por nombre.',
-      { onSuccess: onFetchSuccess },
-    )
-  }
-
-  function handleScanCandidateSelected(pokemon: { apiName?: string; id: number; confidenceScore?: number; reason?: string }) {
-    return fetchAndDisplay(
-      pokemon.apiName ?? pokemon.id,
-      {
-        confidenceScore: pokemon.confidenceScore ?? 100,
-        scannedAt: new Date().toISOString(),
-        scanMode: 'corrección del usuario',
-        visualReason: pokemon.reason,
-      },
-      'No pude abrir ese Pokémon. Búscalo por nombre.',
-      { onSuccess: onFetchSuccess, keepCandidates: true },
-    )
-  }
-
-  const handleCollectionSelected = handleFavoriteSelected
-
-  function handleReset() {
-    clearImage()
-    setError('')
-    setScanCandidates([])
-  }
+  const {
+    handleImageSelected,
+    handlePokemonSelected,
+    handleHistorySelected,
+    handleFavoriteSelected,
+    handleCollectionSelected,
+    handleScanCandidateSelected,
+    handleReset,
+  } = useScanActions({
+    isAutoNarrate,
+    setResult,
+    rememberScan,
+    updateCollection,
+    narratePokemon,
+    fetchAndDisplay,
+    handleAnalyze: runAnalyze,
+    setImageFile,
+    clearImage,
+    setError,
+    setScanCandidates,
+  })
 
   function handleScanFeedback(vote: 'correct' | 'wrong' | null) {
     if (!result?.id || !vote) return
@@ -361,7 +309,7 @@ function App() {
                 onMarkCaptured={(pokemon) => updateCollection(pokemon, 'captured')}
                 onMarkSeen={(pokemon) => updateCollection(pokemon, 'seen')}
                 onSpeakPokedex={narratePokemon}
-                onToggleFavorite={() => toggleFavorite(result!)}
+                onToggleFavorite={() => { if (result) toggleFavorite(result) }}
                 pokemonTotal={pokemonTotal}
                 result={result}
               />

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { PokemonQuiz } from '../PokemonQuiz.tsx'
@@ -94,5 +94,84 @@ describe('PokemonQuiz', () => {
   it('returns null when the index is empty', () => {
     const { container } = render(<PokemonQuiz index={[]} onClose={vi.fn()} />)
     expect(container.firstChild).toBeNull()
+  })
+
+  // ── Deterministic Math.random for branch coverage ─────────────────────────
+  describe('with deterministic Math.random', () => {
+    beforeEach(() => {
+      // Always return 0 → pickQuizPokemon picks index[0] (Bulbasaur)
+      // and buildOptions shuffles deterministically.
+      vi.spyOn(Math, 'random').mockReturnValue(0)
+    })
+    afterEach(() => vi.restoreAllMocks())
+
+    it('renders the silhouette with alt="Pokémon desconocido" before reveal', () => {
+      render(<PokemonQuiz index={SAMPLE_INDEX} onClose={vi.fn()} />)
+      expect(screen.getByAltText('Pokémon desconocido')).toBeInTheDocument()
+    })
+
+    it('reveals the correct displayName as alt text after answering', async () => {
+      const user = userEvent.setup()
+      render(<PokemonQuiz index={SAMPLE_INDEX} onClose={vi.fn()} />)
+
+      // Math.random=0 → correct answer is Bulbasaur
+      await user.click(screen.getByRole('button', { name: 'Bulbasaur' }))
+      expect(screen.getByAltText('Bulbasaur')).toBeInTheDocument()
+    })
+
+    it('increments score when the correct option is picked', async () => {
+      const user = userEvent.setup()
+      render(<PokemonQuiz index={SAMPLE_INDEX} onClose={vi.fn()} />)
+
+      await user.click(screen.getByRole('button', { name: 'Bulbasaur' }))
+      expect(screen.getByText('1/1')).toBeInTheDocument()
+      expect(screen.getByText('¡Correcto! 🎉')).toBeInTheDocument()
+    })
+
+    it('keeps the score at 0 when the wrong option is picked', async () => {
+      const user = userEvent.setup()
+      render(<PokemonQuiz index={SAMPLE_INDEX} onClose={vi.fn()} />)
+
+      // Pick Pikachu (wrong — answer is Bulbasaur)
+      await user.click(screen.getByRole('button', { name: 'Pikachu' }))
+      expect(screen.getByText('0/1')).toBeInTheDocument()
+      expect(screen.getByText(/Era Bulbasaur 😅/)).toBeInTheDocument()
+    })
+
+    it('marks the correct option with aria-current="true" after reveal', async () => {
+      const user = userEvent.setup()
+      render(<PokemonQuiz index={SAMPLE_INDEX} onClose={vi.fn()} />)
+
+      await user.click(screen.getByRole('button', { name: 'Pikachu' }))
+      expect(screen.getByRole('button', { name: 'Bulbasaur' })).toHaveAttribute('aria-current', 'true')
+    })
+
+    it('disables further option clicks after the first answer', async () => {
+      const user = userEvent.setup()
+      render(<PokemonQuiz index={SAMPLE_INDEX} onClose={vi.fn()} />)
+
+      await user.click(screen.getByRole('button', { name: 'Bulbasaur' }))
+      // A second click on a different option must not change the score
+      await user.click(screen.getByRole('button', { name: 'Pikachu' }))
+      expect(screen.getByText('1/1')).toBeInTheDocument()
+    })
+
+    it('marks the wrong picked option with quiz-option-wrong class', async () => {
+      const user = userEvent.setup()
+      render(<PokemonQuiz index={SAMPLE_INDEX} onClose={vi.fn()} />)
+      await user.click(screen.getByRole('button', { name: 'Pikachu' }))
+      expect(screen.getByRole('button', { name: 'Pikachu' }).className).toContain('quiz-option-wrong')
+    })
+
+    it('filters out mega and primal pokémon from the question pool', () => {
+      const indexWithMega: PokemonIndexItem[] = [
+        ...SAMPLE_INDEX,
+        mk(10001, 'mewtwo-mega-x', 'Mega Mewtwo X'),
+      ].map((p, i) => ({ ...p, isMega: i === SAMPLE_INDEX.length, isPrimal: false }))
+
+      render(<PokemonQuiz index={indexWithMega} onClose={vi.fn()} />)
+      // Math.random=0 → first eligible (non-mega), still Bulbasaur
+      expect(screen.queryByRole('button', { name: 'Mega Mewtwo X' })).toBeNull()
+    })
   })
 })

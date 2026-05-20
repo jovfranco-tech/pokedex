@@ -151,8 +151,9 @@ export function ResultCard({
   }
 
   async function handleShare() {
+    if (!result) return
     setIsSharing(true)
-    try { await sharePokemonCard(result!) } catch { /* user cancelled or unsupported */ }
+    try { await sharePokemonCard(result) } catch { /* user cancelled or unsupported */ }
     finally { setIsSharing(false) }
   }
 

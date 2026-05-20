@@ -68,7 +68,9 @@ export function ImageScanner({
       window.requestAnimationFrame(() => {
         if (!videoRef.current) return
         videoRef.current.srcObject = stream
-        videoRef.current.play().catch(() => {})
+        // play() returns void in some envs (older Safari, jsdom) → guard the Promise call.
+        const playResult = videoRef.current.play()
+        if (playResult && typeof playResult.catch === 'function') playResult.catch(() => {})
       })
     } catch {
       setCameraError('No pude abrir la cámara. Puedes usar Subir archivo.')

@@ -24,7 +24,11 @@ declare global {
 let _ctx: AudioContext | null = null
 
 function getCtx(): AudioContext {
-  if (!_ctx) _ctx = new (window.AudioContext || window.webkitAudioContext!)()
+  if (!_ctx) {
+    const Ctor = window.AudioContext ?? window.webkitAudioContext
+    if (!Ctor) throw new Error('Web Audio API not supported in this browser')
+    _ctx = new Ctor()
+  }
   return _ctx
 }
 

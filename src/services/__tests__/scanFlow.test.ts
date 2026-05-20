@@ -103,9 +103,9 @@ describe('identifyPokemonFromImage — scan flow (HTTP-level mock)', () => {
     await vi.advanceTimersByTimeAsync(700)   // skip 650 ms SCAN_DELAY_MS
     const result = await promise
 
-    expect(result).not.toBeNull()
-    expect(result!.name).toBe('pikachu')
-    expect(result!.confidenceScore).toBe(95)
+    if (!result) throw new Error('expected non-null scan result')
+    expect(result.name).toBe('pikachu')
+    expect(result.confidenceScore).toBe(95)
   })
 
   it('populates scanCandidates from the AI response', async () => {
@@ -125,9 +125,12 @@ describe('identifyPokemonFromImage — scan flow (HTTP-level mock)', () => {
     await vi.advanceTimersByTimeAsync(700)
     const result = await promise
 
-    expect(Array.isArray(result!.scanCandidates)).toBe(true)
-    expect(result!.scanCandidates![0].apiName).toBe('charizard')
-    expect(result!.scanCandidates![0].confidenceScore).toBe(88)
+    if (!result) throw new Error('expected non-null scan result')
+    const candidates = result.scanCandidates
+    if (!candidates) throw new Error('expected scanCandidates to be populated')
+    expect(Array.isArray(candidates)).toBe(true)
+    expect(candidates[0].apiName).toBe('charizard')
+    expect(candidates[0].confidenceScore).toBe(88)
   })
 
   // ── Fallback path: AI unavailable, filename used instead ─────────────────
@@ -139,8 +142,8 @@ describe('identifyPokemonFromImage — scan flow (HTTP-level mock)', () => {
     await vi.advanceTimersByTimeAsync(700)
     const result = await promise
 
-    expect(result).not.toBeNull()
-    expect(result!.name).toBe('pikachu')
+    if (!result) throw new Error('expected non-null scan result')
+    expect(result.name).toBe('pikachu')
   })
 
   it('falls back to filename matching when the API key is missing (503 missing_openai_key)', async () => {
@@ -153,8 +156,8 @@ describe('identifyPokemonFromImage — scan flow (HTTP-level mock)', () => {
     await vi.advanceTimersByTimeAsync(700)
     const result = await promise
 
-    expect(result).not.toBeNull()
-    expect(result!.name).toBe('charizard')
+    if (!result) throw new Error('expected non-null scan result')
+    expect(result.name).toBe('charizard')
   })
 
   it('falls back to filename matching when AI confidence is below threshold', async () => {
@@ -172,8 +175,8 @@ describe('identifyPokemonFromImage — scan flow (HTTP-level mock)', () => {
     await vi.advanceTimersByTimeAsync(700)
     const result = await promise
 
-    expect(result).not.toBeNull()
-    expect(result!.name).toBe('bulbasaur')
+    if (!result) throw new Error('expected non-null scan result')
+    expect(result.name).toBe('bulbasaur')
   })
 
   it('falls back to filename matching when AI says isPokemon=false', async () => {
@@ -190,8 +193,8 @@ describe('identifyPokemonFromImage — scan flow (HTTP-level mock)', () => {
     await vi.advanceTimersByTimeAsync(700)
     const result = await promise
 
-    expect(result).not.toBeNull()
-    expect(result!.name).toBe('mewtwo')
+    if (!result) throw new Error('expected non-null scan result')
+    expect(result.name).toBe('mewtwo')
   })
 
   // ── No-match path ─────────────────────────────────────────────────────────

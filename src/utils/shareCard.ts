@@ -31,7 +31,8 @@ export async function sharePokemonCard(result: PokemonDetail): Promise<void> {
   const H = 240
   canvas.width = W
   canvas.height = H
-  const ctx = canvas.getContext('2d')!
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('Canvas 2D context not available')
 
   const primary = getTypeMeta(result.type?.[0])
 

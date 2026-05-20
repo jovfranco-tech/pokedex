@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { ResultCard } from '../ResultCard.tsx'
 
 // vi.hoisted runs before vi.mock hoisting, so these refs are available in the factory.
-const { MotionDiv, MotionSection } = vi.hoisted(() => {
+const { MotionDiv, MotionSection, MotionSpan } = vi.hoisted(() => {
   const MOTION_PROPS = new Set([
     'animate', 'initial', 'exit', 'transition', 'variants', 'whileHover',
     'whileTap', 'whileFocus', 'layout', 'layoutId', 'onAnimationComplete', 'onUpdate',
@@ -22,12 +22,14 @@ const { MotionDiv, MotionSection } = vi.hoisted(() => {
     MotionDiv:     (props: any) => <div     {...strip(props)}>{props.children}</div>,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     MotionSection: (props: any) => <section {...strip(props)}>{props.children}</section>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    MotionSpan:    (props: any) => <span    {...strip(props)}>{props.children}</span>,
   }
 })
 
 vi.mock('framer-motion', () => ({
-  m: { div: MotionDiv, section: MotionSection },
-  motion: { div: MotionDiv, section: MotionSection },
+  m: { div: MotionDiv, section: MotionSection, span: MotionSpan },
+  motion: { div: MotionDiv, section: MotionSection, span: MotionSpan },
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   AnimatePresence: ({ children }: { children: any }) => children,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -193,5 +195,190 @@ describe('ResultCard — pokémon result', () => {
 
     expect(matchupsTab).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByText(/vulnerabilidades/i)).toBeInTheDocument()
+  })
+
+  it('renders 4 tabs (Info/Matchups/Juegos/3D) in normal mode', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    render(<ResultCard {...defaultProps} result={pikachuResult as any} />, { wrapper: Wrapper })
+    expect(screen.getAllByRole('tab')).toHaveLength(4)
+  })
+
+  it('switches to Juegos tab and shows the debut row', async () => {
+    const user = userEvent.setup()
+    const pokemon = { ...pikachuResult, gameAppearances: ['Red', 'Blue'] }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    render(<ResultCard {...defaultProps} result={pokemon as any} />, { wrapper: Wrapper })
+
+    await user.click(screen.getByRole('tab', { name: /juegos/i }))
+    expect(screen.getByText('Debut')).toBeInTheDocument()
+  })
+
+  it('marks the favorite button with the active class when isFavorite is true', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    render(<ResultCard {...defaultProps} result={pikachuResult as any} isFavorite />, { wrapper: Wrapper })
+    const favButton = screen.getByRole('button', { name: /quitar.*favoritos/i })
+    expect(favButton.className).toContain('profile-favorite-button-active')
+  })
+
+  it('uses the "Agregar a favoritos" aria-label when not favorite', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    render(<ResultCard {...defaultProps} result={pikachuResult as any} />, { wrapper: Wrapper })
+    expect(screen.getByRole('button', { name: /agregar.*favoritos/i })).toBeInTheDocument()
+  })
+
+  it('shows "Narrando…" label when isSpeaking is true', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    render(<ResultCard {...defaultProps} result={pikachuResult as any} isSpeaking />, { wrapper: Wrapper })
+    expect(screen.getByText('Narrando…')).toBeInTheDocument()
+  })
+
+  it('disables the Sonido button when cryUrl is empty', () => {
+    const noCry = { ...pikachuResult, cryUrl: '' }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    render(<ResultCard {...defaultProps} result={noCry as any} />, { wrapper: Wrapper })
+    const soundBtn = screen.getByRole('button', { name: /sonido/i })
+    expect(soundBtn).toBeDisabled()
+  })
+
+  it('enables the Sonido button when cryUrl is present', () => {
+    const withCry = { ...pikachuResult, cryUrl: 'https://cries/25.ogg' }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    render(<ResultCard {...defaultProps} result={withCry as any} />, { wrapper: Wrapper })
+    expect(screen.getByRole('button', { name: /sonido/i })).not.toBeDisabled()
+  })
+
+  it('calls onMarkSeen with the pokémon when Visto button is clicked', async () => {
+    const onMarkSeen = vi.fn()
+    const user = userEvent.setup()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    render(<ResultCard {...defaultProps} result={pikachuResult as any} onMarkSeen={onMarkSeen} />, { wrapper: Wrapper })
+    await user.click(screen.getByRole('button', { name: 'Visto' }))
+    expect(onMarkSeen).toHaveBeenCalledOnce()
+  })
+
+  it('calls onMarkCaptured with the pokémon when Capturado button is clicked', async () => {
+    const onMarkCaptured = vi.fn()
+    const user = userEvent.setup()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    render(<ResultCard {...defaultProps} result={pikachuResult as any} onMarkCaptured={onMarkCaptured} />, { wrapper: Wrapper })
+    await user.click(screen.getByRole('button', { name: 'Capturado' }))
+    expect(onMarkCaptured).toHaveBeenCalledOnce()
+  })
+
+  it('highlights Visto as active when collectionEntry.seenAt is set', () => {
+    const entry = { seenAt: '2024-01-01', capturedAt: undefined }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    render(<ResultCard {...defaultProps} result={pikachuResult as any} collectionEntry={entry as any} />, { wrapper: Wrapper })
+    expect(screen.getByRole('button', { name: 'Visto' }).className).toContain('profile-collection-button-active')
+  })
+
+  it('highlights Capturado as active when collectionEntry.capturedAt is set', () => {
+    const entry = { seenAt: '2024-01-01', capturedAt: '2024-01-02' }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    render(<ResultCard {...defaultProps} result={pikachuResult as any} collectionEntry={entry as any} />, { wrapper: Wrapper })
+    expect(screen.getByRole('button', { name: 'Capturado' }).className).toContain('profile-collection-button-active')
+  })
+
+  it('shows the visual reason when scanMode includes "visual" and visualReason is present', () => {
+    const visual = { ...pikachuResult, scanMode: 'escaneo visual', visualReason: 'Forma redonda amarilla' }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    render(<ResultCard {...defaultProps} result={visual as any} />, { wrapper: Wrapper })
+    expect(screen.getByText('Forma redonda amarilla')).toBeInTheDocument()
+  })
+
+  it('shows feedback thumbs-up/down only when scanMode includes "visual"', () => {
+    const visual = { ...pikachuResult, scanMode: 'escaneo visual' }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    render(<ResultCard {...defaultProps} result={visual as any} />, { wrapper: Wrapper })
+    expect(screen.getByRole('button', { name: /identificación correcta/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /identificación incorrecta/i })).toBeInTheDocument()
+  })
+
+  it('does not show feedback row when scanMode is text search', () => {
+    const text = { ...pikachuResult, scanMode: 'búsqueda por texto' }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    render(<ResultCard {...defaultProps} result={text as any} />, { wrapper: Wrapper })
+    expect(screen.queryByRole('button', { name: /identificación correcta/i })).not.toBeInTheDocument()
+  })
+
+  it('calls onFeedback("correct") when thumbs-up is clicked', async () => {
+    const onFeedback = vi.fn()
+    const user = userEvent.setup()
+    const visual = { ...pikachuResult, scanMode: 'escaneo visual' }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    render(<ResultCard {...defaultProps} result={visual as any} onFeedback={onFeedback} />, { wrapper: Wrapper })
+
+    await user.click(screen.getByRole('button', { name: /identificación correcta/i }))
+    expect(onFeedback).toHaveBeenCalledWith('correct')
+  })
+
+  it('calls onFeedback("wrong") when thumbs-down is clicked', async () => {
+    const onFeedback = vi.fn()
+    const user = userEvent.setup()
+    const visual = { ...pikachuResult, scanMode: 'escaneo visual' }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    render(<ResultCard {...defaultProps} result={visual as any} onFeedback={onFeedback} />, { wrapper: Wrapper })
+
+    await user.click(screen.getByRole('button', { name: /identificación incorrecta/i }))
+    expect(onFeedback).toHaveBeenCalledWith('wrong')
+  })
+
+  it('shows form label badge when result has a formLabel', () => {
+    const mega = { ...pikachuResult, formLabel: 'Mega' }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    render(<ResultCard {...defaultProps} result={mega as any} />, { wrapper: Wrapper })
+    expect(screen.getByText('Mega')).toBeInTheDocument()
+  })
+
+  it('shows the legendary badge when isLegendary is true', () => {
+    const legendary = { ...pikachuResult, isLegendary: true }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    render(<ResultCard {...defaultProps} result={legendary as any} />, { wrapper: Wrapper })
+    expect(screen.getByText('Legendario')).toBeInTheDocument()
+  })
+
+  it('shows the mythical badge when isMythical is true', () => {
+    const mythical = { ...pikachuResult, isMythical: true }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    render(<ResultCard {...defaultProps} result={mythical as any} />, { wrapper: Wrapper })
+    expect(screen.getByText('Mítico')).toBeInTheDocument()
+  })
+
+  it('shows category badges for special pokémon (Mega/Inicial/etc.)', () => {
+    const special = { ...pikachuResult, isMega: true, isStarter: true }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    render(<ResultCard {...defaultProps} result={special as any} />, { wrapper: Wrapper })
+    expect(screen.getByText('Mega')).toBeInTheDocument()
+    expect(screen.getByText('Inicial')).toBeInTheDocument()
+  })
+
+  it('shows the confidence score', () => {
+    const conf = { ...pikachuResult, confidenceScore: 88 }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    render(<ResultCard {...defaultProps} result={conf as any} />, { wrapper: Wrapper })
+    expect(screen.getByText('88%')).toBeInTheDocument()
+  })
+
+  it('renders the quick summary including types and top stat', () => {
+    const conf = {
+      ...pikachuResult,
+      stats: [
+        { key: 'hp', name: 'PS', value: 35 },
+        { key: 'speed', name: 'Velocidad', value: 90 },
+      ],
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    render(<ResultCard {...defaultProps} result={conf as any} />, { wrapper: Wrapper })
+    expect(screen.getByText(/Su stat más alto es Velocidad/i)).toBeInTheDocument()
+  })
+})
+
+describe('ResultCard — kids mode', () => {
+  it('renders only Info and 3D tabs when isKidsMode is true', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    render(<ResultCard {...defaultProps} result={pikachuResult as any} isKidsMode />, { wrapper: Wrapper })
+    const tabs = screen.getAllByRole('tab')
+    expect(tabs).toHaveLength(2)
+    expect(tabs.map((t) => t.textContent)).toEqual(expect.arrayContaining([expect.stringContaining('Info'), expect.stringContaining('3D')]))
   })
 })
