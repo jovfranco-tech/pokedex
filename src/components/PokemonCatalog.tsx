@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { formatPokemonNumber } from '../utils/formatPokemonNumber.js'
 import { normalizePokemonText } from '../services/pokeApi.js'
 import { Heart, Search } from 'lucide-react'
+import { playUiClick } from '../utils/pokedexVoice.js'
 import type { PokemonIndexItem } from '../services/pokeApi.js'
 import type { CollectionEntry, FavoriteEntry } from '../hooks/useCollection.js'
 
@@ -97,11 +98,13 @@ export function PokemonCatalog({
   }, [index])
 
   function handleGenFilter(gen: number) {
+    playUiClick()
     setFilterGen((prev) => (prev === gen ? null : gen))
     setPage(0)
   }
 
   function handleSpecialFilter(special: 'mega' | 'primal') {
+    playUiClick()
     setFilterSpecial((prev) => (prev === special ? null : special))
     setPage(0)
   }
@@ -112,11 +115,13 @@ export function PokemonCatalog({
   }
 
   function handleCapturedFilter() {
+    playUiClick()
     setFilterCaptured((prev) => !prev)
     setPage(0)
   }
 
   function handleFavoritesFilter() {
+    playUiClick()
     setFilterFavorites((prev) => !prev)
     setPage(0)
   }
@@ -219,7 +224,7 @@ export function PokemonCatalog({
               role="listitem"
               className="catalog-card"
               aria-label={`Ver ${pokemon.displayName}`}
-              onClick={() => onSelect?.(pokemon)}
+              onClick={() => { playUiClick(); onSelect?.(pokemon); }}
             >
               {(isCap || isFav) && (
                 <div className="catalog-card-indicators" aria-hidden="true">
@@ -264,7 +269,7 @@ export function PokemonCatalog({
             type="button"
             className="catalog-page-btn"
             disabled={page === 0}
-            onClick={() => setPage((p) => p - 1)}
+            onClick={() => { playUiClick(); setPage((p) => p - 1); }}
           >
             ← Anterior
           </button>
@@ -275,7 +280,7 @@ export function PokemonCatalog({
             type="button"
             className="catalog-page-btn"
             disabled={page >= totalPages - 1}
-            onClick={() => setPage((p) => p + 1)}
+            onClick={() => { playUiClick(); setPage((p) => p + 1); }}
           >
             Siguiente →
           </button>

@@ -15,6 +15,7 @@ import {
 } from './sub-components.js'
 import type { PokemonDetail } from '../../services/pokeApi.js'
 import type { CollectionEntry } from '../../hooks/useCollection.js'
+import { playUiClick } from '../../utils/pokedexVoice.js'
 
 type FeedbackVote = 'correct' | 'wrong' | null
 
@@ -203,6 +204,7 @@ export function ResultCard({
             className={`profile-favorite-button ${isFavorite ? 'profile-favorite-button-active' : ''}`}
             aria-label={isFavorite ? `Quitar ${result.name} de favoritos` : `Agregar ${result.name} a favoritos`}
             onClick={() => {
+              playUiClick()
               onToggleFavorite?.()
               setA11yAnnouncement(
                 isFavorite
@@ -227,7 +229,7 @@ export function ResultCard({
       <div className="profile-audio-row">
         <button
           type="button"
-          onClick={() => { unlockAudio(); void playPokemonCry(result.cryUrl ?? '') }}
+          onClick={() => { playUiClick(); unlockAudio(); void playPokemonCry(result.cryUrl ?? '') }}
           disabled={!result.cryUrl}
           className="profile-sound-button"
         >
@@ -236,7 +238,7 @@ export function ResultCard({
         </button>
         <button
           type="button"
-          onClick={() => onSpeakPokedex?.(result)}
+          onClick={() => { playUiClick(); onSpeakPokedex?.(result) }}
           className={`profile-sound-button${isSpeaking ? ' profile-sound-button-speaking' : ''}`}
           aria-label={isSpeaking ? 'Narrando...' : `Narrar información de ${result.name}`}
         >
@@ -245,7 +247,7 @@ export function ResultCard({
         </button>
         <button
           type="button"
-          onClick={handleShare}
+          onClick={() => { playUiClick(); void handleShare() }}
           disabled={isSharing}
           className="profile-sound-button"
           aria-label={`Compartir ${result.name}`}
@@ -261,7 +263,7 @@ export function ResultCard({
           <button
             type="button"
             className={`profile-feedback-btn${feedback === 'correct' ? ' profile-feedback-btn-yes' : ''}`}
-            onClick={() => onFeedback?.('correct')}
+            onClick={() => { playUiClick(); onFeedback?.('correct'); }}
             aria-label="Identificación correcta"
           >
             <ThumbsUp className="size-4" />
@@ -269,7 +271,7 @@ export function ResultCard({
           <button
             type="button"
             className={`profile-feedback-btn${feedback === 'wrong' ? ' profile-feedback-btn-no' : ''}`}
-            onClick={() => onFeedback?.('wrong')}
+            onClick={() => { playUiClick(); onFeedback?.('wrong'); }}
             aria-label="Identificación incorrecta"
           >
             <ThumbsDown className="size-4" />
@@ -284,6 +286,7 @@ export function ResultCard({
           type="button"
           className={collectionEntry?.seenAt ? 'profile-collection-button profile-collection-button-active' : 'profile-collection-button'}
           onClick={() => {
+            playUiClick()
             onMarkSeen?.(result)
             setA11yAnnouncement(
               collectionEntry?.seenAt
@@ -298,6 +301,7 @@ export function ResultCard({
           type="button"
           className={collectionEntry?.capturedAt ? 'profile-collection-button profile-collection-button-active' : 'profile-collection-button'}
           onClick={() => {
+            playUiClick()
             onMarkCaptured?.(result)
             setA11yAnnouncement(
               collectionEntry?.capturedAt
@@ -333,7 +337,7 @@ export function ResultCard({
               type="button"
               role="tab"
               aria-selected={safeActiveTab === tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => { playUiClick(); setActiveTab(tab.id); }}
               className={`profile-tab ${safeActiveTab === tab.id ? 'profile-tab-active' : ''}`}
             >
               <Icon className="size-4" />

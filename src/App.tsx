@@ -1,4 +1,4 @@
-import { AnimatePresence, LazyMotion, useReducedMotion } from 'framer-motion'
+import { AnimatePresence, LazyMotion, m, useReducedMotion } from 'framer-motion'
 
 const loadMotionFeatures = () => import('framer-motion').then((mod) => mod.domAnimation)
 import { Bot, CircleDot, Download, Gamepad2, Mic, Palette, Sparkles, Tv, Volume2, VolumeX } from 'lucide-react'
@@ -30,7 +30,7 @@ import {
   fetchPokemonDetails,
   loadPokemonIndex,
 } from './services/pokeApi.js'
-import { buildPokedexAnnouncement, speakPokedexLine, isPokedexMuted, setPokedexMuted } from './utils/pokedexVoice.js'
+import { buildPokedexAnnouncement, speakPokedexLine, isPokedexMuted, setPokedexMuted, playUiClick, playUiSlideOpen } from './utils/pokedexVoice.js'
 import { onSwUpdate } from './utils/registerServiceWorker.js'
 import { getPokemonTypeTheme } from './data/typeColors.js'
 import { shareAchievement } from './utils/shareCard.js'
@@ -75,6 +75,17 @@ function App() {
   const [crtMode, setCrtMode] = useLocalStorage<'active' | 'dimmed' | 'off'>('pokedex-visual-gen1:crt-mode', 'active')
   const [consoleSkin, setConsoleSkin] = useLocalStorage<'red' | 'stealth' | 'sinnoh' | 'emerald'>('pokedex-visual-gen1:console-skin', 'red')
   const [isMuted, setIsMuted] = useState(isPokedexMuted())
+  const [isConsoleOpened, setIsConsoleOpened] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true
+    return sessionStorage.getItem('pokedex-visual-gen1:is-opened') === 'true'
+  })
+
+  const handleOpenConsole = useCallback(() => {
+    setIsConsoleOpened(true)
+    sessionStorage.setItem('pokedex-visual-gen1:is-opened', 'true')
+    playUiSlideOpen()
+  }, [])
+
 
 
   // ── Collection (history, favorites, Pokédex) ───────────────────────────────
@@ -260,6 +271,50 @@ function App() {
           className={`pokedex-console-card skin-${consoleSkin}`}
           style={result ? (getPokemonTypeTheme(result.type) as React.CSSProperties) : undefined}
         >
+          <AnimatePresence>
+            {!isConsoleOpened && (
+              <m.div
+                className="pokedex-closed-cover-overlay"
+                initial={{ opacity: 1 }}
+                exit={{ opacity: 0, transition: { duration: 0.4, delay: 0.2 } }}
+              >
+                {/* Left Panel */}
+                <m.div
+                  className="pokedex-cover-panel-left"
+                  initial={{ x: 0 }}
+                  exit={{ x: '-100%', transition: { duration: 0.5, ease: [0.77, 0, 0.175, 1] } }}
+                >
+                  <div className="pokedex-cover-detail-line" />
+                </m.div>
+
+                {/* Right Panel */}
+                <m.div
+                  className="pokedex-cover-panel-right"
+                  initial={{ x: 0 }}
+                  exit={{ x: '100%', transition: { duration: 0.5, ease: [0.77, 0, 0.175, 1] } }}
+                >
+                  <div className="pokedex-cover-detail-line" />
+                </m.div>
+
+                {/* Sensor glowing button */}
+                <m.div
+                  className="pokedex-sensor-container"
+                  initial={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0, opacity: 0, transition: { duration: 0.3 } }}
+                >
+                  <button
+                    type="button"
+                    className="pokedex-blue-sensor"
+                    onClick={handleOpenConsole}
+                    aria-label="Abrir Pokédex"
+                  >
+                    <span className="pokedex-sensor-core" />
+                  </button>
+                </m.div>
+              </m.div>
+            )}
+          </AnimatePresence>
+
           <header className="console-title-row">
             <div className="flex min-w-0 items-center gap-3">
               <div className="pokedex-logo-mark" aria-hidden="true" />
@@ -272,7 +327,7 @@ function App() {
 
           <div className="console-quick-actions" aria-label="Controles rápidos">
             {canInstall && !isInstalled && (
-              <button type="button" className="console-mini-button" aria-label="Instalar aplicación" onClick={promptInstall}>
+              <button type="button" className="console-mini-button" aria-label="Instalar aplicación" onClick={() => { playUiClick(); promptInstall(); }}>
                 <Download className="size-4" aria-hidden="true" />
                 Instalar
               </button>
@@ -283,6 +338,7 @@ function App() {
               aria-label={`Cambiar modo de pantalla CRT (actual: ${crtMode})`}
               aria-pressed={crtMode !== 'off'}
               onClick={() => {
+                playUiClick()
                 setCrtMode((prev) => {
                   if (prev === 'active') return 'dimmed'
                   if (prev === 'dimmed') return 'off'
@@ -300,6 +356,7 @@ function App() {
                 consoleSkin === 'red' ? 'Rojo' : consoleSkin === 'stealth' ? 'Sigilo' : consoleSkin === 'sinnoh' ? 'Sinnoh' : 'Esmeralda'
               })`}
               onClick={() => {
+                playUiClick()
                 setConsoleSkin((prev) => {
                   if (prev === 'red') return 'stealth'
                   if (prev === 'stealth') return 'sinnoh'
@@ -320,8 +377,15 @@ function App() {
               aria-pressed={isMuted}
               onClick={() => {
                 const nextMuted = !isMuted
-                setIsMuted(nextMuted)
-                setPokedexMuted(nextMuted)
+                if (!nextMuted) {
+                  setPokedexMuted(false)
+                  setIsMuted(false)
+                  playUiClick()
+                } else {
+                  playUiClick()
+                  setPokedexMuted(true)
+                  setIsMuted(true)
+                }
               }}
             >
               {isMuted ? (
@@ -339,7 +403,7 @@ function App() {
             <button
               type="button"
               className={`console-mini-button ${isAutoNarrate ? 'console-mini-button-active' : ''}`}
-              onClick={() => setIsAutoNarrate((value) => !value)}
+              onClick={() => { playUiClick(); setIsAutoNarrate((value) => !value); }}
               aria-label={isAutoNarrate ? 'Desactivar narración automática' : 'Activar narración automática'}
             >
               <Mic className="size-4" />
@@ -350,7 +414,7 @@ function App() {
               className={`console-mini-button ${isKidsMode ? 'console-mini-button-active' : ''}`}
               aria-label={isKidsMode ? 'Desactivar modo niños' : 'Activar modo niños'}
               aria-pressed={isKidsMode}
-              onClick={() => setIsKidsMode((value) => !value)}
+              onClick={() => { playUiClick(); setIsKidsMode((value) => !value); }}
             >
 
               <Sparkles className="size-4" aria-hidden="true" />
@@ -412,7 +476,7 @@ function App() {
 
             {scanHistory.length > 0 && (
               <details className="console-drawer console-drawer-soft">
-                <summary>
+                <summary onClick={() => playUiClick()}>
                   <Sparkles className="size-4" />
                   Recientes
                 </summary>
@@ -421,11 +485,11 @@ function App() {
             )}
 
             <div className="flex gap-2">
-              <button type="button" className="console-ai-button flex-1" onClick={() => setIsAssistantOpen(true)}>
+              <button type="button" className="console-ai-button flex-1" onClick={() => { playUiClick(); setIsAssistantOpen(true); }}>
                 <Bot className="size-5" />
                 Pokédex IA
               </button>
-              <button type="button" className="console-ai-button flex-1" onClick={() => setIsQuizOpen(true)}>
+              <button type="button" className="console-ai-button flex-1" onClick={() => { playUiClick(); setIsQuizOpen(true); }}>
                 <Gamepad2 className="size-5" />
                 Quiz
               </button>

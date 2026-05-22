@@ -8,6 +8,7 @@ import { m, useReducedMotion } from 'framer-motion'
 import { Activity, BarChart2, ShieldAlert, Sparkles } from 'lucide-react'
 import { type CSSProperties, Suspense, lazy, useState } from 'react'
 import { getTypeMeta } from '../../data/typeColors.js'
+import { playUiClick } from '../../utils/pokedexVoice.js'
 import { ErrorBoundary } from '../ErrorBoundary.js'
 import { gameGroups, gameLabels, kidsTypeEmojis } from './data.js'
 import type { PokemonDetail, TypeMatchups } from '../../services/pokeApi.js'
@@ -181,7 +182,7 @@ export function StatsPanel({ stats = [] }: StatsPanelProps) {
             role="tab"
             aria-selected={viewMode === 'bars'}
             className={`stats-toggle-btn ${viewMode === 'bars' ? 'active' : ''}`}
-            onClick={() => setViewMode('bars')}
+            onClick={() => { playUiClick(); setViewMode('bars'); }}
           >
             <BarChart2 className="size-3.5" />
             <span>Lista</span>
@@ -191,7 +192,7 @@ export function StatsPanel({ stats = [] }: StatsPanelProps) {
             role="tab"
             aria-selected={viewMode === 'radar'}
             className={`stats-toggle-btn ${viewMode === 'radar' ? 'active' : ''}`}
-            onClick={() => setViewMode('radar')}
+            onClick={() => { playUiClick(); setViewMode('radar'); }}
           >
             <Activity className="size-3.5" />
             <span>Radar</span>

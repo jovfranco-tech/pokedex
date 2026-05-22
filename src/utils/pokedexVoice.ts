@@ -124,6 +124,78 @@ export function playPokedexBeep(): Promise<void> {
   }
 }
 
+export function playUiClick(): void {
+  if (typeof window === 'undefined' || isPokedexMuted()) return
+  try {
+    const ctx = getAudioContext()
+    if (!ctx) return
+    const go = () => {
+      scheduleTone(ctx, 1600, 0, 0.03, 0.1)
+    }
+    if (ctx.state === 'suspended') {
+      ctx.resume().then(go).catch(() => {})
+    } else {
+      go()
+    }
+  } catch {
+    // Safe fallback
+  }
+}
+
+export function playUiSlideOpen(): void {
+  if (typeof window === 'undefined' || isPokedexMuted()) return
+  try {
+    const ctx = getAudioContext()
+    if (!ctx) return
+    const go = () => {
+      const start = ctx.currentTime
+      
+      const osc1 = ctx.createOscillator()
+      const g1 = ctx.createGain()
+      osc1.type = 'triangle'
+      osc1.frequency.setValueAtTime(440, start)
+      osc1.frequency.exponentialRampToValueAtTime(880, start + 0.15)
+      g1.gain.setValueAtTime(0.18, start)
+      g1.gain.exponentialRampToValueAtTime(0.0001, start + 0.15)
+      osc1.connect(g1)
+      g1.connect(ctx.destination)
+      osc1.start(start)
+      osc1.stop(start + 0.15)
+
+      const osc2 = ctx.createOscillator()
+      const g2 = ctx.createGain()
+      osc2.type = 'triangle'
+      osc2.frequency.setValueAtTime(660, start + 0.1)
+      osc2.frequency.exponentialRampToValueAtTime(1320, start + 0.25)
+      g2.gain.setValueAtTime(0.18, start + 0.1)
+      g2.gain.exponentialRampToValueAtTime(0.0001, start + 0.25)
+      osc2.connect(g2)
+      g2.connect(ctx.destination)
+      osc2.start(start + 0.1)
+      osc2.stop(start + 0.25)
+
+      const osc3 = ctx.createOscillator()
+      const g3 = ctx.createGain()
+      osc3.type = 'sine'
+      osc3.frequency.setValueAtTime(880, start + 0.2)
+      osc3.frequency.exponentialRampToValueAtTime(1760, start + 0.4)
+      g3.gain.setValueAtTime(0.18, start + 0.2)
+      g3.gain.exponentialRampToValueAtTime(0.0001, start + 0.4)
+      osc3.connect(g3)
+      g3.connect(ctx.destination)
+      osc3.start(start + 0.2)
+      osc3.stop(start + 0.4)
+    }
+    if (ctx.state === 'suspended') {
+      ctx.resume().then(go).catch(() => {})
+    } else {
+      go()
+    }
+  } catch {
+    // Safe fallback
+  }
+}
+
 // --- OpenAI TTS with IndexedDB persistence (#1) ----------------------
 
 const TTS_DB_NAME = 'pokedex-tts-v1'
