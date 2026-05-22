@@ -79,12 +79,45 @@ function App() {
     if (typeof window === 'undefined') return true
     return sessionStorage.getItem('pokedex-visual-gen1:is-opened') === 'true'
   })
+  const [isRebooting, setIsRebooting] = useState(false)
+  const consoleRef = useRef<HTMLDivElement>(null)
 
   const handleOpenConsole = useCallback(() => {
     setIsConsoleOpened(true)
     sessionStorage.setItem('pokedex-visual-gen1:is-opened', 'true')
     playUiSlideOpen()
   }, [])
+
+  const handleSkinChange = useCallback(() => {
+    try {
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
+      if (audioCtx && !isPokedexMuted()) {
+        const osc = audioCtx.createOscillator()
+        const gainNode = audioCtx.createGain()
+        osc.connect(gainNode)
+        gainNode.connect(audioCtx.destination)
+        
+        osc.type = 'sawtooth'
+        osc.frequency.setValueAtTime(800, audioCtx.currentTime)
+        osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.3)
+        gainNode.gain.setValueAtTime(0.04, audioCtx.currentTime)
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3)
+        osc.start()
+        osc.stop(audioCtx.currentTime + 0.3)
+      }
+    } catch (e) {}
+
+    setIsRebooting(true)
+    setConsoleSkin((prev) => {
+      if (prev === 'red') return 'stealth'
+      if (prev === 'stealth') return 'sinnoh'
+      if (prev === 'sinnoh') return 'emerald'
+      return 'red'
+    })
+    setTimeout(() => {
+      setIsRebooting(false)
+    }, 450)
+  }, [setConsoleSkin])
 
 
 
@@ -154,6 +187,37 @@ function App() {
     document.body.classList.remove('crt-active', 'crt-dimmed', 'crt-off')
     document.body.classList.add(`crt-${crtMode}`)
   }, [crtMode])
+
+  // 3D Parallax and Glare Sheen dynamic tracking on physical card element
+  useEffect(() => {
+    const card = consoleRef.current
+    if (!card) return
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = card.getBoundingClientRect()
+      const x = e.clientX - rect.left
+      const y = e.clientY - rect.top
+      const xc = rect.width / 2
+      const yc = rect.height / 2
+      const angleX = (yc - y) / 80 // Max tilt ~4 degrees
+      const angleY = (x - xc) / 80 // Max tilt ~5 degrees
+      card.style.setProperty('--mouse-x', `${x}px`)
+      card.style.setProperty('--mouse-y', `${y}px`)
+      card.style.setProperty('--rx', `${angleX}deg`)
+      card.style.setProperty('--ry', `${angleY}deg`)
+    }
+    const handleMouseLeave = () => {
+      card.style.setProperty('--mouse-x', '50%')
+      card.style.setProperty('--mouse-y', '50%')
+      card.style.setProperty('--rx', '0deg')
+      card.style.setProperty('--ry', '0deg')
+    }
+    card.addEventListener('mousemove', handleMouseMove)
+    card.addEventListener('mouseleave', handleMouseLeave)
+    return () => {
+      card.removeEventListener('mousemove', handleMouseMove)
+      card.removeEventListener('mouseleave', handleMouseLeave)
+    }
+  }, [])
 
 
   // Load Pokémon index on mount; then handle deep-link URL (/pokemon/:name)
@@ -268,9 +332,15 @@ function App() {
     <main className={`pokedex-stage min-h-svh px-2 py-2 text-dex-ink sm:px-5 sm:py-4 ${isKidsMode ? 'kids-mode' : ''}`}>
       <DeviceShell>
         <section
+          ref={consoleRef}
           className={`pokedex-console-card skin-${consoleSkin}`}
           style={result ? (getPokemonTypeTheme(result.type) as React.CSSProperties) : undefined}
         >
+          {isRebooting && (
+            <div className="pokedex-crt-reboot-overlay" aria-hidden="true">
+              <div className="pokedex-reboot-line" />
+            </div>
+          )}
           <AnimatePresence>
             {!isConsoleOpened && (
               <m.div
@@ -355,15 +425,7 @@ function App() {
               aria-label={`Cambiar carcasa de la Pokédex (actual: ${
                 consoleSkin === 'red' ? 'Rojo' : consoleSkin === 'stealth' ? 'Sigilo' : consoleSkin === 'sinnoh' ? 'Sinnoh' : 'Esmeralda'
               })`}
-              onClick={() => {
-                playUiClick()
-                setConsoleSkin((prev) => {
-                  if (prev === 'red') return 'stealth'
-                  if (prev === 'stealth') return 'sinnoh'
-                  if (prev === 'sinnoh') return 'emerald'
-                  return 'red'
-                })
-              }}
+              onClick={handleSkinChange}
             >
               <Palette className="size-4" aria-hidden="true" />
               Carcasa: {

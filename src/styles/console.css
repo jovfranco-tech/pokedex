@@ -2087,6 +2087,97 @@ body.crt-off .console-crt-overlay {
   }
 }
 
+/* ==========================================================================
+   v5 Premium Console Additions: 3D Parallax, Dynamic Glare Sheen & CRT Reboot
+   ========================================================================== */
+
+/* 3D Tilt Parallax on Main Shell */
+.pokedex-console-card {
+  transform: perspective(1000px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform 0.15s ease-out, box-shadow 0.4s ease, border-color 0.4s ease;
+  transform-style: preserve-3d;
+}
+
+/* Skeuomorphic Radial Glare Sheen following cursor */
+.pokedex-console-card::after {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: radial-gradient(
+    circle 280px at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(255, 255, 255, 0.08) 0%,
+    transparent 75%
+  );
+  pointer-events: none;
+  content: "";
+  border-radius: inherit;
+  opacity: 0.85;
+}
+
+/* CRT Diagnostic Hardware Reboot overlay on skin swap */
+.pokedex-crt-reboot-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 99999;
+  background: #000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  animation: crt-reboot-fade-out 0.45s steps(8) forwards;
+}
+
+.pokedex-reboot-line {
+  width: 100%;
+  height: 4px;
+  background: #ffffff;
+  box-shadow: 
+    0 0 8px #ffffff,
+    0 0 20px #00f0ff,
+    0 0 40px #0077ff;
+  transform-origin: center;
+  animation: crt-reboot-shrink 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes crt-reboot-shrink {
+  0% {
+    transform: scaleY(1) scaleX(1);
+    opacity: 1;
+  }
+  25% {
+    transform: scaleY(25) scaleX(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scaleY(0.04) scaleX(1.05);
+    opacity: 1;
+  }
+  75% {
+    transform: scaleY(0.01) scaleX(0.12);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleY(0) scaleX(0);
+    opacity: 0;
+  }
+}
+
+@keyframes crt-reboot-fade-out {
+  0% {
+    opacity: 1;
+    visibility: visible;
+  }
+  82% {
+    opacity: 1;
+    visibility: visible;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+
 
 
 
