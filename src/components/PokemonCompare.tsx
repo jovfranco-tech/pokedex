@@ -125,6 +125,51 @@ function ComparePicker({ index, label, onSelect, selected }: ComparePickerProps)
   )
 }
 
+// ── Stat bars comparison ─────────────────────────────────────────────────────
+
+const STAT_ORDER = ['PS', 'Ataque', 'Defensa', 'Atq. Esp.', 'Def. Esp.', 'Velocidad']
+
+interface StatBarsComparisonProps {
+  first: PokemonDetail | null
+  second: PokemonDetail | null
+}
+
+function StatBarsComparison({ first, second }: StatBarsComparisonProps) {
+  if (!first || !second) return null
+  const allStats = STAT_ORDER.filter((name) =>
+    first.stats?.some((s) => s.name === name) || second.stats?.some((s) => s.name === name),
+  )
+  return (
+    <div className="compare-stats-panel" aria-label="Comparación de estadísticas">
+      <p className="compare-stats-title">Estadísticas base</p>
+      {allStats.map((name) => {
+        const valA = getStat(first, name)
+        const valB = getStat(second, name)
+        const pctA = (valA / 180) * 100
+        const pctB = (valB / 180) * 100
+        const aWins = valA >= valB
+        return (
+          <div key={name} className="compare-stat-row">
+            <span className={`compare-stat-val compare-stat-val-left${aWins ? ' compare-stat-winner' : ''}`}>{valA}</span>
+            <span className="compare-stat-name">{name}</span>
+            <span className={`compare-stat-val compare-stat-val-right${!aWins ? ' compare-stat-winner' : ''}`}>{valB}</span>
+            <div className="compare-stat-bars">
+              <span className="compare-bar-track compare-bar-track-left">
+                <span className={`compare-bar-fill compare-bar-fill-left${aWins ? ' compare-bar-winner' : ''}`} style={{ width: `${pctA}%` }} />
+              </span>
+              <span className="compare-bar-track compare-bar-track-right">
+                <span className={`compare-bar-fill compare-bar-fill-right${!aWins ? ' compare-bar-winner' : ''}`} style={{ width: `${pctB}%` }} />
+              </span>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 interface CompareCardProps {
   pokemon: PokemonDetail | null
   side: 'left' | 'right'
@@ -208,6 +253,8 @@ export function PokemonCompare({ index = [], initialPokemon }: PokemonComparePro
           <CompareCard key={secondPokemon?.id ?? 'empty-b'} pokemon={secondPokemon} side="right" />
         </AnimatePresence>
       </div>
+
+      <StatBarsComparison first={firstPokemon} second={secondPokemon} />
 
       <AnimatePresence>
         {battle && (

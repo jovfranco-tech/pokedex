@@ -1046,6 +1046,86 @@
   font-weight: var(--weight-black);
 }
 
+/* ── Compare stat bars ─────────────────────────────────────────────────────── */
+
+.compare-stats-panel {
+  display: grid;
+  gap: 6px;
+  padding: 10px 4px 4px;
+}
+
+.compare-stats-title {
+  color: #8d94a6;
+  font-size: 0.72rem;
+  font-weight: var(--weight-black);
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.compare-stat-row {
+  display: grid;
+  grid-template-columns: 32px 1fr 32px;
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 3px 6px;
+}
+
+.compare-stat-val {
+  font-size: 0.78rem;
+  font-weight: var(--weight-black);
+  color: #8d94a6;
+}
+
+.compare-stat-val-left  { text-align: right; }
+.compare-stat-val-right { text-align: left; }
+
+.compare-stat-winner {
+  color: #2f8cff;
+}
+
+.compare-stat-name {
+  text-align: center;
+  font-size: 0.68rem;
+  font-weight: var(--weight-black);
+  color: #8d94a6;
+}
+
+.compare-stat-bars {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  height: 6px;
+}
+
+.compare-bar-track {
+  position: relative;
+  display: block;
+  height: 6px;
+  border-radius: 999px;
+  background: #e9ecf2;
+  overflow: hidden;
+}
+
+.compare-bar-track-left  { direction: rtl; }
+.compare-bar-track-right { direction: ltr; }
+
+.compare-bar-fill {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  border-radius: 999px;
+  background: #b0bcd4;
+  transition: width 0.45s ease-out;
+}
+
+.compare-bar-fill-left  { right: 0; }
+.compare-bar-fill-right { left: 0; }
+
+.compare-bar-winner {
+  background: #2f8cff;
+}
+
 .utility-dock {
   display: grid;
   gap: 12px;

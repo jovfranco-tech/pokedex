@@ -213,7 +213,7 @@ describe('fetchPokemonDetails — localStorage cache', () => {
     mockPokeApiFetch()
     // First call — no confidenceScore so it will cache
     await fetchPokemonDetails('pikachu-cache1')
-    const raw = window.localStorage.getItem('pokedex-detail-v1:pikachu-cache1')
+    const raw = window.localStorage.getItem('pokedex-detail-v2:pikachu-cache1')
     expect(raw).not.toBeNull()
     const cached = JSON.parse(raw!)
     expect(cached.detail.name).toBe('Pikachu')

@@ -187,7 +187,7 @@ export const POKEMON_DETAIL_SCHEMA_VERSION = 'spanish-localized-stage-v6'
 const API_BASE = 'https://pokeapi.co/api/v2'
 const INDEX_CACHE_KEY = 'pokedex-visual-latest-species:index:v2-mega'
 const INDEX_CACHE_TTL_MS = 1000 * 60 * 60 * 24 * 7
-const DETAIL_CACHE_PREFIX = 'pokedex-detail-v1:'
+const DETAIL_CACHE_PREFIX = 'pokedex-detail-v2:'
 const DETAIL_CACHE_TTL_MS = 1000 * 60 * 60 * 24 // 24 hours
 const DETAIL_CACHE_MAX = 25
 

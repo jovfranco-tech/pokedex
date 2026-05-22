@@ -283,7 +283,7 @@ export function ResultCard({
 
       <p className="profile-description">{result.description}</p>
 
-      {result.visualReason && (
+      {result.visualReason && result.visualReason !== result.description && (
         <p className="profile-vision-reason">
           <Sparkles className="size-4" />
           {result.visualReason}
