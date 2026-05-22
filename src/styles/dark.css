@@ -47,7 +47,7 @@
 
   .empty-profile p,
   .result-loading p {
-    color: #8a8e9e;
+    color: #a5a9bc;
   }
 
   /* Higher specificity beats .empty-profile .empty-tagline (0,2,0) from profile.css */
@@ -58,10 +58,10 @@
   .empty-action-pills span {
     border-color: rgba(55, 62, 88, 0.8);
     background: rgba(26, 29, 42, 0.9);
-    color: #8a8e9e;
+    color: #a5a9bc;
   }
 
-  /* ── Muted labels → lighter in dark ─────────────────────────── */
+  /* ── Muted labels → lighter in dark (WCAG contrast compliant) ─ */
   .profile-number,
   .profile-mini-stat dt,
   .kids-section-label,
@@ -77,11 +77,11 @@
   .profile-feedback-btn,
   .profile-vision-reason,
   .stage-loading {
-    color: #8a8e9e;
+    color: #a5a9bc;
   }
 
   .profile-tab {
-    color: #8a8e9e;
+    color: #a5a9bc;
   }
 
   .profile-description {
@@ -100,7 +100,7 @@
   }
 
   .profile-sound-button {
-    color: #8a8e9e;
+    color: #a5a9bc;
   }
 
   .profile-mini-stat dd {
@@ -136,7 +136,7 @@
   .chip-cloud span {
     border-color: rgba(50, 55, 78, 0.7);
     background: rgba(22, 25, 36, 0.9);
-    color: #8a8e9e;
+    color: #a5a9bc;
   }
 
   .stat-track {
@@ -157,7 +157,7 @@
   .profile-collection-button {
     border-color: rgba(50, 55, 78, 0.7);
     background: rgba(22, 25, 36, 0.9);
-    color: #8a8e9e;
+    color: #a5a9bc;
   }
 
   .profile-collection-button:hover,
@@ -192,7 +192,7 @@
 
   .game-generation-group .chip-cloud span {
     background: rgba(22, 25, 36, 0.9);
-    color: #8a8e9e;
+    color: #a5a9bc;
   }
 
   .stage-data-row {
@@ -211,7 +211,7 @@
   }
 
   .error-boundary-fallback p {
-    color: #8a8e9e;
+    color: #a5a9bc;
   }
 
   .error-boundary-fallback button {
@@ -272,7 +272,7 @@
   .compare-search-row {
     border-color: rgba(55, 62, 88, 0.7);
     background: rgba(20, 22, 32, 0.95);
-    color: #8a8e9e;
+    color: #a5a9bc;
   }
 
   .compare-search-row input {
@@ -327,9 +327,9 @@
     --scrollbar-track: rgba(255, 255, 255, 0.04);
     --ink-strong:  #e4e6f0;
     --ink:         #c8cad8;
-    --ink-muted:     #8a8e9e;
-    --ink-secondary: #7a7e90;
-    --ink-faint:     #5a5e70;
+    --ink-muted:     #a5a9bc;
+    --ink-secondary: #9094a6;
+    --ink-faint:     #707486;
     --surface:        #12141e;
     --surface-alt:    #0f1117;
     --surface-raised: #1a1c28;

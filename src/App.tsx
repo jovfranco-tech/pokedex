@@ -273,9 +273,18 @@ function App() {
           </div>
 
           <div className="console-status-bar" role="status" aria-live="polite" aria-atomic="true">
-            <span className={`console-led console-led-red ${isScanning ? 'console-led-active' : ''}`} aria-hidden="true" />
-            <span className={`console-led console-led-yellow ${isScanning ? 'console-led-active' : ''}`} aria-hidden="true" />
-            <span className={`console-led console-led-green ${isScanning ? 'console-led-active' : ''}`} aria-hidden="true" />
+            <span
+              className={`console-led console-led-red ${error || (!result && !isScanning) ? 'console-led-active' : ''}`}
+              aria-hidden="true"
+            />
+            <span
+              className={`console-led console-led-yellow ${isScanning ? 'console-led-active' : ''}`}
+              aria-hidden="true"
+            />
+            <span
+              className={`console-led console-led-green ${result && !isScanning && !error ? 'console-led-active' : ''}`}
+              aria-hidden="true"
+            />
             <span className="ml-auto flex items-center gap-2">
               <CircleDot className="size-3 fill-white/70 text-white/70" aria-hidden="true" />
               {isScanning ? 'Analizando...' : result ? 'Identificado' : lastScanLabel}

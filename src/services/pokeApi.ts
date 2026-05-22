@@ -852,92 +852,105 @@ export async function fetchPokemonDetails(
     }
   }
 
-  const pokemonResponse = await apiFetch(`${API_BASE}/pokemon/${cacheKey}`)
-  const pokemon = await pokemonResponse.json() as ApiPokemon
+  try {
+    const pokemonResponse = await apiFetch(`${API_BASE}/pokemon/${cacheKey}`)
+    const pokemon = await pokemonResponse.json() as ApiPokemon
 
-  const speciesResponse = await apiFetch(pokemon.species.url)
-  const species = await speciesResponse.json() as ApiSpecies
+    const speciesResponse = await apiFetch(pokemon.species.url)
+    const species = await speciesResponse.json() as ApiSpecies
 
-  const isMega = pokemon.name.includes('-mega')
-  const isPrimal = pokemon.name.includes('-primal')
-  const isSpecialForm = isMega || isPrimal
-  const speciesId = idFromResourceUrl(pokemon.species.url)
-  const baseDisplayName =
-    species.names?.find((name) => name.language.name === 'es')?.name ?? formatPokemonName(pokemon.name)
-  const displayName = isSpecialForm ? formatSpecialFormName(pokemon.name) : baseDisplayName
+    const isMega = pokemon.name.includes('-mega')
+    const isPrimal = pokemon.name.includes('-primal')
+    const isSpecialForm = isMega || isPrimal
+    const speciesId = idFromResourceUrl(pokemon.species.url)
+    const baseDisplayName =
+      species.names?.find((name) => name.language.name === 'es')?.name ?? formatPokemonName(pokemon.name)
+    const displayName = isSpecialForm ? formatSpecialFormName(pokemon.name) : baseDisplayName
 
-  const [evolutionResult, abilities, attacks] = await Promise.all([
-    fetchEvolution(species),
-    Promise.all(pokemon.abilities.slice(0, 3).map((entry) => getLocalizedAbilityName(entry.ability))),
-    Promise.all(pokemon.moves.slice(0, 4).map((entry) => getLocalizedMoveName(entry.move))),
-  ])
+    const [evolutionResult, abilities, attacks] = await Promise.all([
+      fetchEvolution(species),
+      Promise.all(pokemon.abilities.slice(0, 3).map((entry) => getLocalizedAbilityName(entry.ability))),
+      Promise.all(pokemon.moves.slice(0, 4).map((entry) => getLocalizedMoveName(entry.move))),
+    ])
 
-  const evolution = evolutionResult.text
-  const evolutionChain = evolutionResult.chain
-  const types = pokemon.types.map((entry) => typeTranslations[entry.type.name] ?? formatPokemonName(entry.type.name))
-  const gameAppearances = pokemon.game_indices
-    .map((entry) => formatGameName(entry.version.name))
-    .filter((name, index, list) => list.indexOf(name) === index)
+    const evolution = evolutionResult.text
+    const evolutionChain = evolutionResult.chain
+    const types = pokemon.types.map((entry) => typeTranslations[entry.type.name] ?? formatPokemonName(entry.type.name))
+    const gameAppearances = pokemon.game_indices
+      .map((entry) => formatGameName(entry.version.name))
+      .filter((name, index, list) => list.indexOf(name) === index)
 
-  const categoryFlags = getPokemonCategoryFlags({
-    apiName: pokemon.name,
-    isBaby: species.is_baby,
-    isLegendary: species.is_legendary,
-    isMega,
-    isMythical: species.is_mythical,
-    isPrimal,
-    speciesId,
-  })
+    const categoryFlags = getPokemonCategoryFlags({
+      apiName: pokemon.name,
+      isBaby: species.is_baby,
+      isLegendary: species.is_legendary,
+      isMega,
+      isMythical: species.is_mythical,
+      isPrimal,
+      speciesId,
+    })
 
-  const detail: PokemonDetail = {
-    id: pokemon.id,
-    speciesId,
-    name: displayName,
-    apiName: pokemon.name,
-    baseName: baseDisplayName,
-    displayNumber: isSpecialForm
-      ? formatSpecialFormNumber(speciesId, pokemon.name)
-      : `#${String(speciesId).padStart(3, '0')}`,
-    formLabel: isMega ? 'Mega Evolución' : isPrimal ? 'Forma Primigenia' : '',
-    ...categoryFlags,
-    type: types,
-    height: `${(pokemon.height / 10).toFixed(1)} m`,
-    weight: `${(pokemon.weight / 10).toFixed(1)} kg`,
-    description: isSpecialForm
-      ? `${displayName} es una ${isMega ? 'megaevolución' : 'forma primigenia'} de ${baseDisplayName}. ${pickDescription(species)}`
-      : pickDescription(species),
-    abilities,
-    attacks,
-    evolution: isSpecialForm ? `${baseDisplayName} -> ${displayName}` : evolution,
-    evolutionChain: isSpecialForm ? [] : evolutionChain,
-    baseExperience: pokemon.base_experience,
-    stats: pokemon.stats.map((entry) => ({
-      key: entry.stat.name,
-      name: statTranslations[entry.stat.name] ?? formatPokemonName(entry.stat.name),
-      value: entry.base_stat,
-    })),
-    matchups: buildTypeMatchups(types) as TypeMatchups,
-    gameAppearances,
-    confidenceScore: options.confidenceScore ?? 100,
-    sprite:
-      pokemon.sprites.other?.['official-artwork']?.front_default ??
-      pokemon.sprites.other?.dream_world?.front_default ??
-      pokemon.sprites.front_default ??
-      artworkUrl(pokemon.id),
-    animatedSprite: getAnimatedSprite(pokemon),
-    cryUrl: pokemon.cries?.latest ?? pokemon.cries?.legacy ?? '',
-    generation: isSpecialForm
-      ? 'Mega'
-      : generationNameNumbers[species.generation?.name ?? ''] ?? getGenerationFromId(speciesId),
-    scannedAt: options.scannedAt ?? new Date().toISOString(),
-    scanMode: options.scanMode ?? 'búsqueda PokéAPI Gen 1-9 + Megas',
-    visualReason: options.visualReason ?? '',
-    dataVersion: POKEMON_DETAIL_SCHEMA_VERSION,
+    const detail: PokemonDetail = {
+      id: pokemon.id,
+      speciesId,
+      name: displayName,
+      apiName: pokemon.name,
+      baseName: baseDisplayName,
+      displayNumber: isSpecialForm
+        ? formatSpecialFormNumber(speciesId, pokemon.name)
+        : `#${String(speciesId).padStart(3, '0')}`,
+      formLabel: isMega ? 'Mega Evolución' : isPrimal ? 'Forma Primigenia' : '',
+      ...categoryFlags,
+      type: types,
+      height: `${(pokemon.height / 10).toFixed(1)} m`,
+      weight: `${(pokemon.weight / 10).toFixed(1)} kg`,
+      description: isSpecialForm
+        ? `${displayName} es una ${isMega ? 'megaevolución' : 'forma primigenia'} de ${baseDisplayName}. ${pickDescription(species)}`
+        : pickDescription(species),
+      abilities,
+      attacks,
+      evolution: isSpecialForm ? `${baseDisplayName} -> ${displayName}` : evolution,
+      evolutionChain: isSpecialForm ? [] : evolutionChain,
+      baseExperience: pokemon.base_experience,
+      stats: pokemon.stats.map((entry) => ({
+        key: entry.stat.name,
+        name: statTranslations[entry.stat.name] ?? formatPokemonName(entry.stat.name),
+        value: entry.base_stat,
+      })),
+      matchups: buildTypeMatchups(types) as TypeMatchups,
+      gameAppearances,
+      confidenceScore: options.confidenceScore ?? 100,
+      sprite:
+        pokemon.sprites.other?.['official-artwork']?.front_default ??
+        pokemon.sprites.other?.dream_world?.front_default ??
+        pokemon.sprites.front_default ??
+        artworkUrl(pokemon.id),
+      animatedSprite: getAnimatedSprite(pokemon),
+      cryUrl: pokemon.cries?.latest ?? pokemon.cries?.legacy ?? '',
+      generation: isSpecialForm
+        ? 'Mega'
+        : generationNameNumbers[species.generation?.name ?? ''] ?? getGenerationFromId(speciesId),
+      scannedAt: options.scannedAt ?? new Date().toISOString(),
+      scanMode: options.scanMode ?? 'búsqueda PokéAPI Gen 1-9 + Megas',
+      visualReason: options.visualReason ?? '',
+      dataVersion: POKEMON_DETAIL_SCHEMA_VERSION,
+    }
+
+    if (!options.confidenceScore) {
+      detailsCache.set(cacheKey, detail)
+      writeCachedDetail(cacheKey, detail)
+    }
+    return detail
+  } catch (err) {
+    const persisted = readCachedDetail(cacheKey)
+    if (persisted) {
+      const detail = options.scannedAt ? { ...persisted, scannedAt: options.scannedAt } : persisted
+      detailsCache.set(cacheKey, persisted)
+      return detail
+    }
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      throw new Error('Estás sin conexión a internet y este Pokémon no está en tu memoria caché. Conéctate para escanearlo.')
+    }
+    throw err
   }
-
-  if (!options.confidenceScore) {
-    detailsCache.set(cacheKey, detail)
-    writeCachedDetail(cacheKey, detail)
-  }
-  return detail
 }
