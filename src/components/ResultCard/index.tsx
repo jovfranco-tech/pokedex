@@ -281,7 +281,7 @@ export function ResultCard({
         </button>
       </div>
 
-      <p className="profile-description">{result.description}</p>
+      {!isKidsMode && <p className="profile-description">{result.description}</p>}
 
       {result.visualReason && result.visualReason !== result.description && (
         <p className="profile-vision-reason">
