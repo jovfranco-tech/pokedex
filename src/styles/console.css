@@ -16,7 +16,19 @@
     inset 0 -7px 0 rgba(90, 0, 5, 0.18);
   padding: 18px 22px 20px;
   animation: console-drop-in 360ms cubic-bezier(0.2, 0.88, 0.24, 1.18);
+  transition: box-shadow 0.4s ease, border-color 0.4s ease;
 }
+
+/* Ambient glow dynamically matching the selected Pokemon type */
+.pokedex-console-card[style*="--type-color"] {
+  border-color: var(--type-color);
+  box-shadow:
+    0 18px 48px color-mix(in srgb, var(--type-color) 35%, transparent),
+    0 0 24px color-mix(in srgb, var(--type-color) 60%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    inset 0 -7px 0 rgba(90, 0, 5, 0.18);
+}
+
 
 .console-title-row {
   display: flex;
@@ -1499,6 +1511,97 @@
   border-color: rgba(37, 38, 55, 0.38);
 }
 
+/* Catalog Search and Advanced Filters */
+.catalog-search-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  width: 100%;
+}
+
+.catalog-search-container {
+  position: relative;
+  flex: 1 1 200px;
+}
+
+.catalog-search-input {
+  width: 100%;
+  padding: 8px 12px 8px 34px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(37, 38, 55, 0.15);
+  background: rgba(255, 255, 255, 0.7);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #252637;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.catalog-search-input:focus {
+  border-color: #4d8fe8;
+  box-shadow: 0 0 0 3px rgba(77, 143, 232, 0.12);
+  background: #ffffff;
+}
+
+.catalog-search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #888ba2;
+  pointer-events: none;
+}
+
+.catalog-filters-group {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.catalog-filter-chip {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1.5px solid rgba(37, 38, 55, 0.15);
+  background: rgba(255, 255, 255, 0.7);
+  color: #474963;
+  transition: all 0.2s ease;
+}
+
+.catalog-filter-chip:hover {
+  background: rgba(37, 38, 55, 0.05);
+}
+
+.catalog-filter-chip-captured.catalog-filter-chip-active {
+  background: #e2f9e1;
+  border-color: #2e7d32;
+  color: #1b5e20;
+}
+
+.catalog-filter-chip-favorites.catalog-filter-chip-active {
+  background: #ffebee;
+  border-color: #c62828;
+  color: #b71c1c;
+}
+
+.catalog-empty-state {
+  text-align: center;
+  padding: 24px;
+  color: #5f6677;
+  font-weight: 700;
+  background: rgba(37, 38, 55, 0.02);
+  border-radius: 16px;
+  border: 1.5px dashed rgba(37, 38, 55, 0.12);
+  margin: 8px 0;
+  grid-column: 1 / -1;
+}
+
 .catalog-type-row {
   display: flex;
   flex-wrap: wrap;
@@ -1541,7 +1644,27 @@
   cursor: pointer;
   transition: background 0.15s, transform 0.15s;
   text-align: center;
+  position: relative;
 }
+
+/* Status indicators on catalog cards */
+.catalog-card-indicators {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  display: flex;
+  gap: 3px;
+  pointer-events: none;
+}
+
+.catalog-card-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.68rem;
+  line-height: 1;
+}
+
 
 .catalog-card:hover {
   background: rgba(37, 38, 55, 0.1);
@@ -1659,4 +1782,17 @@
     opacity: 0;
   }
 }
+
+/* Custom classes for interactive CRT Dimmer/Off controls */
+body.crt-dimmed .console-crt-overlay {
+  opacity: 0.35;
+}
+body.crt-dimmed .console-crt-overlay::after {
+  animation-duration: 0.45s; /* slower, smoother flicker */
+  opacity: 0.25;
+}
+body.crt-off .console-crt-overlay {
+  display: none !important;
+}
+
 

@@ -1,7 +1,7 @@
 import { AnimatePresence, LazyMotion, useReducedMotion } from 'framer-motion'
 
 const loadMotionFeatures = () => import('framer-motion').then((mod) => mod.domAnimation)
-import { Bot, CircleDot, Download, Gamepad2, Mic, Sparkles } from 'lucide-react'
+import { Bot, CircleDot, Download, Gamepad2, Mic, Sparkles, Tv } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { CollectionStrip } from './components/CollectionStrip.js'
 import { DeviceShell } from './components/DeviceShell.js'
@@ -32,7 +32,10 @@ import {
 } from './services/pokeApi.js'
 import { buildPokedexAnnouncement, speakPokedexLine } from './utils/pokedexVoice.js'
 import { onSwUpdate } from './utils/registerServiceWorker.js'
+import { getPokemonTypeTheme } from './data/typeColors.js'
+import { shareAchievement } from './utils/shareCard.js'
 import type { PokemonDetail, PokemonIndexItem } from './services/pokeApi.js'
+
 
 
 const LAST_RESULT_KEY = 'pokedex-visual-gen1:last-result'
@@ -69,6 +72,8 @@ function App() {
   const pokemonTotal = pokemonIndex.length || DEFAULT_POKEMON_SPECIES_COUNT
   const { canInstall, isInstalled, promptInstall } = usePwaInstall()
   const [swUpdateReady, setSwUpdateReady] = useState(false)
+  const [crtMode, setCrtMode] = useLocalStorage<'active' | 'dimmed' | 'off'>('pokedex-visual-gen1:crt-mode', 'active')
+
 
   // ── Collection (history, favorites, Pokédex) ───────────────────────────────
   const {
@@ -130,6 +135,13 @@ function App() {
 
   // Subscribe to SW update notifications
   useEffect(() => onSwUpdate(() => setSwUpdateReady(true)), [])
+
+  // Synchronize CRT screen styling classes on body
+  useEffect(() => {
+    document.body.classList.remove('crt-active', 'crt-dimmed', 'crt-off')
+    document.body.classList.add(`crt-${crtMode}`)
+  }, [crtMode])
+
 
   // Load Pokémon index on mount; then handle deep-link URL (/pokemon/:name)
   useEffect(() => {
@@ -223,6 +235,15 @@ function App() {
     setScanFeedback((prev) => ({ ...prev, [result.id]: vote }))
   }
 
+  async function handleShareAchievement(a: any) {
+    try {
+      await shareAchievement(a)
+    } catch (err) {
+      console.error('Error al compartir logro:', err)
+    }
+  }
+
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
@@ -233,7 +254,10 @@ function App() {
     )}
     <main className={`pokedex-stage min-h-svh px-2 py-2 text-dex-ink sm:px-5 sm:py-4 ${isKidsMode ? 'kids-mode' : ''}`}>
       <DeviceShell>
-        <section className="pokedex-console-card">
+        <section
+          className="pokedex-console-card"
+          style={result ? (getPokemonTypeTheme(result.type) as React.CSSProperties) : undefined}
+        >
           <header className="console-title-row">
             <div className="flex min-w-0 items-center gap-3">
               <div className="pokedex-logo-mark" aria-hidden="true" />
@@ -253,6 +277,22 @@ function App() {
             )}
             <button
               type="button"
+              className={`console-mini-button ${crtMode !== 'off' ? 'console-mini-button-active' : ''}`}
+              aria-label={`Cambiar modo de pantalla CRT (actual: ${crtMode})`}
+              aria-pressed={crtMode !== 'off'}
+              onClick={() => {
+                setCrtMode((prev) => {
+                  if (prev === 'active') return 'dimmed'
+                  if (prev === 'dimmed') return 'off'
+                  return 'active'
+                })
+              }}
+            >
+              <Tv className="size-4" aria-hidden="true" />
+              CRT: {crtMode === 'active' ? 'Sí' : crtMode === 'dimmed' ? 'Tenue' : 'No'}
+            </button>
+            <button
+              type="button"
               className={`console-mini-button ${isAutoNarrate ? 'console-mini-button-active' : ''}`}
               onClick={() => setIsAutoNarrate((value) => !value)}
               aria-label={isAutoNarrate ? 'Desactivar narración automática' : 'Activar narración automática'}
@@ -267,6 +307,7 @@ function App() {
               aria-pressed={isKidsMode}
               onClick={() => setIsKidsMode((value) => !value)}
             >
+
               <Sparkles className="size-4" aria-hidden="true" />
               Niños
             </button>
@@ -376,6 +417,8 @@ function App() {
               <PokemonCatalog
                 index={pokemonIndex}
                 onSelect={handlePokemonSelected}
+                collection={collection}
+                favorites={favorites}
               />
             </ErrorBoundary>
           )}
@@ -384,13 +427,20 @@ function App() {
         {achievements.some((a) => a.unlocked) && (
           <section className="achievements-strip" aria-label="Logros">
             {achievements.filter((a) => a.unlocked).map((a) => (
-              <div key={a.id} className="achievement-chip" title={a.desc}>
+              <button
+                key={a.id}
+                type="button"
+                className="achievement-chip"
+                title={`${a.desc} — ¡Haz clic para compartir!`}
+                onClick={() => handleShareAchievement(a)}
+              >
                 <span>{a.emoji}</span>
                 <span>{a.label}</span>
-              </div>
+              </button>
             ))}
           </section>
         )}
+
 
         {(favorites.length > 0 || collection.length > 0 || result) && (
           <section className="utility-dock" aria-label="Herramientas de colección">

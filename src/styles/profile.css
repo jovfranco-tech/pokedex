@@ -1565,7 +1565,21 @@
   color: #7a5800;
   box-shadow: 0 2px 6px rgba(255, 214, 67, 0.12);
   animation: achievement-pop 320ms ease-out both;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease, border-color 0.2s ease;
+  user-select: none;
 }
+
+.achievement-chip:hover {
+  transform: scale(1.06);
+  border-color: rgba(255, 190, 0, 0.95);
+  box-shadow: 0 5px 12px rgba(255, 214, 67, 0.32);
+}
+
+.achievement-chip:active {
+  transform: scale(0.96);
+}
+
 
 @keyframes achievement-pop {
   from { opacity: 0; transform: scale(0.8); }

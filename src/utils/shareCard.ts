@@ -145,3 +145,145 @@ export async function sharePokemonCard(result: PokemonDetail): Promise<void> {
     }, 'image/png')
   })
 }
+
+export async function shareAchievement(achievement: { label: string; desc: string; emoji: string }): Promise<void> {
+  const canvas = document.createElement('canvas')
+  const W = 480
+  const H = 240
+  canvas.width = W
+  canvas.height = H
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('Canvas 2D context not available')
+
+  // Background premium gold/platinum gradient
+  const bg = ctx.createLinearGradient(0, 0, W, H)
+  bg.addColorStop(0, '#fdfbf7') // light platinum
+  bg.addColorStop(0.5, '#fffdf9')
+  bg.addColorStop(1, '#f5eeda') // very light gold/cream
+  ctx.fillStyle = bg
+  roundRect(ctx, 0, 0, W, H, 20)
+  ctx.fill()
+
+  // Left accent golden metallic bar
+  const accent = ctx.createLinearGradient(0, 0, 0, H)
+  accent.addColorStop(0, '#d4af37') // metallic gold
+  accent.addColorStop(0.5, '#f3e5ab') // bright cream gold
+  accent.addColorStop(1, '#aa7c11') // bronze gold
+  ctx.fillStyle = accent
+  roundRect(ctx, 0, 0, 8, H, 0)
+  ctx.fill()
+
+  // Draw decorative golden medal circle on the left
+  ctx.beginPath()
+  const circleX = 110
+  const circleY = H / 2
+  const radius = 64
+  const circleGrad = ctx.createRadialGradient(circleX - 8, circleY - 8, radius - 40, circleX, circleY, radius)
+  circleGrad.addColorStop(0, '#fff3cc')
+  circleGrad.addColorStop(0.8, '#dfac28')
+  circleGrad.addColorStop(1, '#b58b19')
+  ctx.fillStyle = circleGrad
+  ctx.arc(circleX, circleY, radius, 0, Math.PI * 2)
+  ctx.fill()
+  
+  // Outer circle border
+  ctx.strokeStyle = '#b58b19'
+  ctx.lineWidth = 3
+  ctx.stroke()
+
+  // Medal emoji directly centered
+  ctx.fillStyle = '#000'
+  ctx.font = '72px sans-serif'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillText(achievement.emoji || '🏆', circleX, circleY)
+
+  // Label "LOGRO DESBLOQUEADO"
+  ctx.textAlign = 'left'
+  ctx.textBaseline = 'alphabetic'
+  ctx.fillStyle = '#b58b19' // golden bronze
+  ctx.font = 'bold 11px sans-serif'
+  ctx.fillText('¡LOGRO DESBLOQUEADO!', 200, 58)
+
+  // Achievement Title
+  ctx.fillStyle = '#1e202c' // dark ink
+  ctx.font = `bold ${achievement.label.length > 15 ? 22 : 26}px sans-serif`
+  ctx.fillText(achievement.label, 200, 96)
+
+  // Divider line
+  ctx.strokeStyle = 'rgba(212, 175, 55, 0.3)'
+  ctx.lineWidth = 1.5
+  ctx.beginPath()
+  ctx.moveTo(200, 114)
+  ctx.lineTo(W - 40, 114)
+  ctx.stroke()
+
+  // Achievement Description (wrapped)
+  const desc = achievement.desc ?? ''
+  ctx.fillStyle = '#5c5f73'
+  ctx.font = '13px sans-serif'
+  const words = desc.split(' ')
+  let line = ''
+  let lineY = 142
+  for (const word of words) {
+    const test = line ? `${line} ${word}` : word
+    if (ctx.measureText(test).width > 240 && line) {
+      ctx.fillText(line, 200, lineY)
+      line = word
+      lineY += 18
+    } else {
+      line = test
+    }
+  }
+  if (line) ctx.fillText(line, 200, lineY)
+
+  // Watermark "Pokédex IA"
+  ctx.fillStyle = '#b58b19'
+  ctx.font = 'bold 11px sans-serif'
+  ctx.fillText('Pokédex IA', W - 94, H - 20)
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(async (blob) => {
+      if (!blob) { reject(new Error('No se pudo generar la imagen')); return }
+      const file = new File([blob], `logro-${achievement.label.replace(/\s+/g, '-')}.png`, { type: 'image/png' })
+      try {
+        const shareUrl = window.location.origin
+        const shareText = `¡Desbloqueé el logro "${achievement.label}" en Pokédex IA! 🏆 ${achievement.desc}`
+
+        if (navigator.share) {
+          const shareData: ShareData = {
+            title: `Logro Desbloqueado — Pokédex IA`,
+            text: shareText,
+            url: shareUrl,
+          }
+
+          try {
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+              shareData.files = [file]
+            }
+          } catch {
+            // canShare can throw in some strictly sandboxed environments
+          }
+
+          await navigator.share(shareData)
+        } else {
+          // Download fallback
+          const url = URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.href = url
+          a.download = `logro-${achievement.label.replace(/\s+/g, '-')}.png`
+          a.click()
+          URL.revokeObjectURL(url)
+        }
+        resolve()
+      } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') {
+          resolve()
+        } else {
+          reject(err)
+        }
+      }
+    }, 'image/png')
+  })
+}
+
