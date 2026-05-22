@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 
 // ── Mocks (must be hoisted; vi.mock + vi.hoisted patterns) ───────────────────
 
-const { MotionDiv, MotionSection, MotionSpan } = vi.hoisted(() => {
+const { MotionDiv, MotionSection, MotionSpan, MotionButton } = vi.hoisted(() => {
   const MOTION_PROPS = new Set([
     'animate', 'initial', 'exit', 'transition', 'variants',
     'whileHover', 'whileTap', 'whileFocus', 'layout', 'layoutId',
@@ -24,12 +24,14 @@ const { MotionDiv, MotionSection, MotionSpan } = vi.hoisted(() => {
     MotionSection: (props: any) => <section {...strip(props)}>{props.children}</section>,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     MotionSpan:    (props: any) => <span    {...strip(props)}>{props.children}</span>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    MotionButton:  (props: any) => <button  {...strip(props)}>{props.children}</button>,
   }
 })
 
 vi.mock('framer-motion', () => ({
-  m: { div: MotionDiv, section: MotionSection, span: MotionSpan, article: MotionDiv, p: MotionDiv, button: MotionDiv, img: MotionDiv },
-  motion: { div: MotionDiv, section: MotionSection, span: MotionSpan, article: MotionDiv, p: MotionDiv, button: MotionDiv, img: MotionDiv },
+  m: { div: MotionDiv, section: MotionSection, span: MotionSpan, article: MotionDiv, p: MotionDiv, button: MotionButton, img: MotionDiv },
+  motion: { div: MotionDiv, section: MotionSection, span: MotionSpan, article: MotionDiv, p: MotionDiv, button: MotionButton, img: MotionDiv },
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   AnimatePresence: ({ children }: { children: any }) => children,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

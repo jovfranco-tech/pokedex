@@ -397,12 +397,21 @@ function App() {
 
           <div className="console-quick-actions" aria-label="Controles rápidos">
             {canInstall && !isInstalled && (
-              <button type="button" className="console-mini-button" aria-label="Instalar aplicación" onClick={() => { playUiClick(); promptInstall(); }}>
+              <m.button
+                whileTap={{ scale: 0.94 }}
+                transition={{ type: 'spring', stiffness: 450, damping: 15 }}
+                type="button"
+                className="console-mini-button"
+                aria-label="Instalar aplicación"
+                onClick={() => { playUiClick(); promptInstall(); }}
+              >
                 <Download className="size-4" aria-hidden="true" />
                 Instalar
-              </button>
+              </m.button>
             )}
-            <button
+            <m.button
+              whileTap={{ scale: 0.94 }}
+              transition={{ type: 'spring', stiffness: 450, damping: 15 }}
               type="button"
               className={`console-mini-button ${crtMode !== 'off' ? 'console-mini-button-active' : ''}`}
               aria-label={`Cambiar modo de pantalla CRT (actual: ${crtMode})`}
@@ -418,8 +427,10 @@ function App() {
             >
               <Tv className="size-4" aria-hidden="true" />
               CRT: {crtMode === 'active' ? 'Sí' : crtMode === 'dimmed' ? 'Tenue' : 'No'}
-            </button>
-            <button
+            </m.button>
+            <m.button
+              whileTap={{ scale: 0.94 }}
+              transition={{ type: 'spring', stiffness: 450, damping: 15 }}
               type="button"
               className="console-mini-button"
               aria-label={`Cambiar carcasa de la Pokédex (actual: ${
@@ -431,8 +442,10 @@ function App() {
               Carcasa: {
                 consoleSkin === 'red' ? 'Roja' : consoleSkin === 'stealth' ? 'Sigilo' : consoleSkin === 'sinnoh' ? 'Sinnoh' : 'Esmeralda'
               }
-            </button>
-            <button
+            </m.button>
+            <m.button
+              whileTap={{ scale: 0.94 }}
+              transition={{ type: 'spring', stiffness: 450, damping: 15 }}
               type="button"
               className={`console-mini-button ${isMuted ? 'console-mini-button-active' : ''}`}
               aria-label={isMuted ? 'Activar sonido de voz' : 'Silenciar sonido de voz'}
@@ -461,8 +474,10 @@ function App() {
                   Sonido
                 </>
               )}
-            </button>
-            <button
+            </m.button>
+            <m.button
+              whileTap={{ scale: 0.94 }}
+              transition={{ type: 'spring', stiffness: 450, damping: 15 }}
               type="button"
               className={`console-mini-button ${isAutoNarrate ? 'console-mini-button-active' : ''}`}
               onClick={() => { playUiClick(); setIsAutoNarrate((value) => !value); }}
@@ -470,18 +485,19 @@ function App() {
             >
               <Mic className="size-4" />
               Auto
-            </button>
-            <button
+            </m.button>
+            <m.button
+              whileTap={{ scale: 0.94 }}
+              transition={{ type: 'spring', stiffness: 450, damping: 15 }}
               type="button"
               className={`console-mini-button ${isKidsMode ? 'console-mini-button-active' : ''}`}
               aria-label={isKidsMode ? 'Desactivar modo niños' : 'Activar modo niños'}
               aria-pressed={isKidsMode}
               onClick={() => { playUiClick(); setIsKidsMode((value) => !value); }}
             >
-
               <Sparkles className="size-4" aria-hidden="true" />
               Niños
-            </button>
+            </m.button>
           </div>
 
           <div className="console-status-bar" role="status" aria-live="polite" aria-atomic="true">
@@ -547,14 +563,26 @@ function App() {
             )}
 
             <div className="flex gap-2">
-              <button type="button" className="console-ai-button flex-1" onClick={() => { playUiClick(); setIsAssistantOpen(true); }}>
+              <m.button
+                whileTap={{ scale: 0.96 }}
+                transition={{ type: 'spring', stiffness: 450, damping: 15 }}
+                type="button"
+                className="console-ai-button flex-1"
+                onClick={() => { playUiClick(); setIsAssistantOpen(true); }}
+              >
                 <Bot className="size-5" />
                 Pokédex IA
-              </button>
-              <button type="button" className="console-ai-button flex-1" onClick={() => { playUiClick(); setIsQuizOpen(true); }}>
+              </m.button>
+              <m.button
+                whileTap={{ scale: 0.96 }}
+                transition={{ type: 'spring', stiffness: 450, damping: 15 }}
+                type="button"
+                className="console-ai-button flex-1"
+                onClick={() => { playUiClick(); setIsQuizOpen(true); }}
+              >
                 <Gamepad2 className="size-5" />
                 Quiz
-              </button>
+              </m.button>
             </div>
 
           </div>
