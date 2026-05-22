@@ -86,6 +86,7 @@ function renderApp() {
 describe('App — orchestration', () => {
   beforeEach(() => {
     window.localStorage.clear()
+    window.history.pushState(null, '', '/')  // reset URL between tests so deep-link guard doesn't fire
     vi.clearAllMocks()
     // Re-apply default mock implementations after clearAllMocks
     loadPokemonIndex.mockResolvedValue([

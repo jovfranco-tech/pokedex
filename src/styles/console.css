@@ -1457,7 +1457,7 @@
 .catalog-title {
   font-size: 1.1rem;
   font-weight: 900;
-  color: #fff;
+  color: #252637;
   margin: 0;
   display: flex;
   align-items: center;
@@ -1468,8 +1468,8 @@
   font-size: 0.82rem;
   padding: 2px 8px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.15);
-  color: rgba(255, 255, 255, 0.8);
+  background: rgba(37, 38, 55, 0.1);
+  color: #474963;
 }
 
 .catalog-gen-row {
@@ -1484,17 +1484,17 @@
   font-size: 0.75rem;
   font-weight: 800;
   cursor: pointer;
-  border: 1.5px solid rgba(255, 255, 255, 0.25);
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.75);
+  border: 1.5px solid rgba(37, 38, 55, 0.2);
+  background: rgba(37, 38, 55, 0.05);
+  color: #474963;
   transition: background 0.15s, color 0.15s;
 }
 
 .catalog-gen-chip:hover,
 .catalog-gen-chip-active {
-  background: rgba(255, 255, 255, 0.22);
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(37, 38, 55, 0.14);
+  color: #252637;
+  border-color: rgba(37, 38, 55, 0.38);
 }
 
 .catalog-type-row {
@@ -1534,15 +1534,15 @@
   gap: 3px;
   padding: 8px 4px 6px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(37, 38, 55, 0.04);
+  border: 1px solid rgba(37, 38, 55, 0.1);
   cursor: pointer;
   transition: background 0.15s, transform 0.15s;
   text-align: center;
 }
 
 .catalog-card:hover {
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(37, 38, 55, 0.1);
   transform: translateY(-2px);
 }
 
@@ -1556,14 +1556,14 @@
 .catalog-card-num {
   font-size: 0.63rem;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.5);
+  color: #8a8fa8;
   line-height: 1;
 }
 
 .catalog-card-name {
   font-size: 0.72rem;
   font-weight: 800;
-  color: #fff;
+  color: #252637;
   line-height: 1.2;
   max-width: 100%;
   overflow: hidden;
@@ -1582,17 +1582,17 @@
 .catalog-page-btn {
   padding: 6px 14px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.8);
+  background: rgba(37, 38, 55, 0.07);
+  color: #474963;
   font-size: 0.8rem;
   font-weight: 700;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(37, 38, 55, 0.15);
   cursor: pointer;
   transition: background 0.15s;
 }
 
 .catalog-page-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(37, 38, 55, 0.14);
 }
 
 .catalog-page-btn:disabled {
@@ -1603,7 +1603,7 @@
 .catalog-page-info {
   font-size: 0.8rem;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.65);
+  color: #8a8fa8;
   min-width: 60px;
   text-align: center;
 }
@@ -1615,6 +1615,6 @@
   justify-content: center;
   gap: 12px;
   padding: 32px 0;
-  color: rgba(255, 255, 255, 0.65);
+  color: #474963;
   font-weight: 700;
 }

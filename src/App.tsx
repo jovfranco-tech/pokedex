@@ -2,7 +2,7 @@ import { AnimatePresence, LazyMotion, m, useReducedMotion } from 'framer-motion'
 
 const loadMotionFeatures = () => import('framer-motion').then((mod) => mod.domAnimation)
 import { Bot, CircleDot, Download, Gamepad2, Mic, Sparkles, Volume2, X } from 'lucide-react'
-import { Suspense, lazy, useCallback, useEffect, useState } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react'
 import { CollectionStrip } from './components/CollectionStrip.js'
 import { DeviceShell } from './components/DeviceShell.js'
 import { ErrorBoundary } from './components/ErrorBoundary.js'
@@ -44,6 +44,17 @@ const AUTO_NARRATE_KEY = 'pokedex-visual-gen1:auto-narrate'
 const SCAN_FEEDBACK_KEY = 'pokedex-visual-gen1:scan-feedback'
 
 function App() {
+  // Capture the deep-link pokemon name synchronously at mount (before any effect fires).
+  // deepLinkResolvedRef starts false when a deep-link URL is present and becomes true
+  // once the fetch completes (success OR failure), releasing the URL-sync guard.
+  const deepLinkNameRef = useRef<string | null>(
+    (() => {
+      const m = window.location.pathname.match(/^\/pokemon\/([^/]+)$/)
+      return m ? decodeURIComponent(m[1]) : null
+    })(),
+  )
+  const deepLinkResolvedRef = useRef(deepLinkNameRef.current === null)
+
   const { imageFile, previewUrl, setImageFile, clearImage } = useImagePreview()
   const [result, setResult] = useLocalStorage<PokemonDetail | null>(LAST_RESULT_KEY, null)
   const [isKidsMode, setIsKidsMode] = useLocalStorage<boolean>(KIDS_MODE_KEY, false)
@@ -129,21 +140,31 @@ function App() {
       .then((index) => {
         if (!isActive) return
         setPokemonIndex(index)
-        // Honour shareable deep-link: /pokemon/<apiName>
-        const match = window.location.pathname.match(/^\/pokemon\/([^/]+)$/)
-        if (match) {
-          const apiName = decodeURIComponent(match[1])
+        // Honour shareable deep-link captured synchronously at mount time
+        const apiName = deepLinkNameRef.current
+        if (apiName) {
           fetchPokemonDetails(apiName, { confidenceScore: 100, scanMode: 'enlace directo' })
-            .then((details) => { if (isActive) setResult(details) })
-            .catch(() => {})
+            .then((details) => {
+              if (isActive) {
+                setResult(details)
+                deepLinkResolvedRef.current = true  // release URL-sync guard (success)
+              }
+            })
+            .catch(() => {
+              deepLinkResolvedRef.current = true    // release URL-sync guard (failure)
+            })
         }
       })
       .finally(() => { if (isActive) setIsIndexLoading(false) })
     return () => { isActive = false }
   }, [setResult])
 
-  // Keep URL in sync with current result (shareable deep-links)
+  // Keep URL in sync with current result (shareable deep-links).
+  // Guard: while the deep-link fetch is still in flight, do not push the cached
+  // result's URL over the incoming path. The guard is released once the fetch
+  // resolves (success or failure) via deepLinkResolvedRef.
   useEffect(() => {
+    if (!deepLinkResolvedRef.current) return
     const newPath = result?.apiName ? `/pokemon/${result.apiName}` : '/'
     if (window.location.pathname !== newPath) {
       window.history.pushState(null, '', newPath)
