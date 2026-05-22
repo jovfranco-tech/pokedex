@@ -1,4 +1,5 @@
 import { pokemonAliases } from '../data/pokemonAliases.js'
+import { getBackup, saveBackup } from '../utils/indexedDbBackup.js'
 import { getPokemonCategoryFlags } from '../data/pokemonCategories.js'
 import { buildTypeMatchups } from '../data/typeChart.js'
 import { normalizePokemonText, searchPokemonIndex } from '../utils/pokemonSearch.js'
@@ -844,7 +845,10 @@ export async function fetchPokemonDetails(
   }
 
   if (!options.confidenceScore) {
-    const persisted = readCachedDetail(cacheKey)
+    let persisted = readCachedDetail(cacheKey)
+    if (!persisted) {
+      persisted = await getBackup<PokemonDetail>(DETAIL_CACHE_PREFIX + cacheKey)
+    }
     if (persisted) {
       const detail = options.scannedAt ? { ...persisted, scannedAt: options.scannedAt } : persisted
       detailsCache.set(cacheKey, persisted)
@@ -939,10 +943,14 @@ export async function fetchPokemonDetails(
     if (!options.confidenceScore) {
       detailsCache.set(cacheKey, detail)
       writeCachedDetail(cacheKey, detail)
+      void saveBackup(DETAIL_CACHE_PREFIX + cacheKey, detail)
     }
     return detail
   } catch (err) {
-    const persisted = readCachedDetail(cacheKey)
+    let persisted = readCachedDetail(cacheKey)
+    if (!persisted) {
+      persisted = await getBackup<PokemonDetail>(DETAIL_CACHE_PREFIX + cacheKey)
+    }
     if (persisted) {
       const detail = options.scannedAt ? { ...persisted, scannedAt: options.scannedAt } : persisted
       detailsCache.set(cacheKey, persisted)

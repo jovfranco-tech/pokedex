@@ -333,6 +333,11 @@ function App() {
       <PwaUpdateBanner onDismiss={() => setSwUpdateReady(false)} />
     )}
     <main className={`pokedex-stage min-h-svh px-2 py-2 text-dex-ink sm:px-5 sm:py-4 ${isKidsMode ? 'kids-mode' : ''}`}>
+      <div 
+        className="pokedex-ambilight-glow" 
+        style={result ? (getPokemonTypeTheme(result.type) as React.CSSProperties) : undefined}
+        aria-hidden="true"
+      />
       <DeviceShell>
         <section
           ref={consoleRef}
@@ -515,9 +520,15 @@ function App() {
               onClick={() => {
                 playUiClick()
                 setVoiceRate((prev) => {
-                  if (prev === 0.8) return 1.0
-                  if (prev === 1.0) return 1.2
-                  return 0.8
+                  const next = prev === 0.8 ? 1.0 : prev === 1.0 ? 1.2 : 0.8
+                  const text = next === 0.8 ? "Velocidad lenta" : next === 1.0 ? "Velocidad normal" : "Velocidad rápida"
+                  setTimeout(() => {
+                    speakPokedexLine(text, {
+                      rate: next, pitch: 0.1, volume: 1, withBeep: true,
+                      lang: voiceAccent === 'mx' ? 'es-MX' : 'es-ES'
+                    })
+                  }, 150)
+                  return next
                 })
               }}
             >
@@ -532,7 +543,17 @@ function App() {
               aria-label={`Cambiar acento de voz (actual: ${voiceAccent === 'mx' ? 'México' : 'España'})`}
               onClick={() => {
                 playUiClick()
-                setVoiceAccent((prev) => (prev === 'mx' ? 'es' : 'mx'))
+                setVoiceAccent((prev) => {
+                  const next = prev === 'mx' ? 'es' : 'mx'
+                  const text = next === 'mx' ? "Acento latino" : "Acento castellano"
+                  setTimeout(() => {
+                    speakPokedexLine(text, {
+                      rate: voiceRate, pitch: 0.1, volume: 1, withBeep: true,
+                      lang: next === 'mx' ? 'es-MX' : 'es-ES'
+                    })
+                  }, 150)
+                  return next
+                })
               }}
             >
               <Languages className="size-4" aria-hidden="true" />

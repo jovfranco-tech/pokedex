@@ -1789,6 +1789,27 @@
   animation: crt-flicker 0.18s infinite;
 }
 
+.console-crt-overlay::before {
+  content: "";
+  display: block;
+  position: absolute;
+  top: -100px;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(0, 0, 0, 0.15) 51%,
+    transparent
+  );
+  opacity: 0.42;
+  z-index: 7;
+  pointer-events: none;
+  animation: crt-rolling-static 15s infinite linear;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .console-crt-overlay::after {
     animation: none;
@@ -2254,6 +2275,41 @@ body.crt-off .console-crt-overlay {
   }
   .console-crt-overlay {
     animation: none;
+  }
+  .console-crt-overlay::before {
+    animation: none;
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   v7 Premium Additions: Elemental Ambilight Backdrop & CRT Rolling Static
+   ========================================================================== */
+
+.pokedex-ambilight-glow {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background: radial-gradient(
+    circle at 50% 35%,
+    color-mix(in srgb, var(--type-color, rgba(47, 140, 255, 0.2)) 50%, transparent) 0%,
+    transparent 68%
+  );
+  filter: blur(130px);
+  opacity: 0.26;
+  transition: background 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s ease;
+  pointer-events: none;
+}
+
+@keyframes crt-rolling-static {
+  0% {
+    top: -100px;
+  }
+  10% {
+    top: 100%;
+  }
+  100% {
+    top: 100%;
   }
 }
 

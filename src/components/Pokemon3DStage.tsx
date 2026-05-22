@@ -47,6 +47,7 @@ interface Pokemon3DStageProps {
 export function Pokemon3DStage({ pokemon }: Pokemon3DStageProps) {
   const [tilt, setTilt] = useState<TiltState>(neutralTilt)
   const [imgLoaded, setImgLoaded] = useState(false)
+  const [manualRotation, setManualRotation] = useState<number>(0)
   const modelSprite = pokemon.sprite
   const motionSprite = pokemon.animatedSprite
   const stageSprite = motionSprite || modelSprite
@@ -73,7 +74,13 @@ export function Pokemon3DStage({ pokemon }: Pokemon3DStageProps) {
   return (
     <div
       className={`pokemon-3d-shell pokemon-3d-${primaryType} ${motionClass}`}
-      style={{ '--tilt-x': tilt.x, '--tilt-y': tilt.y, '--light-x': tilt.lightX, '--light-y': tilt.lightY } as CSSProperties}
+      style={{ 
+        '--tilt-x': tilt.x, 
+        '--tilt-y': tilt.y, 
+        '--light-x': tilt.lightX, 
+        '--light-y': tilt.lightY,
+        '--manual-rot': `${manualRotation}deg`
+      } as CSSProperties}
       aria-label={`Animación 3D de ${pokemon.name}`}
       onPointerMove={handlePointerMove}
       onPointerLeave={() => setTilt(neutralTilt)}
@@ -166,6 +173,22 @@ export function Pokemon3DStage({ pokemon }: Pokemon3DStageProps) {
       )}
 
       <div className="pokemon-3d-shadow" aria-hidden="true" />
+
+      {/* Dial deslizante para rotar el holograma */}
+      <div className="hologram-dial-container" onClick={(e) => e.stopPropagation()}>
+        <label htmlFor="hologram-rotator" className="sr-only">Rotar holograma 3D</label>
+        <span className="dial-label" aria-hidden="true">ROTAR</span>
+        <input 
+          id="hologram-rotator"
+          type="range"
+          min="-180"
+          max="180"
+          value={manualRotation}
+          onChange={(e) => setManualRotation(Number(e.target.value))}
+          className="hologram-dial-slider"
+        />
+        <span className="dial-value" aria-hidden="true">{manualRotation}°</span>
+      </div>
     </div>
   )
 }

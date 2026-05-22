@@ -263,7 +263,7 @@
   inset: 13% 13% 19%;
   width: auto;
   aspect-ratio: auto;
-  transform: rotateX(var(--tilt-x, -7deg)) rotateY(var(--tilt-y, 10deg));
+  transform: rotateX(var(--tilt-x, -7deg)) rotateY(calc(var(--tilt-y, 10deg) + var(--manual-rot, 0deg)));
   transition: transform 160ms ease-out;
   animation: none;
   will-change: transform;
@@ -1520,4 +1520,77 @@
   100% {
     top: 0%;
   }
+}
+
+/* ==========================================================================
+   v7 Premium Dial Additions: Glassmorphic Rotation Thumbwheel Potentiometer
+   ========================================================================== */
+
+.hologram-dial-container {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  bottom: 6px;
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(27, 28, 43, 0.45);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 99px;
+  padding: 4px 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  transition: opacity 0.2s ease;
+  user-select: none;
+}
+
+.dial-label {
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.6);
+  text-shadow: 0 0 3px rgba(255, 255, 255, 0.2);
+}
+
+.hologram-dial-slider {
+  flex: 1;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 99px;
+  outline: none;
+  cursor: ew-resize;
+  margin: 0;
+}
+
+.hologram-dial-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ffffff 0%, #d1d5db 40%, #9ca3af 100%);
+  border: 1.5px solid #1b1c2b;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition: transform 0.1s ease;
+}
+
+.hologram-dial-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.hologram-dial-slider::-webkit-slider-thumb:active {
+  transform: scale(0.95);
+}
+
+.dial-value {
+  font-family: monospace;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--stage-accent, #00f0ff);
+  min-width: 28px;
+  text-align: right;
+  text-shadow: 0 0 4px color-mix(in srgb, var(--stage-accent, #00f0ff) 40%, transparent);
 }
