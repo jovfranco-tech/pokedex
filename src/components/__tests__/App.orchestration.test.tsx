@@ -47,6 +47,10 @@ vi.mock('../../services/visionSimulator.ts', () => ({
 vi.mock('../../utils/pokedexVoice.ts', () => ({
   buildPokedexAnnouncement: vi.fn().mockReturnValue(''),
   speakPokedexLine: vi.fn(),
+  isPokedexMuted: vi.fn().mockReturnValue(false),
+  setPokedexMuted: vi.fn(),
+  stopPokedexVoice: vi.fn(),
+  speakWithPokedexVoice: vi.fn(),
 }))
 
 vi.mock('../../utils/playPokemonCry.ts', () => ({

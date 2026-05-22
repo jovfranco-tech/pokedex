@@ -5,8 +5,8 @@
  * mounting the full ResultCard shell.
  */
 import { m, useReducedMotion } from 'framer-motion'
-import { ShieldAlert, Sparkles } from 'lucide-react'
-import { type CSSProperties, Suspense, lazy } from 'react'
+import { Activity, BarChart2, ShieldAlert, Sparkles } from 'lucide-react'
+import { type CSSProperties, Suspense, lazy, useState } from 'react'
 import { getTypeMeta } from '../../data/typeColors.js'
 import { ErrorBoundary } from '../ErrorBoundary.js'
 import { gameGroups, gameLabels, kidsTypeEmojis } from './data.js'
@@ -103,31 +103,190 @@ interface StatsPanelProps {
 }
 
 export function StatsPanel({ stats = [] }: StatsPanelProps) {
+  const [viewMode, setViewMode] = useState<'bars' | 'radar'>('bars')
   const prefersReducedMotion = useReducedMotion()
+
   if (!stats.length) {
     return <p className="profile-muted">Stats no disponibles.</p>
   }
 
+  // Map stats in order of hexagon vertices
+  const hpStat = stats.find((s) => s.key === 'hp') || stats[0]
+  const attStat = stats.find((s) => s.key === 'attack') || stats[1]
+  const defStat = stats.find((s) => s.key === 'defense') || stats[2]
+  const speedStat = stats.find((s) => s.key === 'speed') || stats[5]
+  const spDefStat = stats.find((s) => s.key === 'special-defense') || stats[4]
+  const spAttStat = stats.find((s) => s.key === 'special-attack') || stats[3]
+
+  const orderedStats = [hpStat, attStat, defStat, speedStat, spDefStat, spAttStat].filter(Boolean)
+
+  const getCoords = (i: number, val: number) => {
+    const angle = i * (Math.PI / 3) - Math.PI / 2
+    const r = Math.min(70, (val / 180) * 70)
+    return {
+      x: 100 + r * Math.cos(angle),
+      y: 100 + r * Math.sin(angle),
+    }
+  }
+
+  // Concentric hexagons background grids
+  const gridLevels = [45, 90, 135, 180]
+  const gridHexagons = gridLevels.map((val) => {
+    return Array.from({ length: 6 }, (_, i) => {
+      const angle = i * (Math.PI / 3) - Math.PI / 2
+      const x = 100 + (val / 180) * 70 * Math.cos(angle)
+      const y = 100 + (val / 180) * 70 * Math.sin(angle)
+      return `${x.toFixed(1)},${y.toFixed(1)}`
+    }).join(' ')
+  })
+
+  // Radial axes lines
+  const axisLines = Array.from({ length: 6 }, (_, i) => {
+    const angle = i * (Math.PI / 3) - Math.PI / 2
+    return {
+      x: 100 + 70 * Math.cos(angle),
+      y: 100 + 70 * Math.sin(angle),
+    }
+  })
+
+  // Active Pokemon stat polygon points
+  const activePolygonPoints = orderedStats
+    .map((stat, i) => {
+      const { x, y } = getCoords(i, stat.value)
+      return `${x.toFixed(1)},${y.toFixed(1)}`
+    })
+    .join(' ')
+
+  const dataDots = orderedStats.map((stat, i) => ({
+    ...getCoords(i, stat.value),
+    key: stat.key,
+  }))
+
+  const labelPositions = [
+    { x: 100, y: 15,  anchor: 'middle' }, // hp (top)
+    { x: 178, y: 64,  anchor: 'start'  }, // attack (top-right)
+    { x: 178, y: 142, anchor: 'start'  }, // defense (bottom-right)
+    { x: 100, y: 194, anchor: 'middle' }, // speed (bottom)
+    { x: 22,  y: 142, anchor: 'end'    }, // sp-defense (bottom-left)
+    { x: 22,  y: 64,  anchor: 'end'    }, // sp-attack (top-left)
+  ]
+
   return (
-    <div className="stats-list" role="list" aria-label="Estadísticas base">
-      {stats.map((stat, i) => {
-        const pct = Math.min(100, (stat.value / 180) * 100)
-        return (
-          <div key={stat.key} className="stat-row" role="listitem">
-            <span>{stat.name}</span>
-            <span className="stat-track" aria-hidden="true">
-              <m.span
-                initial={{ width: 0 }}
-                animate={{ width: `${pct}%` }}
-                transition={prefersReducedMotion
-                  ? { duration: 0 }
-                  : { duration: 0.5, delay: i * 0.06, ease: 'easeOut' }}
+    <div className="stats-container-block">
+      <div className="stats-header-row">
+        <span>Estadísticas base</span>
+        <div className="stats-view-toggle" role="tablist" aria-label="Vista de estadísticas">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={viewMode === 'bars'}
+            className={`stats-toggle-btn ${viewMode === 'bars' ? 'active' : ''}`}
+            onClick={() => setViewMode('bars')}
+          >
+            <BarChart2 className="size-3.5" />
+            <span>Lista</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={viewMode === 'radar'}
+            className={`stats-toggle-btn ${viewMode === 'radar' ? 'active' : ''}`}
+            onClick={() => setViewMode('radar')}
+          >
+            <Activity className="size-3.5" />
+            <span>Radar</span>
+          </button>
+        </div>
+      </div>
+
+      {viewMode === 'bars' ? (
+        <div className="stats-list animate-fade-in" role="list" aria-label="Estadísticas base">
+          {stats.map((stat, i) => {
+            const pct = Math.min(100, (stat.value / 180) * 100)
+            return (
+              <div key={stat.key} className="stat-row" role="listitem">
+                <span>{stat.name}</span>
+                <span className="stat-track" aria-hidden="true">
+                  <m.span
+                    initial={{ width: 0 }}
+                    animate={{ width: `${pct}%` }}
+                    transition={
+                      prefersReducedMotion
+                        ? { duration: 0 }
+                        : { duration: 0.5, delay: i * 0.06, ease: 'easeOut' }
+                    }
+                  />
+                </span>
+                <strong aria-label={`${stat.value} puntos`}>{stat.value}</strong>
+              </div>
+            )
+          })}
+        </div>
+      ) : (
+        <div className="radar-chart-wrap animate-fade-in" aria-label="Radar de estadísticas base">
+          <svg viewBox="0 0 200 200" className="pokedex-radar-chart">
+            {/* Background grid concentric hexagons */}
+            {gridHexagons.map((points, idx) => (
+              <polygon
+                key={`grid-hex-${idx}`}
+                points={points}
+                className="radar-grid-hexagon"
               />
-            </span>
-            <strong aria-label={`${stat.value} puntos`}>{stat.value}</strong>
-          </div>
-        )
-      })}
+            ))}
+
+            {/* Background radial axes */}
+            {axisLines.map((axis, idx) => (
+              <line
+                key={`grid-axis-${idx}`}
+                x1={100}
+                y1={100}
+                x2={axis.x}
+                y2={axis.y}
+                className="radar-grid-axis"
+              />
+            ))}
+
+            {/* Active Stat Area Polygon */}
+            <m.polygon
+              points={activePolygonPoints}
+              className="radar-active-polygon"
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.45, ease: 'easeOut' }}
+            />
+
+            {/* Stat Vertex Dots */}
+            {dataDots.map((dot) => (
+              <circle
+                key={`dot-${dot.key}`}
+                cx={dot.x}
+                cy={dot.y}
+                r="3.5"
+                className="radar-active-dot"
+              />
+            ))}
+
+            {/* Text Labels */}
+            {orderedStats.map((stat, i) => {
+              const pos = labelPositions[i]
+              return (
+                <text
+                  key={`label-${stat.key}`}
+                  x={pos.x}
+                  y={pos.y}
+                  textAnchor={pos.anchor}
+                  className="radar-label"
+                >
+                  {stat.name}{' '}
+                  <tspan className="radar-label-value" dy="0">
+                    {stat.value}
+                  </tspan>
+                </text>
+              )
+            })}
+          </svg>
+        </div>
+      )}
     </div>
   )
 }

@@ -1,7 +1,7 @@
 import { AnimatePresence, LazyMotion, useReducedMotion } from 'framer-motion'
 
 const loadMotionFeatures = () => import('framer-motion').then((mod) => mod.domAnimation)
-import { Bot, CircleDot, Download, Gamepad2, Mic, Sparkles, Tv } from 'lucide-react'
+import { Bot, CircleDot, Download, Gamepad2, Mic, Palette, Sparkles, Tv, Volume2, VolumeX } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { CollectionStrip } from './components/CollectionStrip.js'
 import { DeviceShell } from './components/DeviceShell.js'
@@ -30,7 +30,7 @@ import {
   fetchPokemonDetails,
   loadPokemonIndex,
 } from './services/pokeApi.js'
-import { buildPokedexAnnouncement, speakPokedexLine } from './utils/pokedexVoice.js'
+import { buildPokedexAnnouncement, speakPokedexLine, isPokedexMuted, setPokedexMuted } from './utils/pokedexVoice.js'
 import { onSwUpdate } from './utils/registerServiceWorker.js'
 import { getPokemonTypeTheme } from './data/typeColors.js'
 import { shareAchievement } from './utils/shareCard.js'
@@ -73,6 +73,8 @@ function App() {
   const { canInstall, isInstalled, promptInstall } = usePwaInstall()
   const [swUpdateReady, setSwUpdateReady] = useState(false)
   const [crtMode, setCrtMode] = useLocalStorage<'active' | 'dimmed' | 'off'>('pokedex-visual-gen1:crt-mode', 'active')
+  const [consoleSkin, setConsoleSkin] = useLocalStorage<'red' | 'stealth' | 'sinnoh' | 'emerald'>('pokedex-visual-gen1:console-skin', 'red')
+  const [isMuted, setIsMuted] = useState(isPokedexMuted())
 
 
   // ── Collection (history, favorites, Pokédex) ───────────────────────────────
@@ -255,7 +257,7 @@ function App() {
     <main className={`pokedex-stage min-h-svh px-2 py-2 text-dex-ink sm:px-5 sm:py-4 ${isKidsMode ? 'kids-mode' : ''}`}>
       <DeviceShell>
         <section
-          className="pokedex-console-card"
+          className={`pokedex-console-card skin-${consoleSkin}`}
           style={result ? (getPokemonTypeTheme(result.type) as React.CSSProperties) : undefined}
         >
           <header className="console-title-row">
@@ -290,6 +292,49 @@ function App() {
             >
               <Tv className="size-4" aria-hidden="true" />
               CRT: {crtMode === 'active' ? 'Sí' : crtMode === 'dimmed' ? 'Tenue' : 'No'}
+            </button>
+            <button
+              type="button"
+              className="console-mini-button"
+              aria-label={`Cambiar carcasa de la Pokédex (actual: ${
+                consoleSkin === 'red' ? 'Rojo' : consoleSkin === 'stealth' ? 'Sigilo' : consoleSkin === 'sinnoh' ? 'Sinnoh' : 'Esmeralda'
+              })`}
+              onClick={() => {
+                setConsoleSkin((prev) => {
+                  if (prev === 'red') return 'stealth'
+                  if (prev === 'stealth') return 'sinnoh'
+                  if (prev === 'sinnoh') return 'emerald'
+                  return 'red'
+                })
+              }}
+            >
+              <Palette className="size-4" aria-hidden="true" />
+              Carcasa: {
+                consoleSkin === 'red' ? 'Roja' : consoleSkin === 'stealth' ? 'Sigilo' : consoleSkin === 'sinnoh' ? 'Sinnoh' : 'Esmeralda'
+              }
+            </button>
+            <button
+              type="button"
+              className={`console-mini-button ${isMuted ? 'console-mini-button-active' : ''}`}
+              aria-label={isMuted ? 'Activar sonido de voz' : 'Silenciar sonido de voz'}
+              aria-pressed={isMuted}
+              onClick={() => {
+                const nextMuted = !isMuted
+                setIsMuted(nextMuted)
+                setPokedexMuted(nextMuted)
+              }}
+            >
+              {isMuted ? (
+                <>
+                  <VolumeX className="size-4" aria-hidden="true" />
+                  Mudo
+                </>
+              ) : (
+                <>
+                  <Volume2 className="size-4" aria-hidden="true" />
+                  Sonido
+                </>
+              )}
             </button>
             <button
               type="button"

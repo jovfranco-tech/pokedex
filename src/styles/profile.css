@@ -1766,3 +1766,122 @@
   background: linear-gradient(160deg, #c9000a 0%, #8a0006 100%);
   overflow-y: auto;
 }
+
+/* Combat Stats Radar Chart and View Toggle */
+.stats-container-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.stats-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.stats-header-row > span {
+  font-size: 0.9rem;
+  font-weight: var(--weight-black);
+  text-transform: uppercase;
+  color: var(--ink-main);
+  letter-spacing: 0.05em;
+}
+
+.stats-view-toggle {
+  display: flex;
+  background: rgba(30, 41, 59, 0.05);
+  border: 1px solid rgba(30, 41, 59, 0.08);
+  border-radius: 20px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.stats-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  border-radius: 18px;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stats-toggle-btn:hover {
+  color: var(--ink-main);
+}
+
+.stats-toggle-btn.active {
+  background: #fff;
+  color: var(--type-color, var(--ink-main)) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.stats-toggle-btn svg {
+  stroke-width: 2.5;
+}
+
+/* Radar Chart SVG */
+.radar-chart-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px 0;
+  width: 100%;
+}
+
+.pokedex-radar-chart {
+  max-width: 240px;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.radar-grid-hexagon {
+  fill: none;
+  stroke: rgba(148, 163, 184, 0.18);
+  stroke-width: 1;
+  transition: stroke 0.3s ease;
+}
+
+.radar-grid-axis {
+  stroke: rgba(148, 163, 184, 0.22);
+  stroke-dasharray: 2 2;
+  stroke-width: 1;
+}
+
+.radar-active-polygon {
+  fill: color-mix(in srgb, var(--type-color, #ef4444) 22%, transparent) !important;
+  stroke: var(--type-color, #ef4444) !important;
+  stroke-width: 2.5;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--type-color, #ef4444) 40%, transparent));
+  transition: fill 0.4s ease, stroke 0.4s ease;
+}
+
+.radar-active-dot {
+  fill: #fff !important;
+  stroke: var(--type-color, #ef4444) !important;
+  stroke-width: 2;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.15));
+  transition: stroke 0.4s ease;
+}
+
+.radar-label {
+  font-family: var(--font-display, sans-serif);
+  font-size: 7.5px;
+  font-weight: 800;
+  fill: var(--ink-muted) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.radar-label-value {
+  font-weight: 900;
+  fill: var(--ink-main) !important;
+}

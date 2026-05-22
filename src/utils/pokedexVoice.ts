@@ -277,11 +277,54 @@ export function speakSyncAndWait(text: string, options: SpeakOptions = {}): Prom
 
 // --- Public API -------------------------------------------------------
 
+let _isMuted = false
+if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+  _isMuted = localStorage.getItem('pokedex-visual-gen1:is-muted') === 'true'
+}
+
+export function isPokedexMuted(): boolean {
+  return _isMuted
+}
+
+export function setPokedexMuted(muted: boolean): void {
+  _isMuted = muted
+  if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+    localStorage.setItem('pokedex-visual-gen1:is-muted', String(muted))
+  }
+  if (muted) {
+    stopPokedexVoice()
+  }
+}
+
+export function stopPokedexVoice(): void {
+  if (typeof window !== 'undefined') {
+    // 1. Cancel Speech Synthesis
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel()
+    }
+    // 2. Reset Audio Element
+    const audio = getAudioEl()
+    if (audio) {
+      try {
+        audio.pause()
+        audio.currentTime = 0
+        audio.src = ''
+      } catch {
+        // Safe fallback
+      }
+    }
+  }
+}
+
 // Tries OpenAI TTS (onyx voice). If unavailable, falls back to Web
 // Speech API. Beep always plays via AudioContext before the voice.
 // options.onEnd() is called after speech finishes (useful for UI indicators).
 export async function speakPokedexLine(text: string, options: SpeakOptions = {}): Promise<void> {
-  if (!text) return
+  stopPokedexVoice()
+  if (!text || isPokedexMuted()) {
+    options.onEnd?.()
+    return
+  }
   const withBeep = options.withBeep !== false
 
   // On iOS beep and TTS fetch must start synchronously from the gesture.
@@ -310,6 +353,8 @@ export async function speakPokedexLine(text: string, options: SpeakOptions = {})
 }
 
 export async function speakWithPokedexVoice(text: string, options: SpeakOptions = {}): Promise<void> {
+  stopPokedexVoice()
+  if (isPokedexMuted()) return
   return speakSyncAndWait(text, options)
 }
 

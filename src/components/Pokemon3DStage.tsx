@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { CSSProperties } from 'react'
 import type { PokemonDetail } from '../services/pokeApi.js'
 
@@ -46,9 +46,14 @@ interface Pokemon3DStageProps {
 
 export function Pokemon3DStage({ pokemon }: Pokemon3DStageProps) {
   const [tilt, setTilt] = useState<TiltState>(neutralTilt)
+  const [imgLoaded, setImgLoaded] = useState(false)
   const modelSprite = pokemon.sprite
   const motionSprite = pokemon.animatedSprite
   const stageSprite = motionSprite || modelSprite
+
+  useEffect(() => {
+    setImgLoaded(false)
+  }, [pokemon.id, stageSprite])
   const primaryType = (pokemon.type?.[0] ?? 'normal').toLowerCase().replace(/[^a-z0-9]/g, '')
   const motionClass = stageMotionByType[primaryType] ?? 'stage-motion-mystic'
 
@@ -108,7 +113,19 @@ export function Pokemon3DStage({ pokemon }: Pokemon3DStageProps) {
       <span className="pokemon-3d-spark spark-two" aria-hidden="true" />
       <span className="pokemon-3d-spark spark-three" aria-hidden="true" />
 
-      <div className="pokemon-3d-model">
+      {!imgLoaded && (
+        <div className="stage-artwork-loader" aria-hidden="true">
+          <svg viewBox="0 0 100 100" className="stage-loader-pokeball">
+            <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" strokeWidth="8" strokeDasharray="12 22" />
+            <line x1="10" y1="50" x2="90" y2="50" stroke="currentColor" strokeWidth="8" />
+            <circle cx="50" cy="50" r="15" fill="currentColor" stroke="none" />
+            <circle cx="50" cy="50" r="6" fill="#1b1c2b" stroke="none" />
+          </svg>
+          <span className="sr-only">Cargando holograma...</span>
+        </div>
+      )}
+
+      <div className="pokemon-3d-model" style={{ opacity: imgLoaded ? 1 : 0, transition: 'opacity 0.4s ease' }}>
         <div className="pokemon-3d-model-idle">
           <div className="pokemon-3d-depth-stack">
             <img
@@ -116,18 +133,21 @@ export function Pokemon3DStage({ pokemon }: Pokemon3DStageProps) {
               alt=""
               className={`pokemon-3d-depth depth-back ${motionSprite ? 'pokemon-animated-depth' : ''}`}
               aria-hidden="true"
+              onLoad={() => setImgLoaded(true)}
             />
             <img
               src={stageSprite}
               alt=""
               className={`pokemon-3d-depth depth-mid ${motionSprite ? 'pokemon-animated-depth' : ''}`}
               aria-hidden="true"
+              onLoad={() => setImgLoaded(true)}
             />
             <div className="pokemon-3d-card">
               <img
                 src={stageSprite}
                 alt={`Holograma 3D de ${pokemon.name}`}
                 className={motionSprite ? 'pokemon-animated-sprite' : ''}
+                onLoad={() => setImgLoaded(true)}
               />
             </div>
           </div>
@@ -140,6 +160,7 @@ export function Pokemon3DStage({ pokemon }: Pokemon3DStageProps) {
           alt=""
           className="pokemon-3d-motion-sprite"
           aria-hidden="true"
+          onLoad={() => setImgLoaded(true)}
         />
       )}
 

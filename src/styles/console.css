@@ -1795,4 +1795,129 @@ body.crt-off .console-crt-overlay {
   display: none !important;
 }
 
+/* Progress Sprite Load Neon Pokeball */
+.stage-artwork-loader {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  z-index: 10;
+  background: rgba(27, 28, 43, 0.45);
+  backdrop-filter: blur(4px);
+  border-radius: inherit;
+  animation: fade-in 0.25s ease-out;
+}
+
+.stage-loader-pokeball {
+  width: 56px;
+  height: 56px;
+  color: var(--type-color, #f12122);
+  filter: drop-shadow(0 0 8px var(--type-color, #f12122));
+  animation: spin-pulse 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes spin-pulse {
+  0% {
+    transform: rotate(0deg) scale(0.9);
+    opacity: 0.75;
+  }
+  50% {
+    transform: rotate(180deg) scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(360deg) scale(0.9);
+    opacity: 0.75;
+  }
+}
+
+/* Console Skins */
+.pokedex-console-card.skin-red {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0) 38%),
+    linear-gradient(180deg, #f10514 0%, #d9000b 56%, #b70008 100%) !important;
+  box-shadow:
+    0 18px 36px rgba(184, 0, 8, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    inset 0 -7px 0 rgba(90, 0, 5, 0.18) !important;
+  border-color: rgba(255, 255, 255, 0.44) !important;
+}
+
+.pokedex-console-card.skin-stealth {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0) 38%),
+    linear-gradient(180deg, #374151 0%, #1f2937 56%, #111827 100%) !important;
+  box-shadow:
+    0 18px 36px rgba(17, 24, 39, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -7px 0 rgba(0, 0, 0, 0.35) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.pokedex-console-card.skin-sinnoh {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0) 38%),
+    linear-gradient(180deg, #1d4ed8 0%, #1e40af 56%, #1e3a8a 100%) !important;
+  box-shadow:
+    0 18px 36px rgba(30, 58, 138, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -7px 0 rgba(23, 37, 84, 0.25) !important;
+  border-color: rgba(255, 255, 255, 0.38) !important;
+}
+
+.pokedex-console-card.skin-emerald {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0) 38%),
+    linear-gradient(180deg, #047857 0%, #065f46 56%, #064e3b 100%) !important;
+  box-shadow:
+    0 18px 36px rgba(6, 78, 59, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -7px 0 rgba(2, 44, 34, 0.28) !important;
+  border-color: rgba(255, 255, 255, 0.32) !important;
+}
+
+.pokedex-console-card.skin-stealth[style*="--type-color"],
+.pokedex-console-card.skin-sinnoh[style*="--type-color"],
+.pokedex-console-card.skin-emerald[style*="--type-color"] {
+  border-color: var(--type-color) !important;
+  box-shadow:
+    0 18px 48px color-mix(in srgb, var(--type-color) 35%, transparent),
+    0 0 24px color-mix(in srgb, var(--type-color) 60%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -7px 0 rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Glassmorphic cohesive hover and focus styling */
+.catalog-card {
+  transition: all 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+}
+
+.catalog-card:hover {
+  transform: translateY(-3px) scale(1.03) !important;
+  background: rgba(37, 38, 55, 0.08) !important;
+  border-color: rgba(37, 38, 55, 0.2) !important;
+  box-shadow: 0 8px 24px rgba(31, 41, 55, 0.08) !important;
+}
+
+.catalog-search-input {
+  transition: all 0.2s ease !important;
+}
+
+.catalog-search-input:focus {
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25), 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+  transform: translateY(-0.5px) !important;
+}
+
+.catalog-gen-chip,
+.catalog-filter-chip {
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+}
+
+.catalog-gen-chip:hover,
+.catalog-filter-chip:hover {
+  transform: translateY(-1.5px) scale(1.02) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+}
+
+
 
