@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { formatPokemonNumber } from '../utils/formatPokemonNumber.js'
-import { normalizePokemonText } from '../services/pokeApi.js'
+import { normalizePokemonText, fetchPokemonDetails } from '../services/pokeApi.js'
 import { Heart, Search } from 'lucide-react'
 import { playUiClick } from '../utils/pokedexVoice.js'
 import type { PokemonIndexItem } from '../services/pokeApi.js'
@@ -26,6 +26,22 @@ export function PokemonCatalog({
   const [filterFavorites, setFilterFavorites] = useState(false)
   const [page, setPage] = useState(0)
   const PAGE_SIZE = 60
+
+  const handlePrefetch = (apiName: string) => {
+    if (!apiName) return
+    fetchPokemonDetails(apiName, { confidenceScore: 100, scanMode: 'precarga' })
+      .then((detail) => {
+        if (detail.sprite) {
+          const img = new Image()
+          img.src = detail.sprite
+        }
+        if (detail.animatedSprite) {
+          const img2 = new Image()
+          img2.src = detail.animatedSprite
+        }
+      })
+      .catch(() => {})
+  }
 
   // Optimize lookups with memoized Sets
   const capturedSet = useMemo(() => {
@@ -224,6 +240,7 @@ export function PokemonCatalog({
               role="listitem"
               className="catalog-card"
               aria-label={`Ver ${pokemon.displayName}`}
+              onMouseEnter={() => handlePrefetch(pokemon.apiName)}
               onClick={() => { playUiClick(); onSelect?.(pokemon); }}
             >
               {(isCap || isFav) && (

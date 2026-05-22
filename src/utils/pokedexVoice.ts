@@ -50,11 +50,18 @@ if (typeof window !== 'undefined' && window.speechSynthesis) {
   window.speechSynthesis.addEventListener('voiceschanged', syncVoices)
 }
 
-function chooseRoboticVoice(): SpeechSynthesisVoice | null {
+function chooseRoboticVoice(lang?: string): SpeechSynthesisVoice | null {
   syncVoices()
   if (!_voices.length) return null
-  const spanishVoices = _voices.filter((v) => /^es(-|$)/i.test(v.lang))
+  const targetLang = lang ?? 'es-MX'
+  const targetPrefix = targetLang.substring(0, 2).toLowerCase()
+  const spanishVoices = _voices.filter((v) => new RegExp('^' + targetPrefix + '(-|$)', 'i').test(v.lang))
   const pool = spanishVoices.length ? spanishVoices : _voices
+  
+  // Find a voice matching the exact region first if possible
+  const regionalVoice = pool.find((v) => new RegExp(targetLang, 'i').test(v.lang))
+  if (regionalVoice) return regionalVoice
+
   return (
     pool.find((v) => /google/i.test(v.name)) ??
     pool.find((v) => /microsoft/i.test(v.name)) ??
@@ -319,6 +326,7 @@ export interface SpeakOptions {
   rate?: number
   pitch?: number
   volume?: number
+  lang?: string
   onEnd?: () => void
 }
 
@@ -328,12 +336,12 @@ export function speakSyncAndWait(text: string, options: SpeakOptions = {}): Prom
   if (!message) return Promise.resolve()
 
   const utterance = new SpeechSynthesisUtterance(message)
-  utterance.lang   = 'es-MX'
+  utterance.lang   = options.lang   ?? 'es-MX'
   utterance.rate   = options.rate   ?? 1.0
   utterance.pitch  = options.pitch  ?? 0.55
   utterance.volume = options.volume ?? 1
 
-  const voice = chooseRoboticVoice()
+  const voice = chooseRoboticVoice(options.lang)
   if (voice) utterance.voice = voice
 
   window.speechSynthesis.cancel()

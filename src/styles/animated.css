@@ -206,6 +206,33 @@
   border-color: rgba(47, 140, 255, 0.12);
 }
 
+.pedestal-laser-cone {
+  position: absolute;
+  left: 5%;
+  right: 5%;
+  top: -150px;
+  height: 150px;
+  background: linear-gradient(to top, var(--stage-accent), transparent);
+  clip-path: polygon(18% 0%, 82% 0%, 100% 100%, 0% 100%);
+  opacity: 0.18;
+  mix-blend-mode: screen;
+  transform: rotateX(-66deg) translateZ(18px);
+  transform-origin: bottom center;
+  pointer-events: none;
+  animation: laser-pulse 2.8s ease-in-out infinite alternate;
+}
+
+@keyframes laser-pulse {
+  0% {
+    opacity: 0.12;
+    transform: rotateX(-66deg) translateZ(18px) scaleX(0.94) scaleY(0.96);
+  }
+  100% {
+    opacity: 0.28;
+    transform: rotateX(-66deg) translateZ(18px) scaleX(1.06) scaleY(1.04);
+  }
+}
+
 .pokemon-3d-energy-ring {
   left: 11%;
   right: 11%;

@@ -1,7 +1,7 @@
 import { AnimatePresence, LazyMotion, m, useReducedMotion } from 'framer-motion'
 
 const loadMotionFeatures = () => import('framer-motion').then((mod) => mod.domAnimation)
-import { Bot, CircleDot, Download, Gamepad2, Mic, Palette, Sparkles, Tv, Volume2, VolumeX } from 'lucide-react'
+import { Bot, CircleDot, Download, Gamepad2, Gauge, Languages, Mic, Palette, Sparkles, Tv, Volume2, VolumeX } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { CollectionStrip } from './components/CollectionStrip.js'
 import { DeviceShell } from './components/DeviceShell.js'
@@ -74,6 +74,8 @@ function App() {
   const [swUpdateReady, setSwUpdateReady] = useState(false)
   const [crtMode, setCrtMode] = useLocalStorage<'active' | 'dimmed' | 'off'>('pokedex-visual-gen1:crt-mode', 'active')
   const [consoleSkin, setConsoleSkin] = useLocalStorage<'red' | 'stealth' | 'sinnoh' | 'emerald'>('pokedex-visual-gen1:console-skin', 'red')
+  const [voiceRate, setVoiceRate] = useLocalStorage<number>('pokedex-visual-gen1:voice-rate', 1.0)
+  const [voiceAccent, setVoiceAccent] = useLocalStorage<'mx' | 'es'>('pokedex-visual-gen1:voice-accent', 'mx')
   const [isMuted, setIsMuted] = useState(isPokedexMuted())
   const [isConsoleOpened, setIsConsoleOpened] = useState<boolean>(() => {
     if (typeof window === 'undefined') return true
@@ -172,10 +174,11 @@ function App() {
     setIsSpeaking(true)
     // Not awaited: speak() must fire synchronously from the gesture call stack (iOS Safari).
     speakPokedexLine(announcement, {
-      rate: 1.0, pitch: 0.1, volume: 1, withBeep: true,
+      rate: voiceRate, pitch: 0.1, volume: 1, withBeep: true,
+      lang: voiceAccent === 'mx' ? 'es-MX' : 'es-ES',
       onEnd: () => setIsSpeaking(false),
     })
-  }, [])
+  }, [voiceRate, voiceAccent])
 
   // ── Effects ────────────────────────────────────────────────────────────────
 
@@ -388,6 +391,11 @@ function App() {
           <header className="console-title-row">
             <div className="flex min-w-0 items-center gap-3">
               <div className="pokedex-logo-mark" aria-hidden="true" />
+              <span 
+                className={`pokedex-hardware-led ${isSpeaking ? 'speaking' : isKidsMode ? 'kids' : 'active'}`} 
+                aria-hidden="true"
+                title={isSpeaking ? "Narración activa" : isKidsMode ? "Modo Niños" : "Pokédex Encendida"}
+              />
               <div className="min-w-0">
                 <h1 className="truncate text-2xl font-black uppercase tracking-[0.05em] text-white">Pokédex IA</h1>
               </div>
@@ -497,6 +505,38 @@ function App() {
             >
               <Sparkles className="size-4" aria-hidden="true" />
               Niños
+            </m.button>
+            <m.button
+              whileTap={{ scale: 0.94 }}
+              transition={{ type: 'spring', stiffness: 450, damping: 15 }}
+              type="button"
+              className={`console-mini-button ${voiceRate !== 1.0 ? 'console-mini-button-active' : ''}`}
+              aria-label={`Cambiar velocidad de voz (actual: ${voiceRate}x)`}
+              onClick={() => {
+                playUiClick()
+                setVoiceRate((prev) => {
+                  if (prev === 0.8) return 1.0
+                  if (prev === 1.0) return 1.2
+                  return 0.8
+                })
+              }}
+            >
+              <Gauge className="size-4" aria-hidden="true" />
+              Voz: {voiceRate === 0.8 ? 'Lenta' : voiceRate === 1.0 ? 'Normal' : 'Rápida'}
+            </m.button>
+            <m.button
+              whileTap={{ scale: 0.94 }}
+              transition={{ type: 'spring', stiffness: 450, damping: 15 }}
+              type="button"
+              className={`console-mini-button ${voiceAccent !== 'mx' ? 'console-mini-button-active' : ''}`}
+              aria-label={`Cambiar acento de voz (actual: ${voiceAccent === 'mx' ? 'México' : 'España'})`}
+              onClick={() => {
+                playUiClick()
+                setVoiceAccent((prev) => (prev === 'mx' ? 'es' : 'mx'))
+              }}
+            >
+              <Languages className="size-4" aria-hidden="true" />
+              Acento: {voiceAccent === 'mx' ? 'MX' : 'ES'}
             </m.button>
           </div>
 

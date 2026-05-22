@@ -231,18 +231,33 @@ export function PokemonAssistant({ pokemon }: PokemonAssistantProps) {
             <span className="assistant-bot-dot">
               {isThinking ? <span className="assistant-thinking-pokeball" /> : <Bot className="size-4" />}
             </span>
-            <div className="assistant-answer-bubble">
-              {isThinking || !visibleAnswer ? (
-                <span className="assistant-thinking-dots" aria-label="Pensando como Pokédex IA">
-                  <span />
-                  <span />
-                  <span />
-                </span>
-              ) : (
-                getAnswerParagraphs(visibleAnswer).map((paragraph) => (
-                  <p key={paragraph}>{paragraph}</p>
-                ))
-              )}
+            <div className="flex-1 min-w-0">
+              <div className="assistant-answer-bubble">
+                {isThinking || !visibleAnswer ? (
+                  <span className="assistant-thinking-dots" aria-label="Pensando como Pokédex IA">
+                    <span />
+                    <span />
+                    <span />
+                  </span>
+                ) : (
+                  <>
+                    {getAnswerParagraphs(visibleAnswer).map((paragraph) => (
+                      <p key={paragraph}>{paragraph}</p>
+                    ))}
+                    <div className="mt-2.5 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => handleSpeak()}
+                        className="flex items-center gap-1.5 rounded-md bg-white/10 px-2.5 py-1 text-xs font-bold text-white hover:bg-white/20 transition-all border border-white/5 shadow-sm active:scale-95"
+                        aria-label="Escuchar respuesta"
+                      >
+                        <Volume2 className="size-3" />
+                        Escuchar
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>

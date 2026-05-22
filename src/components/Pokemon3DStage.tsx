@@ -108,6 +108,7 @@ export function Pokemon3DStage({ pokemon }: Pokemon3DStageProps) {
       <div className="pokemon-3d-pedestal" aria-hidden="true">
         <span />
         <span />
+        <div className="pedestal-laser-cone" />
       </div>
       <span className="pokemon-3d-spark spark-one" aria-hidden="true" />
       <span className="pokemon-3d-spark spark-two" aria-hidden="true" />
