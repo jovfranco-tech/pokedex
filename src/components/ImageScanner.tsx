@@ -129,6 +129,7 @@ export function ImageScanner({
 
       {!isCameraLive && previewUrl && (
         <div className={`console-preview ${isScanning ? 'scan-glow' : ''}`}>
+          <div className="console-crt-overlay" aria-hidden="true" />
           {isScanning && <div className="scan-laser-line" aria-hidden="true" />}
           <img src={previewUrl} alt="Vista previa para identificar Pokémon" className="console-preview-image" />
           <div className="min-w-0">

@@ -106,12 +106,25 @@ export async function sharePokemonCard(result: PokemonDetail): Promise<void> {
       if (!blob) { reject(new Error('No se pudo generar la imagen')); return }
       const file = new File([blob], `${result.name}.png`, { type: 'image/png' })
       try {
-        if (navigator.share && navigator.canShare?.({ files: [file] })) {
-          await navigator.share({
+        const shareUrl = `${window.location.origin}/pokemon/${result.apiName || result.id}`
+        const shareText = `¡Mira a ${result.name} en Pokédex IA! Tipo: ${(result.type ?? []).map(getTypeMeta).map(m => m.label).join('/')}`
+
+        if (navigator.share) {
+          const shareData: ShareData = {
             title: `${result.name} — Pokédex IA`,
-            text: `${result.name} · ${result.type?.join('/')} · ${result.displayNumber ?? ''}`,
-            files: [file],
-          })
+            text: shareText,
+            url: shareUrl,
+          }
+
+          try {
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+              shareData.files = [file]
+            }
+          } catch {
+            // canShare can throw in some strictly sandboxed environments
+          }
+
+          await navigator.share(shareData)
         } else {
           const url = URL.createObjectURL(blob)
           const a = document.createElement('a')
@@ -122,7 +135,12 @@ export async function sharePokemonCard(result: PokemonDetail): Promise<void> {
         }
         resolve()
       } catch (err) {
-        reject(err)
+        // User cancelling the share sheet throws an AbortError. Do not reject as it is a normal user action.
+        if (err instanceof Error && err.name === 'AbortError') {
+          resolve()
+        } else {
+          reject(err)
+        }
       }
     }, 'image/png')
   })

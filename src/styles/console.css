@@ -1620,3 +1620,43 @@
   color: #474963;
   font-weight: 700;
 }
+
+/* Capa de Pantalla Retro CRT y Flicker */
+.console-crt-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  border-radius: inherit;
+  background: 
+    linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.12) 50%),
+    linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+  background-size: 100% 3px, 6px 100%;
+}
+
+@keyframes crt-flicker {
+  0% { opacity: 0.96; }
+  50% { opacity: 1; }
+  100% { opacity: 0.97; }
+}
+
+.console-crt-overlay::after {
+  content: "";
+  display: block;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(18, 16, 16, 0.015);
+  opacity: 0.8;
+  z-index: 6;
+  pointer-events: none;
+  animation: crt-flicker 0.18s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .console-crt-overlay::after {
+    animation: none;
+    opacity: 0;
+  }
+}
+

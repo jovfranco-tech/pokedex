@@ -160,11 +160,17 @@ export function ResultCard({
 
   const motionProps = prefersReducedMotion
     ? { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }, transition: { duration: 0.15 } }
-    : { initial: { opacity: 0, y: 10, scale: 0.97 }, animate: { opacity: 1, y: 0, scale: 1 }, exit: { opacity: 0, scale: 0.97 }, transition: { duration: 0.22, type: 'spring' as const, bounce: 0.18 } }
+    : {
+        initial: { opacity: 0, y: 12, scale: 0.97 },
+        animate: { opacity: 1, y: 0, scale: 1 },
+        exit: { opacity: 0, y: -12, scale: 0.97 },
+        transition: { type: 'spring' as const, stiffness: 220, damping: 24, mass: 0.8 }
+      }
 
   return (
     <m.section
       {...motionProps}
+      layout="position"
       className="pokemon-profile-card"
       aria-label={`Resultado: ${result.name}`}
       aria-live="polite"
@@ -190,6 +196,7 @@ export function ResultCard({
         </div>
 
         <div className="profile-art-card">
+          <div className="console-crt-overlay" aria-hidden="true" />
           <span className="profile-confidence">{result.confidenceScore}%</span>
           <button
             type="button"
