@@ -1,5 +1,6 @@
-import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { PokemonCompare } from '../PokemonCompare.tsx'
 import type { PokemonDetail, PokemonIndexItem } from '../../services/pokeApi.ts'
 
@@ -43,6 +44,8 @@ vi.mock('../../services/pokeApi.ts', async (importOriginal) => {
     fetchPokemonDetails: vi.fn(),
   }
 })
+
+import { fetchPokemonDetails } from '../../services/pokeApi.ts'
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -121,5 +124,107 @@ describe('PokemonCompare', () => {
   it('uses defaults when index is not provided', () => {
     render(<PokemonCompare />)
     expect(screen.getByText('Comparar Pokémon')).toBeInTheDocument()
+  })
+})
+
+// ── Search interaction ────────────────────────────────────────────────────────
+
+describe('PokemonCompare — search interaction', () => {
+  beforeEach(() => { vi.clearAllMocks() })
+
+  it('shows search results dropdown when user types in Pokémon A', async () => {
+    const user = userEvent.setup()
+    render(<PokemonCompare index={INDEX} />)
+
+    await user.type(screen.getByLabelText(/Buscar Pokémon A/i), 'pika')
+
+    expect(screen.getByRole('listbox', { name: /Resultados para Pokémon A/i })).toBeInTheDocument()
+  })
+
+  it('shows the matching pokemon option in the dropdown', async () => {
+    const user = userEvent.setup()
+    render(<PokemonCompare index={INDEX} />)
+
+    await user.type(screen.getByLabelText(/Buscar Pokémon A/i), 'pika')
+
+    expect(screen.getByRole('option', { name: /Elegir pikachu como Pokémon A/i })).toBeInTheDocument()
+  })
+
+  it('hides dropdown when input is cleared', async () => {
+    const user = userEvent.setup()
+    render(<PokemonCompare index={INDEX} />)
+
+    const input = screen.getByLabelText(/Buscar Pokémon A/i)
+    await user.type(input, 'pika')
+    await user.clear(input)
+
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
+  })
+
+  it('calls fetchPokemonDetails when a result is clicked', async () => {
+    vi.mocked(fetchPokemonDetails).mockResolvedValue(PIKACHU)
+    const user = userEvent.setup()
+    render(<PokemonCompare index={INDEX} />)
+
+    await user.type(screen.getByLabelText(/Buscar Pokémon A/i), 'pika')
+    await user.click(screen.getByRole('option', { name: /Elegir pikachu/i }))
+
+    expect(fetchPokemonDetails).toHaveBeenCalledWith('pikachu')
+  })
+
+  it('clears the input after selection', async () => {
+    vi.mocked(fetchPokemonDetails).mockResolvedValue(PIKACHU)
+    const user = userEvent.setup()
+    render(<PokemonCompare index={INDEX} />)
+
+    const input = screen.getByLabelText(/Buscar Pokémon A/i)
+    await user.type(input, 'pika')
+    await user.click(screen.getByRole('option', { name: /Elegir pikachu/i }))
+
+    expect(input).toHaveValue('')
+  })
+})
+
+// ── Battle result ─────────────────────────────────────────────────────────────
+
+describe('PokemonCompare — battle result', () => {
+  beforeEach(() => { vi.clearAllMocks() })
+
+  const CHARIZARD: PokemonDetail = {
+    ...PIKACHU,
+    id: 6, speciesId: 6, apiName: 'charizard', name: 'Charizard',
+    type: ['Fire', 'Flying'],
+    stats: [
+      { key: 'hp', name: 'PS', value: 78 },
+      { key: 'attack', name: 'Ataque', value: 84 },
+      { key: 'defense', name: 'Defensa', value: 78 },
+      { key: 'special-attack', name: 'Atq. Esp.', value: 109 },
+      { key: 'special-defense', name: 'Def. Esp.', value: 85 },
+      { key: 'speed', name: 'Velocidad', value: 100 },
+    ],
+  }
+
+  it('shows battle winner announcement when both slots are filled', async () => {
+    vi.mocked(fetchPokemonDetails).mockResolvedValue(CHARIZARD)
+    const user = userEvent.setup()
+    render(<PokemonCompare index={INDEX} initialPokemon={PIKACHU} />)
+
+    await user.type(screen.getByLabelText(/Buscar Pokémon B/i), 'char')
+    await user.click(screen.getByRole('option', { name: /Elegir charizard/i }))
+
+    await waitFor(() => expect(screen.getByRole('status')).toBeInTheDocument())
+    expect(screen.getByRole('status')).toHaveTextContent(/tiene ventaja/i)
+  })
+
+  it('shows win probability percentages in the banner', async () => {
+    vi.mocked(fetchPokemonDetails).mockResolvedValue(CHARIZARD)
+    const user = userEvent.setup()
+    render(<PokemonCompare index={INDEX} initialPokemon={PIKACHU} />)
+
+    await user.type(screen.getByLabelText(/Buscar Pokémon B/i), 'char')
+    await user.click(screen.getByRole('option', { name: /Elegir charizard/i }))
+
+    await waitFor(() => expect(screen.getByRole('status')).toBeInTheDocument())
+    expect(screen.getByRole('status').textContent).toMatch(/%/)
   })
 })
