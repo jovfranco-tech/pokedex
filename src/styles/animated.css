@@ -1466,3 +1466,31 @@
     opacity: 0.9;
   }
 }
+
+/* Scan Laser Line Animation */
+.scan-laser-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #28ff8c, #00f3ff, #28ff8c, transparent);
+  box-shadow: 
+    0 0 10px rgba(40, 255, 140, 0.8),
+    0 0 20px rgba(0, 243, 255, 0.5);
+  z-index: 10;
+  pointer-events: none;
+  opacity: 0.85;
+  animation: laser-sweep 2s ease-in-out infinite;
+}
+
+@keyframes laser-sweep {
+  0% {
+    top: 0%;
+  }
+  50% {
+    top: 100%;
+  }
+  100% {
+    top: 0%;
+  }
+}

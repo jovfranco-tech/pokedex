@@ -101,6 +101,7 @@ export function ResultCard({
   const prefersReducedMotion = useReducedMotion()
   const [activeTab, setActiveTab] = useState('info')
   const [isSharing, setIsSharing] = useState(false)
+  const [a11yAnnouncement, setA11yAnnouncement] = useState('')
   const visibleTabs = useMemo(
     () => (isKidsMode ? profileTabs.filter((tab) => ['info', 'stage'].includes(tab.id)) : profileTabs),
     [isKidsMode],
@@ -194,7 +195,14 @@ export function ResultCard({
             type="button"
             className={`profile-favorite-button ${isFavorite ? 'profile-favorite-button-active' : ''}`}
             aria-label={isFavorite ? `Quitar ${result.name} de favoritos` : `Agregar ${result.name} a favoritos`}
-            onClick={onToggleFavorite}
+            onClick={() => {
+              onToggleFavorite?.()
+              setA11yAnnouncement(
+                isFavorite
+                  ? `Quitaste a ${result.name} de tus favoritos.`
+                  : `¡Agregaste a ${result.name} a tus favoritos!`
+              )
+            }}
           >
             <Heart className="size-4" />
           </button>
@@ -268,14 +276,28 @@ export function ResultCard({
         <button
           type="button"
           className={collectionEntry?.seenAt ? 'profile-collection-button profile-collection-button-active' : 'profile-collection-button'}
-          onClick={() => onMarkSeen?.(result)}
+          onClick={() => {
+            onMarkSeen?.(result)
+            setA11yAnnouncement(
+              collectionEntry?.seenAt
+                ? `Marcaste a ${result.name} como no visto.`
+                : `Marcaste a ${result.name} como visto.`
+            )
+          }}
         >
           Visto
         </button>
         <button
           type="button"
           className={collectionEntry?.capturedAt ? 'profile-collection-button profile-collection-button-active' : 'profile-collection-button'}
-          onClick={() => onMarkCaptured?.(result)}
+          onClick={() => {
+            onMarkCaptured?.(result)
+            setA11yAnnouncement(
+              collectionEntry?.capturedAt
+                ? `Marcaste a ${result.name} como no capturado.`
+                : `¡Felicidades! Capturaste a ${result.name} y lo agregaste a tu colección.`
+            )
+          }}
         >
           Capturado
         </button>
@@ -329,6 +351,23 @@ export function ResultCard({
           {safeActiveTab === 'stage'    && <StageTab result={result} />}
         </m.div>
       </AnimatePresence>
+      <div
+        aria-live="polite"
+        aria-atomic="true"
+        style={{
+          position: 'absolute',
+          width: '1px',
+          height: '1px',
+          padding: 0,
+          margin: '-1px',
+          overflow: 'hidden',
+          clip: 'rect(0, 0, 0, 0)',
+          whiteSpace: 'nowrap',
+          border: 0,
+        }}
+      >
+        {a11yAnnouncement}
+      </div>
     </m.section>
   )
 }

@@ -334,6 +334,8 @@
 }
 
 .console-preview {
+  position: relative;
+  overflow: hidden;
   border-style: solid;
   background: rgba(255, 255, 255, 0.12);
 }

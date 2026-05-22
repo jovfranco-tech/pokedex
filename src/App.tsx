@@ -1,8 +1,8 @@
-import { AnimatePresence, LazyMotion, m, useReducedMotion } from 'framer-motion'
+import { AnimatePresence, LazyMotion, useReducedMotion } from 'framer-motion'
 
 const loadMotionFeatures = () => import('framer-motion').then((mod) => mod.domAnimation)
-import { Bot, CircleDot, Download, Gamepad2, Mic, Sparkles, Volume2, X } from 'lucide-react'
-import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react'
+import { Bot, CircleDot, Download, Gamepad2, Mic, Sparkles } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { CollectionStrip } from './components/CollectionStrip.js'
 import { DeviceShell } from './components/DeviceShell.js'
 import { ErrorBoundary } from './components/ErrorBoundary.js'
@@ -10,14 +10,15 @@ import { FavoritesStrip } from './components/FavoritesStrip.js'
 import { ImageScanner } from './components/ImageScanner.js'
 import { PokemonCatalog } from './components/PokemonCatalog.js'
 import { PokemonCompare } from './components/PokemonCompare.js'
-import { PokemonQuiz } from './components/PokemonQuiz.js'
 import { PokemonSearch } from './components/PokemonSearch.js'
 import { ResultCard } from './components/ResultCard.js'
 import { ScanCandidateStrip } from './components/ScanCandidateStrip.js'
 import { ScanHistoryStrip } from './components/ScanHistoryStrip.js'
+import { PwaUpdateBanner } from './components/PwaUpdateBanner.js'
+import { QuizModal } from './components/QuizModal.js'
+import { AssistantModal } from './components/AssistantModal.js'
 import { useAchievements } from './hooks/useAchievements.js'
 import { useCollection } from './hooks/useCollection.js'
-import { useFocusTrap } from './hooks/useFocusTrap.js'
 import { useImagePreview } from './hooks/useImagePreview.js'
 import { useLocalStorage } from './hooks/useLocalStorage.js'
 import { usePokemonFetch } from './hooks/usePokemonFetch.js'
@@ -30,10 +31,9 @@ import {
   loadPokemonIndex,
 } from './services/pokeApi.js'
 import { buildPokedexAnnouncement, speakPokedexLine } from './utils/pokedexVoice.js'
-import { applySwUpdate, onSwUpdate } from './utils/registerServiceWorker.js'
+import { onSwUpdate } from './utils/registerServiceWorker.js'
 import type { PokemonDetail, PokemonIndexItem } from './services/pokeApi.js'
 
-const PokemonAssistant = lazy(() => import('./components/PokemonAssistant.js').then((module) => ({ default: module.PokemonAssistant })))
 
 const LAST_RESULT_KEY = 'pokedex-visual-gen1:last-result'
 const SCAN_HISTORY_KEY = 'pokedex-visual-gen1:scan-history'
@@ -64,8 +64,6 @@ function App() {
   const prefersReducedMotion = useReducedMotion()
   const [isAssistantOpen, setIsAssistantOpen] = useState(false)
   const [isQuizOpen, setIsQuizOpen] = useState(false)
-  const quizTrapRef = useFocusTrap(isQuizOpen)
-  const assistantTrapRef = useFocusTrap(isAssistantOpen)
   const [pokemonIndex, setPokemonIndex] = useState<PokemonIndexItem[]>([])
   const [isIndexLoading, setIsIndexLoading] = useState(true)
   const pokemonTotal = pokemonIndex.length || DEFAULT_POKEMON_SPECIES_COUNT
@@ -231,24 +229,7 @@ function App() {
     <LazyMotion features={loadMotionFeatures}>
     <a href="#main-result" className="skip-to-content">Saltar al resultado</a>
     {swUpdateReady && (
-      <div className="sw-update-banner" role="alert">
-        <span>🆕 Nueva versión disponible</span>
-        <button
-          type="button"
-          className="sw-update-reload"
-          onClick={() => { applySwUpdate(); window.location.reload() }}
-        >
-          Recargar
-        </button>
-        <button
-          type="button"
-          className="sw-update-dismiss"
-          aria-label="Descartar"
-          onClick={() => setSwUpdateReady(false)}
-        >
-          <X className="size-3" />
-        </button>
-      </div>
+      <PwaUpdateBanner onDismiss={() => setSwUpdateReady(false)} />
     )}
     <main className={`pokedex-stage min-h-svh px-2 py-2 text-dex-ink sm:px-5 sm:py-4 ${isKidsMode ? 'kids-mode' : ''}`}>
       <DeviceShell>
@@ -438,102 +419,19 @@ function App() {
           </section>
         )}
 
-        <AnimatePresence>
-          {isQuizOpen && (
-            <m.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="assistant-modal-backdrop"
-              role="presentation"
-            >
-              <m.section
-                ref={quizTrapRef}
-                initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 50, scale: 0.9 }}
-                animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
-                exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 20, scale: 0.95 }}
-                transition={prefersReducedMotion ? { duration: 0.15 } : { type: 'spring', bounce: 0.25 }}
-                className="assistant-modal quiz-modal"
-                role="dialog"
-                aria-modal="true"
-                aria-label="Quiz Pokémon"
-                onKeyDown={(e) => e.key === 'Escape' && setIsQuizOpen(false)}
-              >
-                <ErrorBoundary message="El quiz tuvo un problema. Prueba cerrándolo y volviéndolo a abrir.">
-                  <PokemonQuiz
-                    index={pokemonIndex.length ? pokemonIndex : []}
-                    onClose={() => setIsQuizOpen(false)}
-                  />
-                </ErrorBoundary>
-              </m.section>
-            </m.div>
-          )}
-        </AnimatePresence>
+        <QuizModal
+          isOpen={isQuizOpen}
+          onClose={() => setIsQuizOpen(false)}
+          pokemonIndex={pokemonIndex}
+          prefersReducedMotion={prefersReducedMotion}
+        />
 
-        <AnimatePresence>
-          {isAssistantOpen && (
-            <m.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="assistant-modal-backdrop"
-              role="presentation"
-            >
-              <m.section
-                ref={assistantTrapRef}
-                initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 50, scale: 0.9 }}
-                animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
-                exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 20, scale: 0.95 }}
-                transition={prefersReducedMotion ? { duration: 0.15 } : { type: 'spring', bounce: 0.25 }}
-                className="assistant-modal"
-                role="dialog"
-                aria-modal="true"
-                aria-label="Pokédex IA"
-                onKeyDown={(e) => e.key === 'Escape' && setIsAssistantOpen(false)}
-              >
-                <header className="assistant-modal-header">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-white/18">
-                      <Bot className="size-5" />
-                    </div>
-                    <div className="min-w-0">
-                      <h2 className="truncate text-xl font-black text-white">Pokédex IA</h2>
-                      <p className="truncate text-sm font-bold text-white/75">
-                        {result ? `Pregunta sobre ${result.name}` : 'Pregunta sobre un Pokémon'}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    className="assistant-modal-close"
-                    aria-label="Leer saludo de Pokédex IA"
-                    onClick={() => {
-                      speakPokedexLine(
-                        result ? `Hola. Soy tu Pokédex IA. Pregúntame sobre ${result.name}.` : 'Hola. Soy tu Pokédex IA.',
-                        { rate: 1.0, pitch: 0.1, withBeep: true },
-                      )
-                    }}
-                  >
-                    <Volume2 className="size-5" />
-                  </button>
-                  <button
-                    type="button"
-                    className="assistant-modal-close"
-                    aria-label="Cerrar Pokédex IA"
-                    onClick={() => setIsAssistantOpen(false)}
-                  >
-                    <X className="size-5" />
-                  </button>
-                </header>
-                <Suspense fallback={<div className="assistant-loading">Cargando asistente...</div>}>
-                  <ErrorBoundary message="El asistente tuvo un problema. Prueba recargando.">
-                    <PokemonAssistant pokemon={result ?? null} />
-                  </ErrorBoundary>
-                </Suspense>
-              </m.section>
-            </m.div>
-          )}
-        </AnimatePresence>
+        <AssistantModal
+          isOpen={isAssistantOpen}
+          onClose={() => setIsAssistantOpen(false)}
+          result={result}
+          prefersReducedMotion={prefersReducedMotion}
+        />
       </DeviceShell>
     </main>
     </LazyMotion>

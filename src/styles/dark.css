@@ -323,6 +323,8 @@
 
   /* ── Dark token overrides (apply to the root for global cascade) ─── */
   :root {
+    --scrollbar-thumb: rgba(241, 33, 34, 0.52);
+    --scrollbar-track: rgba(255, 255, 255, 0.04);
     --ink-strong:  #e4e6f0;
     --ink:         #c8cad8;
     --ink-muted:     #8a8e9e;
