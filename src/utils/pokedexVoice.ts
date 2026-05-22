@@ -137,7 +137,14 @@ export function playUiClick(): void {
     const ctx = getAudioContext()
     if (!ctx) return
     const go = () => {
-      scheduleTone(ctx, 1600, 0, 0.03, 0.1)
+      let vol = 0.8
+      try {
+        const storedVol = localStorage.getItem('pokedex-visual-gen1:volume')
+        if (storedVol !== null) {
+          vol = parseFloat(storedVol) / 100
+        }
+      } catch {}
+      scheduleTone(ctx, 1600, 0, 0.03, vol * 0.1)
     }
     if (ctx.state === 'suspended') {
       ctx.resume().then(go).catch(() => {})

@@ -5,15 +5,8 @@
  * allow raw.githubusercontent.com. Instead we fetch the audio data (connect-src
  * does allow it) and decode it with AudioContext.decodeAudioData — no media-src
  * restriction applies to this path.
- *
- * Usage:
- *   1. Call unlockAudio() synchronously at the top of every user-gesture handler
- *      (before any await). This resumes the AudioContext while the browser still
- *      considers the event trusted.
- *   2. Call playPokemonCry(url) any time after — from a gesture handler or from a
- *      useEffect. It polls briefly for the context to be running, then fetches,
- *      decodes and plays.
  */
+import { getBackup, saveBackup } from './indexedDbBackup.js'
 
 declare global {
   interface Window {
@@ -80,11 +73,29 @@ export async function playPokemonCry(cryUrl: string, volume = 0.55): Promise<voi
       }
     }
 
-    // fetch() is allowed by connect-src; new Audio() would be blocked by media-src
-    const resp = await fetch(cryUrl)
-    if (!resp.ok) return
+    // Check IndexedDB cache first
+    let arrayBuffer: ArrayBuffer | null = null
+    try {
+      const cached = await getBackup<{ buffer: ArrayBuffer }>(`cry-cache:${cryUrl}`)
+      if (cached && cached.buffer) {
+        arrayBuffer = cached.buffer
+      }
+    } catch {
+      // ignore
+    }
 
-    const decoded = await c.decodeAudioData(await resp.arrayBuffer())
+    if (!arrayBuffer) {
+      const resp = await fetch(cryUrl)
+      if (!resp.ok) return
+      arrayBuffer = await resp.arrayBuffer()
+      try {
+        void saveBackup(`cry-cache:${cryUrl}`, { buffer: arrayBuffer })
+      } catch {
+        // ignore
+      }
+    }
+
+    const decoded = await c.decodeAudioData(arrayBuffer.slice(0))
 
     const source = c.createBufferSource()
     source.buffer = decoded

@@ -14,6 +14,63 @@ interface PokemonSearchProps {
   variant?: 'panel' | 'console'
 }
 
+// Helper function to calculate Levenshtein distance
+function getLevenshteinDistance(a: string, b: string): number {
+  const tmp: number[][] = []
+  if (a.length === 0) return b.length
+  if (b.length === 0) return a.length
+  for (let i = 0; i <= a.length; i++) tmp[i] = [i]
+  for (let j = 0; j <= b.length; j++) tmp[0][j] = j
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      tmp[i][j] = Math.min(
+        tmp[i - 1][j] + 1,
+        tmp[i][j - 1] + 1,
+        a[i - 1] === b[j - 1] ? tmp[i - 1][j - 1] : tmp[i - 1][j - 1] + 1,
+      )
+    }
+  }
+  return tmp[a.length][b.length]
+}
+
+// Helper to find the closest spelling match
+function findSpellingSuggestion(query: string, list: PokemonIndexItem[]): PokemonIndexItem | null {
+  const cleanQuery = query.trim().toLowerCase()
+  if (!cleanQuery || cleanQuery.startsWith('#') || /^\d+$/.test(cleanQuery) || cleanQuery.length < 2) {
+    return null
+  }
+
+  let bestMatch: PokemonIndexItem | null = null
+  let minDistance = Infinity
+
+  for (const item of list) {
+    const nameDist = getLevenshteinDistance(cleanQuery, item.name.toLowerCase())
+    const displayDist = getLevenshteinDistance(cleanQuery, item.displayName.toLowerCase())
+    let itemMinDist = Math.min(nameDist, displayDist)
+
+    if (item.aliases && item.aliases.length > 0) {
+      for (const alias of item.aliases) {
+        const aliasDist = getLevenshteinDistance(cleanQuery, alias.toLowerCase())
+        if (aliasDist < itemMinDist) {
+          itemMinDist = aliasDist
+        }
+      }
+    }
+
+    if (itemMinDist < minDistance) {
+      minDistance = itemMinDist
+      bestMatch = item
+    }
+  }
+
+  const threshold = cleanQuery.length <= 4 ? 2 : 3
+  if (minDistance <= threshold) {
+    return bestMatch
+  }
+
+  return null
+}
+
 export function PokemonSearch({ index, isLoading, onSelect, variant = 'panel' }: PokemonSearchProps) {
   const [query, setQuery] = useState('')
   const [filterGen, setFilterGen] = useState(0)
@@ -26,6 +83,11 @@ export function PokemonSearch({ index, isLoading, onSelect, variant = 'panel' }:
 
   const matches = useMemo(() => searchPokemonIndex(filtered, query, 8), [filtered, query])
 
+  const spellingSuggestion = useMemo(() => {
+    if (matches.length > 0 || !query) return null
+    return findSpellingSuggestion(query, filtered)
+  }, [matches, query, filtered])
+
   function selectPokemon(pokemon: PokemonIndexItem) {
     setQuery('')
     onSelect(pokemon)
@@ -34,6 +96,7 @@ export function PokemonSearch({ index, isLoading, onSelect, variant = 'panel' }:
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
     if (matches[0]) selectPokemon(matches[0])
+    else if (spellingSuggestion) selectPokemon(spellingSuggestion)
   }
 
   if (variant === 'console') {
@@ -102,7 +165,20 @@ export function PokemonSearch({ index, isLoading, onSelect, variant = 'panel' }:
                 </m.button>
               ))
             ) : (
-              <p className="console-help-text">No encontré ese Pokémon. Prueba con nombre en inglés o número.</p>
+              <div className="flex flex-col gap-2 p-1">
+                {spellingSuggestion && (
+                  <button
+                    type="button"
+                    onClick={() => selectPokemon(spellingSuggestion)}
+                    className="flex items-center gap-1.5 rounded-lg border border-yellow-500/30 bg-yellow-500/10 hover:bg-yellow-500/20 px-2 py-1.5 text-left text-[11px] font-bold text-yellow-400 transition cursor-pointer"
+                  >
+                    <span>¿Quisiste decir:</span>
+                    <span className="underline italic text-yellow-200">{spellingSuggestion.displayName}</span>
+                    <span>?</span>
+                  </button>
+                )}
+                <p className="console-help-text">No encontré ese Pokémon. Prueba con nombre en inglés o número.</p>
+              </div>
             )}
           </div>
         )}
@@ -158,9 +234,24 @@ export function PokemonSearch({ index, isLoading, onSelect, variant = 'panel' }:
       </div>
 
       {query && !matches.length && (
-        <p className="mt-3 rounded-lg border border-dex-shell/10 bg-white/80 px-3 py-2 text-sm font-extrabold text-dex-ink/65">
-          No encontré ese Pokémon. Prueba con el nombre en inglés o número de Pokédex.
-        </p>
+        <div className="mt-3 flex flex-col gap-2">
+          {spellingSuggestion && (
+            <button
+              type="button"
+              onClick={() => selectPokemon(spellingSuggestion)}
+              className="flex items-center gap-2 rounded-lg border-2 border-dex-yellow bg-dex-yellow/10 hover:bg-dex-yellow/20 px-3 py-2 text-left text-sm font-extrabold text-dex-ink transition shadow-[0_3px_0_rgba(0,0,0,0.15)] active:translate-y-[1px] active:shadow-[0_2px_0_rgba(0,0,0,0.15)] cursor-pointer"
+            >
+              <span className="text-dex-ink/85">¿Quisiste decir:</span>
+              <span className="rounded bg-dex-yellow px-1.5 py-0.5 text-xs font-black uppercase text-dex-ink shadow-sm">
+                {spellingSuggestion.displayName}
+              </span>
+              <span className="text-dex-ink/85">?</span>
+            </button>
+          )}
+          <p className="rounded-lg border border-dex-shell/10 bg-white/80 px-3 py-2 text-sm font-extrabold text-dex-ink/65">
+            No encontré ese Pokémon. Prueba con el nombre en inglés o número de Pokédex.
+          </p>
+        </div>
       )}
     </section>
   )

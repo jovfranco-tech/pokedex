@@ -151,6 +151,7 @@ export function Pokemon3DStage({ pokemon }: Pokemon3DStageProps) {
               onLoad={() => setImgLoaded(true)}
             />
             <div className="pokemon-3d-card">
+              <div className="holographic-glare-foil" aria-hidden="true" />
               <img
                 src={stageSprite}
                 alt={`Holograma 3D de ${pokemon.name}`}

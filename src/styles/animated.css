@@ -1594,3 +1594,197 @@
   text-align: right;
   text-shadow: 0 0 4px color-mix(in srgb, var(--stage-accent, #00f0ff) 40%, transparent);
 }
+
+/* Rare Prism Foil Holographic Sheen Card */
+.holographic-glare-foil {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(
+    125deg,
+    rgba(255, 0, 0, 0.14) 0%,
+    rgba(255, 154, 0, 0.09) 18%,
+    rgba(208, 222, 33, 0.14) 36%,
+    rgba(79, 220, 74, 0.09) 54%,
+    rgba(63, 218, 216, 0.14) 72%,
+    rgba(47, 101, 239, 0.09) 90%,
+    rgba(223, 76, 241, 0.14) 100%
+  );
+  background-size: 300% 300%;
+  mix-blend-mode: color-dodge;
+  opacity: 0.44;
+  border-radius: inherit;
+  background-position: calc(50% + var(--tilt-x, 0deg) * 6) calc(50% + var(--tilt-y, 0deg) * 6);
+  transition: background-position 0.25s ease-out;
+}
+
+/* Retro Gaming Mando Footer: D-Pad & A/B Buttons */
+.console-retro-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 24px 8px;
+  background: rgba(0, 0, 0, 0.14);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.35);
+  margin-top: 14px;
+}
+
+.retro-dpad {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.5));
+  flex-shrink: 0;
+}
+
+.dpad-axis {
+  position: absolute;
+  background: linear-gradient(180deg, #2e2f38 0%, #17181c 100%);
+  border: 1px solid #0d0e10;
+  border-radius: 4px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.dpad-x {
+  left: 0;
+  top: 20px;
+  width: 64px;
+  height: 24px;
+}
+
+.dpad-y {
+  left: 20px;
+  top: 0;
+  width: 24px;
+  height: 64px;
+}
+
+.dpad-center {
+  position: absolute;
+  left: 20px;
+  top: 20px;
+  width: 24px;
+  height: 24px;
+  background: #17181c;
+  border-radius: 50%;
+  z-index: 2;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+.retro-action-buttons {
+  display: flex;
+  gap: 12px;
+  transform: rotate(-12deg);
+  transform-origin: center;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 6px 12px;
+  border-radius: 99px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.retro-button {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid #000;
+  background: radial-gradient(circle at 35% 35%, #ff3b30 0%, #d30a0a 60%, #8b0000 100%);
+  color: rgba(255, 255, 255, 0.85);
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 900;
+  text-shadow: 0 -1px 1px rgba(0, 0, 0, 0.5);
+  box-shadow: 
+    0 4px 8px rgba(0, 0, 0, 0.5), 
+    inset 0 1.5px 2px rgba(255, 255, 255, 0.4),
+    inset 0 -3px 4px rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  outline: none;
+  transition: transform 0.1s ease;
+  user-select: none;
+}
+
+.retro-button:hover {
+  background: radial-gradient(circle at 35% 35%, #ff4f43 0%, #e61414 60%, #a00000 100%);
+}
+
+.retro-button:active {
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.6), 
+    inset 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* Volume Fader Controller & dynamic LEDs */
+.console-volume-controller {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.28);
+  border-radius: 99px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 3px 10px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+  flex-shrink: 0;
+}
+
+.console-volume-slider {
+  width: 56px;
+  height: 3px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 99px;
+  outline: none;
+  cursor: pointer;
+  margin: 0;
+}
+
+.console-volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 9px;
+  height: 12px;
+  border-radius: 2px;
+  background: linear-gradient(to right, #e5e7eb, #9ca3af);
+  border: 1px solid #111827;
+  box-shadow: 0 1.5px 3px rgba(0, 0, 0, 0.6);
+}
+
+.console-volume-leds {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.volume-led {
+  width: 4px;
+  height: 7px;
+  border-radius: 1px;
+  background-color: #221c00;
+  border: 0.5px solid rgba(0, 0, 0, 0.6);
+  box-shadow: inset 0 0.5px 1px rgba(0, 0, 0, 0.8);
+  transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.volume-led:nth-child(-n+3).led-on {
+  background-color: #10b981; /* Green LED */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 0 5px #10b981;
+}
+
+.volume-led:nth-child(n+4):nth-child(-n+5).led-on {
+  background-color: #fbbf24; /* Yellow LED */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 0 5px #fbbf24;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .holographic-glare-foil {
+    animation: none;
+    opacity: 0.15;
+    background-position: 50% 50%;
+  }
+}

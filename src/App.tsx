@@ -76,6 +76,8 @@ function App() {
   const [consoleSkin, setConsoleSkin] = useLocalStorage<'red' | 'stealth' | 'sinnoh' | 'emerald'>('pokedex-visual-gen1:console-skin', 'red')
   const [voiceRate, setVoiceRate] = useLocalStorage<number>('pokedex-visual-gen1:voice-rate', 1.0)
   const [voiceAccent, setVoiceAccent] = useLocalStorage<'mx' | 'es'>('pokedex-visual-gen1:voice-accent', 'mx')
+  const [pokedexVolume, setPokedexVolume] = useLocalStorage<number>('pokedex-visual-gen1:volume', 80)
+  const [voicePitch, setVoicePitch] = useLocalStorage<number>('pokedex-visual-gen1:voice-pitch', 0.55)
   const [isMuted, setIsMuted] = useState(isPokedexMuted())
   const [isConsoleOpened, setIsConsoleOpened] = useState<boolean>(() => {
     if (typeof window === 'undefined') return true
@@ -174,11 +176,11 @@ function App() {
     setIsSpeaking(true)
     // Not awaited: speak() must fire synchronously from the gesture call stack (iOS Safari).
     speakPokedexLine(announcement, {
-      rate: voiceRate, pitch: 0.1, volume: 1, withBeep: true,
+      rate: voiceRate, pitch: voicePitch, volume: pokedexVolume / 100, withBeep: true,
       lang: voiceAccent === 'mx' ? 'es-MX' : 'es-ES',
       onEnd: () => setIsSpeaking(false),
     })
-  }, [voiceRate, voiceAccent])
+  }, [voiceRate, voiceAccent, voicePitch, pokedexVolume])
 
   // ── Effects ────────────────────────────────────────────────────────────────
 
@@ -548,7 +550,7 @@ function App() {
                   const text = next === 'mx' ? "Acento latino" : "Acento castellano"
                   setTimeout(() => {
                     speakPokedexLine(text, {
-                      rate: voiceRate, pitch: 0.1, volume: 1, withBeep: true,
+                      rate: voiceRate, pitch: voicePitch, volume: pokedexVolume / 100, withBeep: true,
                       lang: next === 'mx' ? 'es-MX' : 'es-ES'
                     })
                   }, 150)
@@ -559,6 +561,61 @@ function App() {
               <Languages className="size-4" aria-hidden="true" />
               Acento: {voiceAccent === 'mx' ? 'MX' : 'ES'}
             </m.button>
+            <m.button
+              whileTap={{ scale: 0.94 }}
+              transition={{ type: 'spring', stiffness: 450, damping: 15 }}
+              type="button"
+              className={`console-mini-button ${voicePitch !== 0.55 ? 'console-mini-button-active' : ''}`}
+              aria-label={`Cambiar tono de voz (actual: ${voicePitch === 0.2 ? 'Profundo' : voicePitch === 0.55 ? 'Normal' : 'Agudo'})`}
+              onClick={() => {
+                playUiClick()
+                setVoicePitch((prev) => {
+                  const next = prev === 0.2 ? 0.55 : prev === 0.55 ? 1.0 : 0.2
+                  const text = next === 0.2 ? "Tono profundo" : next === 0.55 ? "Tono normal" : "Tono agudo"
+                  setTimeout(() => {
+                    speakPokedexLine(text, {
+                      rate: voiceRate, pitch: next, volume: pokedexVolume / 100, withBeep: true,
+                      lang: voiceAccent === 'mx' ? 'es-MX' : 'es-ES'
+                    })
+                  }, 150)
+                  return next
+                })
+              }}
+            >
+              <Bot className="size-4" aria-hidden="true" />
+              Tono: {voicePitch === 0.2 ? 'Bajo' : voicePitch === 0.55 ? 'Medio' : 'Alto'}
+            </m.button>
+
+            {/* Dynamic Hardware Volume Fader & LED Meter */}
+            <div className="console-volume-controller" title="Volumen de Hardware">
+              <Volume2 className="size-3.5 text-white/60 shrink-0" aria-hidden="true" />
+              <input 
+                type="range"
+                min="0"
+                max="100"
+                value={isMuted ? 0 : pokedexVolume}
+                onChange={(e) => {
+                  const vol = Number(e.target.value)
+                  setPokedexVolume(vol)
+                  if (vol === 0) {
+                    setPokedexMuted(true)
+                    setIsMuted(true)
+                  } else {
+                    setPokedexMuted(false)
+                    setIsMuted(false)
+                  }
+                }}
+                className="console-volume-slider"
+                aria-label="Volumen de hardware"
+              />
+              <div className="console-volume-leds" aria-hidden="true">
+                <span className={`volume-led ${(!isMuted && pokedexVolume >= 20) ? 'led-on' : ''}`} />
+                <span className={`volume-led ${(!isMuted && pokedexVolume >= 40) ? 'led-on' : ''}`} />
+                <span className={`volume-led ${(!isMuted && pokedexVolume >= 60) ? 'led-on' : ''}`} />
+                <span className={`volume-led ${(!isMuted && pokedexVolume >= 80) ? 'led-on' : ''}`} />
+                <span className={`volume-led ${(!isMuted && pokedexVolume >= 95) ? 'led-on' : ''}`} />
+              </div>
+            </div>
           </div>
 
           <div className="console-status-bar" role="status" aria-live="polite" aria-atomic="true">
@@ -644,6 +701,44 @@ function App() {
                 <Gamepad2 className="size-5" />
                 Quiz
               </m.button>
+            </div>
+
+            {/* Retro Gaming Controller Footer: D-Pad and Action Buttons A & B */}
+            <div className="console-retro-controls" aria-hidden="true">
+              <div className="retro-dpad">
+                <span className="dpad-axis dpad-x" />
+                <span className="dpad-axis dpad-y" />
+                <span className="dpad-center" />
+              </div>
+              
+              <div className="retro-action-buttons">
+                <m.button
+                  whileTap={{ scale: 0.88 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 12 }}
+                  type="button"
+                  onClick={() => {
+                    playUiClick()
+                    handleReset()
+                  }}
+                  className="retro-button button-b"
+                  title="Botón B — Reiniciar"
+                >
+                  B
+                </m.button>
+                <m.button
+                  whileTap={{ scale: 0.88 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 12 }}
+                  type="button"
+                  onClick={() => {
+                    playUiClick()
+                    setIsAssistantOpen(true)
+                  }}
+                  className="retro-button button-a"
+                  title="Botón A — Asistente IA"
+                >
+                  A
+                </m.button>
+              </div>
             </div>
 
           </div>
