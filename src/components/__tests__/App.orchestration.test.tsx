@@ -54,7 +54,11 @@ vi.mock('../../utils/playPokemonCry.ts', () => ({
   unlockAudio: vi.fn(),
 }))
 
-vi.mock('../../utils/registerServiceWorker.ts', () => ({ registerServiceWorker: vi.fn() }))
+vi.mock('../../utils/registerServiceWorker.ts', () => ({
+  registerServiceWorker: vi.fn(),
+  onSwUpdate: vi.fn(() => vi.fn()),
+  applySwUpdate: vi.fn(),
+}))
 
 vi.mock('../../hooks/usePwaInstall.ts', () => ({
   usePwaInstall: vi.fn().mockReturnValue({ canInstall: false, isInstalled: false, promptInstall: vi.fn() }),

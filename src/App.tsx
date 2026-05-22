@@ -8,6 +8,7 @@ import { DeviceShell } from './components/DeviceShell.js'
 import { ErrorBoundary } from './components/ErrorBoundary.js'
 import { FavoritesStrip } from './components/FavoritesStrip.js'
 import { ImageScanner } from './components/ImageScanner.js'
+import { PokemonCatalog } from './components/PokemonCatalog.js'
 import { PokemonCompare } from './components/PokemonCompare.js'
 import { PokemonQuiz } from './components/PokemonQuiz.js'
 import { PokemonSearch } from './components/PokemonSearch.js'
@@ -29,6 +30,7 @@ import {
   loadPokemonIndex,
 } from './services/pokeApi.js'
 import { buildPokedexAnnouncement, speakPokedexLine } from './utils/pokedexVoice.js'
+import { applySwUpdate, onSwUpdate } from './utils/registerServiceWorker.js'
 import type { PokemonDetail, PokemonIndexItem } from './services/pokeApi.js'
 
 const PokemonAssistant = lazy(() => import('./components/PokemonAssistant.js').then((module) => ({ default: module.PokemonAssistant })))
@@ -45,7 +47,7 @@ function App() {
   const { imageFile, previewUrl, setImageFile, clearImage } = useImagePreview()
   const [result, setResult] = useLocalStorage<PokemonDetail | null>(LAST_RESULT_KEY, null)
   const [isKidsMode, setIsKidsMode] = useLocalStorage<boolean>(KIDS_MODE_KEY, false)
-  const [isAutoNarrate, setIsAutoNarrate] = useLocalStorage<boolean>(AUTO_NARRATE_KEY, true)
+  const [isAutoNarrate, setIsAutoNarrate] = useLocalStorage<boolean>(AUTO_NARRATE_KEY, false)
   const [scanFeedback, setScanFeedback] = useLocalStorage<Record<number, string>>(SCAN_FEEDBACK_KEY, {})
   const [isSpeaking, setIsSpeaking] = useState(false)
   const prefersReducedMotion = useReducedMotion()
@@ -57,6 +59,7 @@ function App() {
   const [isIndexLoading, setIsIndexLoading] = useState(true)
   const pokemonTotal = pokemonIndex.length || DEFAULT_POKEMON_SPECIES_COUNT
   const { canInstall, isInstalled, promptInstall } = usePwaInstall()
+  const [swUpdateReady, setSwUpdateReady] = useState(false)
 
   // ── Collection (history, favorites, Pokédex) ───────────────────────────────
   const {
@@ -116,14 +119,36 @@ function App() {
 
   // ── Effects ────────────────────────────────────────────────────────────────
 
-  // Load Pokémon index on mount
+  // Subscribe to SW update notifications
+  useEffect(() => onSwUpdate(() => setSwUpdateReady(true)), [])
+
+  // Load Pokémon index on mount; then handle deep-link URL (/pokemon/:name)
   useEffect(() => {
     let isActive = true
     loadPokemonIndex()
-      .then((index) => { if (isActive) setPokemonIndex(index) })
+      .then((index) => {
+        if (!isActive) return
+        setPokemonIndex(index)
+        // Honour shareable deep-link: /pokemon/<apiName>
+        const match = window.location.pathname.match(/^\/pokemon\/([^/]+)$/)
+        if (match) {
+          const apiName = decodeURIComponent(match[1])
+          fetchPokemonDetails(apiName, { confidenceScore: 100, scanMode: 'enlace directo' })
+            .then((details) => { if (isActive) setResult(details) })
+            .catch(() => {})
+        }
+      })
       .finally(() => { if (isActive) setIsIndexLoading(false) })
     return () => { isActive = false }
-  }, [])
+  }, [setResult])
+
+  // Keep URL in sync with current result (shareable deep-links)
+  useEffect(() => {
+    const newPath = result?.apiName ? `/pokemon/${result.apiName}` : '/'
+    if (window.location.pathname !== newPath) {
+      window.history.pushState(null, '', newPath)
+    }
+  }, [result?.apiName])
 
   // Re-fetch stale results that are missing schema fields
   useEffect(() => {
@@ -184,6 +209,26 @@ function App() {
   return (
     <LazyMotion features={loadMotionFeatures}>
     <a href="#main-result" className="skip-to-content">Saltar al resultado</a>
+    {swUpdateReady && (
+      <div className="sw-update-banner" role="alert">
+        <span>🆕 Nueva versión disponible</span>
+        <button
+          type="button"
+          className="sw-update-reload"
+          onClick={() => { applySwUpdate(); window.location.reload() }}
+        >
+          Recargar
+        </button>
+        <button
+          type="button"
+          className="sw-update-dismiss"
+          aria-label="Descartar"
+          onClick={() => setSwUpdateReady(false)}
+        >
+          <X className="size-3" />
+        </button>
+      </div>
+    )}
     <main className={`pokedex-stage min-h-svh px-2 py-2 text-dex-ink sm:px-5 sm:py-4 ${isKidsMode ? 'kids-mode' : ''}`}>
       <DeviceShell>
         <section className="pokedex-console-card">
@@ -293,7 +338,7 @@ function App() {
         </section>
 
         {/* Column 2: skip-link target + result card — wrapped so both share one grid cell */}
-        <div style={{ minWidth: 0 }}>
+        <div style={{ minWidth: 0 }} className="result-column">
           <div id="main-result" tabIndex={-1} style={{ outline: 'none' }} />
           <AnimatePresence mode="wait">
             <ErrorBoundary message="No se pudo mostrar el Pokémon. Prueba buscando otro.">
@@ -315,6 +360,14 @@ function App() {
               />
             </ErrorBoundary>
           </AnimatePresence>
+          {!isScanning && (
+            <ErrorBoundary message="El catálogo tuvo un problema.">
+              <PokemonCatalog
+                index={pokemonIndex}
+                onSelect={handlePokemonSelected}
+              />
+            </ErrorBoundary>
+          )}
         </div>
 
         {achievements.some((a) => a.unlocked) && (

@@ -38,9 +38,11 @@ export default defineConfig(({ mode }): UserConfig => {
       openaiVisionApiPlugin({ env }),
       react(),
       VitePWA({
-        registerType: 'autoUpdate',
+        registerType: 'prompt',
         manifest: false,
         workbox: {
+          skipWaiting: true,
+          clientsClaim: true,
           globPatterns: ['**/*.{js,css,html,ico,png,svg,json}'],
           runtimeCaching: [
             {

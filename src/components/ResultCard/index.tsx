@@ -30,7 +30,7 @@ const profileTabs: ProfileTabDef[] = [
   { id: 'info',     label: 'Info',    icon: Info },
   { id: 'matchups', label: 'Matchups', icon: Swords },
   { id: 'games',    label: 'Juegos',  icon: Gamepad2 },
-  { id: 'stage',    label: '3D',      icon: Sparkles },
+  { id: 'stage',    label: 'Arte',    icon: Sparkles },
 ]
 
 interface SpecialBadge {
@@ -159,7 +159,7 @@ export function ResultCard({
 
   const motionProps = prefersReducedMotion
     ? { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }, transition: { duration: 0.15 } }
-    : { initial: { opacity: 0, y: 20, scale: 0.95 }, animate: { opacity: 1, y: 0, scale: 1 }, exit: { opacity: 0, scale: 0.95 }, transition: { duration: 0.4, type: 'spring' as const, bounce: 0.3 } }
+    : { initial: { opacity: 0, y: 10, scale: 0.97 }, animate: { opacity: 1, y: 0, scale: 1 }, exit: { opacity: 0, scale: 0.97 }, transition: { duration: 0.22, type: 'spring' as const, bounce: 0.18 } }
 
   return (
     <m.section

@@ -359,15 +359,26 @@ export function GameAppearances({ games = [] }: GameAppearancesProps) {
   )
 }
 
-// ── 3D stage tab ──────────────────────────────────────────────────────────────
+// ── Arte tab (official artwork + 3D stage) ───────────────────────────────────
 
 interface StageTabProps {
   result: PokemonDetail
 }
 
 export function StageTab({ result }: StageTabProps) {
+  const speciesId = result.speciesId ?? result.id
+  const officialArtwork = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${speciesId}.png`
+
   return (
     <div className="stage-tab-panel">
+      <div className="stage-artwork-hero">
+        <img
+          src={officialArtwork}
+          alt={`Arte oficial de ${result.name}`}
+          className="stage-artwork-img"
+          loading="lazy"
+        />
+      </div>
       <ErrorBoundary message="La escena 3D no pudo cargarse.">
         <Suspense fallback={<div className="stage-loading">Preparando escena...</div>}>
           <Pokemon3DStage pokemon={result} />

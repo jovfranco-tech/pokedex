@@ -78,6 +78,58 @@ body::before {
   pointer-events: none;
 }
 
+/* ── SW update banner ───────────────────────────────────────────────────── */
+.sw-update-banner {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #1e1f2e;
+  color: #fff;
+  border-radius: 12px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+  white-space: nowrap;
+}
+
+.sw-update-reload {
+  padding: 5px 12px;
+  border-radius: 8px;
+  background: #f12122;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 900;
+  cursor: pointer;
+  border: none;
+  transition: background 0.15s;
+}
+
+.sw-update-reload:hover {
+  background: #c8172f;
+}
+
+.sw-update-dismiss {
+  display: grid;
+  place-items: center;
+  padding: 4px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: color 0.15s;
+}
+
+.sw-update-dismiss:hover {
+  color: #fff;
+}
+
 /* ── Skip-to-content link (a11y) ────────────────────────────────────────── */
 .skip-to-content {
   position: absolute;

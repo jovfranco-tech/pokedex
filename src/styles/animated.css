@@ -4,6 +4,25 @@
   gap: 14px;
 }
 
+.stage-artwork-hero {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 8px 0 0;
+}
+
+.stage-artwork-img {
+  width: min(68vw, 260px);
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.18));
+  transition: transform 0.3s ease;
+}
+
+.stage-artwork-img:hover {
+  transform: scale(1.05) translateY(-4px);
+}
+
 .stage-tab-panel .pokemon-3d-shell {
   --stage-aura: rgba(255, 214, 67, 0.28);
   --stage-accent: rgba(47, 140, 255, 0.24);

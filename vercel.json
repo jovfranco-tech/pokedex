@@ -1,4 +1,7 @@
 {
+  "rewrites": [
+    { "source": "/pokemon/:name", "destination": "/index.html" }
+  ],
   "headers": [
     {
       "source": "/api/(.*)",

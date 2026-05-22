@@ -197,7 +197,7 @@ describe('ResultCard — pokémon result', () => {
     expect(screen.getByText(/vulnerabilidades/i)).toBeInTheDocument()
   })
 
-  it('renders 4 tabs (Info/Matchups/Juegos/3D) in normal mode', () => {
+  it('renders 4 tabs (Info/Matchups/Juegos/Arte) in normal mode', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     render(<ResultCard {...defaultProps} result={pikachuResult as any} />, { wrapper: Wrapper })
     expect(screen.getAllByRole('tab')).toHaveLength(4)
@@ -374,11 +374,11 @@ describe('ResultCard — pokémon result', () => {
 })
 
 describe('ResultCard — kids mode', () => {
-  it('renders only Info and 3D tabs when isKidsMode is true', () => {
+  it('renders only Info and Arte tabs when isKidsMode is true', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     render(<ResultCard {...defaultProps} result={pikachuResult as any} isKidsMode />, { wrapper: Wrapper })
     const tabs = screen.getAllByRole('tab')
     expect(tabs).toHaveLength(2)
-    expect(tabs.map((t) => t.textContent)).toEqual(expect.arrayContaining([expect.stringContaining('Info'), expect.stringContaining('3D')]))
+    expect(tabs.map((t) => t.textContent)).toEqual(expect.arrayContaining([expect.stringContaining('Info'), expect.stringContaining('Arte')]))
   })
 })

@@ -56,6 +56,13 @@ vi.mock('../services/pokeApi.js', async (importOriginal) => {
   }
 })
 
+// SW utilities — stub so tests don't pull virtual:pwa-register
+vi.mock('../utils/registerServiceWorker.js', () => ({
+  registerServiceWorker: vi.fn(),
+  onSwUpdate: vi.fn(() => vi.fn()),
+  applySwUpdate: vi.fn(),
+}))
+
 // Voice utils are noisy — stub them
 vi.mock('../utils/pokedexVoice.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../utils/pokedexVoice.ts')>()
@@ -151,18 +158,19 @@ describe('App — quick action toggles', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    // Default is true → button label says "Desactivar"
-    const btn = screen.getByRole('button', { name: /Desactivar narración automática/i })
+    // Default is now false → button label says "Activar"
+    const btn = screen.getByRole('button', { name: /Activar narración automática/i })
     await user.click(btn)
-    expect(screen.getByRole('button', { name: /Activar narración automática/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Desactivar narración automática/i })).toBeInTheDocument()
   })
 
   it('persists auto-narrate to localStorage', async () => {
     const user = userEvent.setup()
     render(<App />)
 
-    await user.click(screen.getByRole('button', { name: /Desactivar narración automática/i }))
-    expect(window.localStorage.getItem('pokedex-visual-gen1:auto-narrate')).toBe('false')
+    // Default is off; clicking activates it → localStorage becomes 'true'
+    await user.click(screen.getByRole('button', { name: /Activar narración automática/i }))
+    expect(window.localStorage.getItem('pokedex-visual-gen1:auto-narrate')).toBe('true')
   })
 })
 

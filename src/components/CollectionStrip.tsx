@@ -1,4 +1,3 @@
-import { CheckCircle2 } from 'lucide-react'
 import { formatPokemonNumber } from '../utils/formatPokemonNumber.js'
 import type { CollectionEntry } from '../hooks/useCollection.js'
 
@@ -14,9 +13,10 @@ export function CollectionStrip({ collection = [], onSelect }: CollectionStripPr
 
   if (!items.length) {
     return (
-      <section className="collection-empty">
-        <CheckCircle2 className="size-5" />
-        <span>Busca o escanea Pokémon para empezar tu colección.</span>
+      <section className="collection-empty" aria-label="Colección vacía">
+        <span className="collection-empty-icon">🔴</span>
+        <span>Tu Pokédex está vacía</span>
+        <span className="collection-empty-hint">Busca o escanea Pokémon y márcalos como vistos o capturados</span>
       </section>
     )
   }
