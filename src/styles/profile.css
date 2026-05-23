@@ -1097,6 +1097,27 @@
   color: #1f5ca8;
 }
 
+@property --type-color {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #f4d23c;
+}
+@property --type-color-2 {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #f4d23c;
+}
+@property --type-soft {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #fff8cc;
+}
+@property --type-soft-2 {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #fff8cc;
+}
+
 .pokemon-profile-card {
   --type-color: #f4d23c;
   --type-soft: #fff8cc;
@@ -1107,6 +1128,14 @@
     radial-gradient(circle at 82% 14%, color-mix(in srgb, var(--type-color) 20%, transparent), transparent 24%),
     radial-gradient(circle at 16% 0%, color-mix(in srgb, var(--type-color-2) 10%, transparent), transparent 28%),
     rgba(255, 255, 255, 0.96);
+  transition: 
+    --type-color 0.45s ease,
+    --type-color-2 0.45s ease,
+    --type-soft 0.45s ease,
+    --type-soft-2 0.45s ease,
+    background 0.45s ease,
+    border-color 0.45s ease,
+    box-shadow 0.45s ease;
 }
 
 .pokemon-profile-card,
