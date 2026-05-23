@@ -1,7 +1,7 @@
 import { AnimatePresence, LazyMotion, m, useReducedMotion } from 'framer-motion'
 
 const loadMotionFeatures = () => import('framer-motion').then((mod) => mod.domAnimation)
-import { Bot, CircleDot, Download, Gamepad2, Gauge, Languages, Mic, Palette, Sparkles, Tv, Volume2, VolumeX, User, MicOff } from 'lucide-react'
+import { Bot, CircleDot, Download, Gamepad2, Mic, Palette, Sparkles, Volume2, VolumeX, User, MicOff } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { CollectionStrip } from './components/CollectionStrip.js'
 import { DeviceShell } from './components/DeviceShell.js'
@@ -75,12 +75,12 @@ function App() {
   const pokemonTotal = pokemonIndex.length || DEFAULT_POKEMON_SPECIES_COUNT
   const { canInstall, isInstalled, promptInstall } = usePwaInstall()
   const [swUpdateReady, setSwUpdateReady] = useState(false)
-  const [crtMode, setCrtMode] = useLocalStorage<'active' | 'dimmed' | 'off'>('pokedex-visual-gen1:crt-mode', 'active')
+  const crtMode = 'active'
   const [consoleSkin, setConsoleSkin] = useLocalStorage<'red' | 'stealth' | 'sinnoh' | 'emerald' | 'purple' | 'yellow'>('pokedex-visual-gen1:console-skin', 'red')
-  const [voiceRate, setVoiceRate] = useLocalStorage<number>('pokedex-visual-gen1:voice-rate', 1.0)
-  const [voiceAccent, setVoiceAccent] = useLocalStorage<'mx' | 'es'>('pokedex-visual-gen1:voice-accent', 'mx')
+  const voiceRate = 1.0
+  const voiceAccent = 'mx'
   const [pokedexVolume, setPokedexVolume] = useLocalStorage<number>('pokedex-visual-gen1:volume', 80)
-  const [voicePitch, setVoicePitch] = useLocalStorage<number>('pokedex-visual-gen1:voice-pitch', 0.55)
+  const voicePitch = 0.55
   const [isMuted, setIsMuted] = useState(isPokedexMuted())
   const [isConsoleOpened, setIsConsoleOpened] = useState<boolean>(() => {
     if (typeof window === 'undefined') return true
@@ -88,20 +88,8 @@ function App() {
   })
   const [isRebooting, setIsRebooting] = useState(false)
   const [isAiThinking, setIsAiThinking] = useState(false)
-  const [stickersEnabled, setStickersEnabled] = useState(() => {
-    try {
-      return localStorage.getItem('pokedex-visual-gen1:stickers-enabled') !== 'false'
-    } catch {
-      return true
-    }
-  })
-  const [wearTearEnabled, setWearTearEnabled] = useState(() => {
-    try {
-      return localStorage.getItem('pokedex-visual-gen1:wear-tear-enabled') === 'true'
-    } catch {
-      return false
-    }
-  })
+  const stickersEnabled = false
+  const wearTearEnabled = false
   const [radioStation, setRadioStation] = useState<Station>('off')
   const [unlockedAchievements, setUnlockedAchievements] = useState<string[]>(() => {
     try {
@@ -359,17 +347,7 @@ function App() {
     }
   }, [result?.apiName])
 
-  useEffect(() => {
-    try {
-      localStorage.setItem('pokedex-visual-gen1:stickers-enabled', String(stickersEnabled))
-    } catch {}
-  }, [stickersEnabled])
 
-  useEffect(() => {
-    try {
-      localStorage.setItem('pokedex-visual-gen1:wear-tear-enabled', String(wearTearEnabled))
-    } catch {}
-  }, [wearTearEnabled])
 
   useEffect(() => {
     ChiptuneRadio.setVolume(isMuted ? 0 : pokedexVolume)
@@ -704,22 +682,10 @@ function App() {
       localStorage.setItem('pokedex-visual-gen1:achievements', JSON.stringify(importedData.achievements))
     }
 
-    // Config options
-    if (importedData.stickersEnabled !== undefined) {
-      setStickersEnabled(importedData.stickersEnabled)
-      localStorage.setItem('pokedex-visual-gen1:stickers-enabled', String(importedData.stickersEnabled))
-    }
-    if (importedData.wearTearEnabled !== undefined) {
-      setWearTearEnabled(importedData.wearTearEnabled)
-      localStorage.setItem('pokedex-visual-gen1:wear-tear-enabled', String(importedData.wearTearEnabled))
-    }
     if (importedData.consoleSkin) {
       setConsoleSkin(importedData.consoleSkin)
     }
-    if (importedData.crtMode) {
-      setCrtMode(importedData.crtMode)
-    }
-  }, [setConsoleSkin, setCrtMode, restoreCollectionData])
+  }, [setConsoleSkin, restoreCollectionData])
 
   function handleScanFeedback(vote: 'correct' | 'wrong' | null) {
     if (!result?.id || !vote) return
@@ -777,41 +743,7 @@ function App() {
             '--ry': `${rotateY}deg`,
           } as React.CSSProperties}
         >
-          {wearTearEnabled && (
-            <div className="console-wear-tear-overlay" aria-hidden="true">
-              <div className="wear-scratch wear-scratch-1" />
-              <div className="wear-scratch wear-scratch-2" />
-              <div className="wear-scratch wear-scratch-3" />
-            </div>
-          )}
-          {stickersEnabled && (
-            <>
-              <div className="pokedex-chassis-sticker sticker-pikachu" aria-hidden="true" title="Calcomanía Retro Pikachu">
-                ⚡️
-              </div>
-              <div className="pokedex-chassis-sticker sticker-pokeball" aria-hidden="true" title="Calcomanía Retro Pokéball">
-                🔴
-              </div>
-              <div className="pokedex-chassis-sticker sticker-badge" aria-hidden="true" title="Calcomanía Insignia de Liga">
-                ✨
-              </div>
-              {unlockedAchievements.includes('fire-master') && (
-                <div className="pokedex-chassis-sticker sticker-charizard" aria-hidden="true" title="Calcomanía Desbloqueada: Charizard">
-                  🔥
-                </div>
-              )}
-              {unlockedAchievements.includes('legend-hunter') && (
-                <div className="pokedex-chassis-sticker sticker-mew" aria-hidden="true" title="Calcomanía Desbloqueada: Mew">
-                  ✨
-                </div>
-              )}
-              {unlockedAchievements.includes('ai-lover') && (
-                <div className="pokedex-chassis-sticker sticker-prof" aria-hidden="true" title="Calcomanía Desbloqueada: Profesor">
-                  🎓
-                </div>
-              )}
-            </>
-          )}
+
           {isRebooting && (
             <div className="pokedex-crt-reboot-overlay" aria-hidden="true">
               <div className="pokedex-reboot-line" />
@@ -893,25 +825,7 @@ function App() {
                 Instalar
               </m.button>
             )}
-            <m.button
-              whileTap={{ scale: 0.94 }}
-              transition={{ type: 'spring', stiffness: 450, damping: 15 }}
-              type="button"
-              className={`console-mini-button ${crtMode !== 'off' ? 'console-mini-button-active' : ''}`}
-              aria-label={`Cambiar modo de pantalla CRT (actual: ${crtMode})`}
-              aria-pressed={crtMode !== 'off'}
-              onClick={() => {
-                playUiClick()
-                setCrtMode((prev) => {
-                  if (prev === 'active') return 'dimmed'
-                  if (prev === 'dimmed') return 'off'
-                  return 'active'
-                })
-              }}
-            >
-              <Tv className="size-4" aria-hidden="true" />
-              CRT: {crtMode === 'active' ? 'Sí' : crtMode === 'dimmed' ? 'Tenue' : 'No'}
-            </m.button>
+
             <m.button
               whileTap={{ scale: 0.94 }}
               transition={{ type: 'spring', stiffness: 450, damping: 15 }}
@@ -1002,34 +916,7 @@ function App() {
               <Sparkles className="size-4" aria-hidden="true" />
               Niños
             </m.button>
-            <m.button
-              whileTap={{ scale: 0.94 }}
-              transition={{ type: 'spring', stiffness: 450, damping: 15 }}
-              type="button"
-              className={`console-mini-button ${stickersEnabled ? 'console-mini-button-active' : ''}`}
-              aria-label="Alternar calcomanías retro en la carcasa"
-              onClick={() => {
-                playUiClick()
-                setStickersEnabled(prev => !prev)
-              }}
-            >
-              <Sparkles className="size-4" aria-hidden="true" />
-              Stickers
-            </m.button>
-            <m.button
-              whileTap={{ scale: 0.94 }}
-              transition={{ type: 'spring', stiffness: 450, damping: 15 }}
-              type="button"
-              className={`console-mini-button ${wearTearEnabled ? 'console-mini-button-active' : ''}`}
-              aria-label="Alternar desgaste retro en la carcasa"
-              onClick={() => {
-                playUiClick()
-                setWearTearEnabled(prev => !prev)
-              }}
-            >
-              <Palette className="size-4" aria-hidden="true" />
-              Desgaste: {wearTearEnabled ? 'Retro' : 'Nuevo'}
-            </m.button>
+
             <m.button
               whileTap={{ scale: 0.94 }}
               transition={{ type: 'spring', stiffness: 450, damping: 15 }}
@@ -1049,78 +936,7 @@ function App() {
               <Gamepad2 className="size-4" aria-hidden="true" />
               Radio: {radioStation === 'off' ? 'Off' : radioStation === 'route1' ? 'Ruta 1' : radioStation === 'center' ? 'Centro' : 'Lavanda'}
             </m.button>
-            <m.button
-              whileTap={{ scale: 0.94 }}
-              transition={{ type: 'spring', stiffness: 450, damping: 15 }}
-              type="button"
-              className={`console-mini-button ${voiceRate !== 1.0 ? 'console-mini-button-active' : ''}`}
-              aria-label={`Cambiar velocidad de voz (actual: ${voiceRate}x)`}
-              onClick={() => {
-                playUiClick()
-                setVoiceRate((prev) => {
-                  const next = prev === 0.8 ? 1.0 : prev === 1.0 ? 1.2 : 0.8
-                  const text = next === 0.8 ? "Velocidad lenta" : next === 1.0 ? "Velocidad normal" : "Velocidad rápida"
-                  setTimeout(() => {
-                    speakPokedexLine(text, {
-                      rate: next, pitch: 0.1, volume: 1, withBeep: true,
-                      lang: voiceAccent === 'mx' ? 'es-MX' : 'es-ES'
-                    })
-                  }, 150)
-                  return next
-                })
-              }}
-            >
-              <Gauge className="size-4" aria-hidden="true" />
-              Voz: {voiceRate === 0.8 ? 'Lenta' : voiceRate === 1.0 ? 'Normal' : 'Rápida'}
-            </m.button>
-            <m.button
-              whileTap={{ scale: 0.94 }}
-              transition={{ type: 'spring', stiffness: 450, damping: 15 }}
-              type="button"
-              className={`console-mini-button ${voiceAccent !== 'mx' ? 'console-mini-button-active' : ''}`}
-              aria-label={`Cambiar acento de voz (actual: ${voiceAccent === 'mx' ? 'México' : 'España'})`}
-              onClick={() => {
-                playUiClick()
-                setVoiceAccent((prev) => {
-                  const next = prev === 'mx' ? 'es' : 'mx'
-                  const text = next === 'mx' ? "Acento latino" : "Acento castellano"
-                  setTimeout(() => {
-                    speakPokedexLine(text, {
-                      rate: voiceRate, pitch: voicePitch, volume: pokedexVolume / 100, withBeep: true,
-                      lang: next === 'mx' ? 'es-MX' : 'es-ES'
-                    })
-                  }, 150)
-                  return next
-                })
-              }}
-            >
-              <Languages className="size-4" aria-hidden="true" />
-              Acento: {voiceAccent === 'mx' ? 'MX' : 'ES'}
-            </m.button>
-            <m.button
-              whileTap={{ scale: 0.94 }}
-              transition={{ type: 'spring', stiffness: 450, damping: 15 }}
-              type="button"
-              className={`console-mini-button ${voicePitch !== 0.55 ? 'console-mini-button-active' : ''}`}
-              aria-label={`Cambiar tono de voz (actual: ${voicePitch === 0.2 ? 'Profundo' : voicePitch === 0.55 ? 'Normal' : 'Agudo'})`}
-              onClick={() => {
-                playUiClick()
-                setVoicePitch((prev) => {
-                  const next = prev === 0.2 ? 0.55 : prev === 0.55 ? 1.0 : 0.2
-                  const text = next === 0.2 ? "Tono profundo" : next === 0.55 ? "Tono normal" : "Tono agudo"
-                  setTimeout(() => {
-                    speakPokedexLine(text, {
-                      rate: voiceRate, pitch: next, volume: pokedexVolume / 100, withBeep: true,
-                      lang: voiceAccent === 'mx' ? 'es-MX' : 'es-ES'
-                    })
-                  }, 150)
-                  return next
-                })
-              }}
-            >
-              <Bot className="size-4" aria-hidden="true" />
-              Tono: {voicePitch === 0.2 ? 'Bajo' : voicePitch === 0.55 ? 'Medio' : 'Alto'}
-            </m.button>
+
 
             {/* Dynamic Hardware Volume Fader & LED Meter */}
             <div className="console-volume-controller" title="Volumen de Hardware">
