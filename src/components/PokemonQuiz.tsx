@@ -28,9 +28,10 @@ function makeQuestion(index: PokemonIndexItem[]): Question {
 interface PokemonQuizProps {
   index: PokemonIndexItem[]
   onClose: () => void
+  onCorrectAnswer?: () => void
 }
 
-export function PokemonQuiz({ index, onClose }: PokemonQuizProps) {
+export function PokemonQuiz({ index, onClose, onCorrectAnswer }: PokemonQuizProps) {
   const prefersReducedMotion = useReducedMotion()
   const [{ pokemon, options }, setQuestion] = useState<Question>(() => makeQuestion(index))
   const [selected, setSelected] = useState<PokemonIndexItem | null>(null)
@@ -48,7 +49,10 @@ export function PokemonQuiz({ index, onClose }: PokemonQuizProps) {
     if (selected !== null) return
     setSelected(option)
     setTotal((t) => t + 1)
-    if (option.id === pokemon?.id) setScore((s) => s + 1)
+    if (option.id === pokemon?.id) {
+      setScore((s) => s + 1)
+      onCorrectAnswer?.()
+    }
   }
 
   if (!pokemon) return null

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { m, AnimatePresence } from 'framer-motion'
-import { X, Download, Upload, Trash2, Award, Sparkles, User, Shield } from 'lucide-react'
+import { X, Download, Upload, Trash2, Award, Sparkles, User, Shield, Layers } from 'lucide-react'
 import { playUiClick, playUiPowerOn, playUiSlideOpen } from '../utils/pokedexVoice.ts'
 import type { CollectionEntry, FavoriteEntry } from '../hooks/useCollection.ts'
 import { formatPokemonNumber } from '../utils/formatPokemonNumber.ts'
@@ -15,6 +15,8 @@ interface TrainerProfileModalProps {
   onUpdateCollection: (pokemonId: number, action: 'seen' | 'captured' | 'release') => void
   onImportProfile: (importedData: any) => void
   prefersReducedMotion: boolean
+  trainerLevel: number
+  trainerXP: number
 }
 
 export function TrainerProfileModal({
@@ -27,6 +29,8 @@ export function TrainerProfileModal({
   onUpdateCollection,
   onImportProfile,
   prefersReducedMotion,
+  trainerLevel = 1,
+  trainerXP = 0,
 }: TrainerProfileModalProps) {
   const [trainerName, setTrainerName] = useState(() => {
     try {
@@ -163,16 +167,21 @@ export function TrainerProfileModal({
                   🎓
                 </div>
                 <div className="trainer-details">
-                  <label htmlFor="trainer-name-input" className="sr-only">Nombre del Entrenador</label>
-                  <input
-                    id="trainer-name-input"
-                    type="text"
-                    value={trainerName}
-                    onChange={handleNameChange}
-                    className="trainer-name-input"
-                    placeholder="Tu nombre de entrenador"
-                    maxLength={16}
-                  />
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    <label htmlFor="trainer-name-input" className="sr-only">Nombre del Entrenador</label>
+                    <input
+                      id="trainer-name-input"
+                      type="text"
+                      value={trainerName}
+                      onChange={handleNameChange}
+                      className="trainer-name-input"
+                      placeholder="Tu nombre de entrenador"
+                      maxLength={16}
+                    />
+                    <div className="trainer-level-badge" title={`Nivel de Entrenador: ${trainerLevel}`}>
+                      LV {trainerLevel}
+                    </div>
+                  </div>
                   <div className="trainer-stats-row">
                     <span className="trainer-stat-pill" title="Pokémon Vistos">
                       <Sparkles className="size-3" /> Vistos: {seenCount}
@@ -184,6 +193,25 @@ export function TrainerProfileModal({
                       <Award className="size-3" /> Logros: {achievementsCount}
                     </span>
                   </div>
+                  {/* XP progress bar (v14) */}
+                  {(() => {
+                    const nextLevelXp = trainerLevel * 200
+                    const xpPercent = Math.min(100, Math.max(0, (trainerXP / nextLevelXp) * 100))
+                    return (
+                      <div className="trainer-xp-container">
+                        <div className="trainer-xp-header">
+                          <span>Experiencia</span>
+                          <span className="trainer-xp-text">{trainerXP} / {nextLevelXp} XP</span>
+                        </div>
+                        <div className="trainer-xp-bar" title={`${xpPercent.toFixed(1)}% de progreso`}>
+                          <div 
+                            className="trainer-xp-fill" 
+                            style={{ width: `${xpPercent}%` }} 
+                          />
+                        </div>
+                      </div>
+                    )
+                  })()}
                 </div>
               </div>
 

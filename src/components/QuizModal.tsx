@@ -9,9 +9,10 @@ interface QuizModalProps {
   onClose: () => void
   pokemonIndex: PokemonIndexItem[]
   prefersReducedMotion: boolean
+  onCorrectAnswer?: () => void
 }
 
-export function QuizModal({ isOpen, onClose, pokemonIndex, prefersReducedMotion }: QuizModalProps) {
+export function QuizModal({ isOpen, onClose, pokemonIndex, prefersReducedMotion, onCorrectAnswer }: QuizModalProps) {
   const quizTrapRef = useFocusTrap(isOpen)
 
   return (
@@ -40,6 +41,7 @@ export function QuizModal({ isOpen, onClose, pokemonIndex, prefersReducedMotion 
               <PokemonQuiz
                 index={pokemonIndex.length ? pokemonIndex : []}
                 onClose={onClose}
+                onCorrectAnswer={onCorrectAnswer}
               />
             </ErrorBoundary>
           </m.section>

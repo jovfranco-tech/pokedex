@@ -520,3 +520,54 @@ export function buildPokedexAnnouncement(pokemon: PokemonDetail | null): string 
   const description = pokemon.description ?? ''
   return normalize(`${pokemon.name}. Tipo ${types}. ${description}`)
 }
+
+// Retro 8-bit arpeggio fanfare chime on level-up (v14)
+export function playLevelUpFanfare(): void {
+  if (typeof window === 'undefined' || isPokedexMuted()) return
+  try {
+    const ctx = getAudioContext()
+    if (!ctx) return
+    const go = () => {
+      let vol = 0.8
+      try {
+        const storedVol = localStorage.getItem('pokedex-visual-gen1:volume')
+        if (storedVol !== null) {
+          vol = parseFloat(storedVol) / 100
+        }
+      } catch {}
+
+      const start = ctx.currentTime
+      const notes = [
+        523.25,  // C5
+        659.25,  // E5
+        783.99,  // G5
+        1046.50, // C6
+        1318.51, // E6
+        1567.98, // G6
+        2093.00  // C7
+      ]
+
+      notes.forEach((freq, index) => {
+        const noteStart = start + index * 0.08
+        const noteDuration = 0.18
+        const osc = ctx.createOscillator()
+        const g = ctx.createGain()
+        osc.type = 'square'
+        osc.frequency.setValueAtTime(freq, noteStart)
+        g.gain.setValueAtTime(vol * 0.05, noteStart)
+        g.gain.exponentialRampToValueAtTime(0.0001, noteStart + noteDuration)
+        osc.connect(g)
+        g.connect(ctx.destination)
+        osc.start(noteStart)
+        osc.stop(noteStart + noteDuration)
+      })
+    }
+    if (ctx.state === 'suspended') {
+      ctx.resume().then(go).catch(() => {})
+    } else {
+      go()
+    }
+  } catch {
+    // Safe fallback
+  }
+}

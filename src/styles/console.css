@@ -1787,8 +1787,17 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: rgba(18, 16, 16, 0.015);
-  opacity: 0.8;
+  background: 
+    repeating-linear-gradient(90deg, 
+      rgba(255, 0, 0, 0.04) 0px, 
+      rgba(255, 0, 0, 0.04) 2px, 
+      rgba(0, 255, 0, 0.02) 2px, 
+      rgba(0, 255, 0, 0.02) 4px, 
+      rgba(0, 0, 255, 0.04) 4px, 
+      rgba(0, 0, 255, 0.04) 6px
+    ),
+    rgba(18, 16, 16, 0.015);
+  opacity: 0.85;
   z-index: 6;
   pointer-events: none;
   animation: crt-flicker 0.18s infinite;

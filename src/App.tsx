@@ -31,7 +31,7 @@ import {
   fetchPokemonDetails,
   loadPokemonIndex,
 } from './services/pokeApi.js'
-import { buildPokedexAnnouncement, speakPokedexLine, isPokedexMuted, setPokedexMuted, playUiClick, playUiSlideOpen, playUiPowerOn } from './utils/pokedexVoice.js'
+import { buildPokedexAnnouncement, speakPokedexLine, isPokedexMuted, setPokedexMuted, playUiClick, playUiSlideOpen, playUiPowerOn, playLevelUpFanfare } from './utils/pokedexVoice.js'
 import { onSwUpdate } from './utils/registerServiceWorker.js'
 import { getPokemonTypeTheme } from './data/typeColors.js'
 import { ChiptuneRadio } from './utils/chiptuneRadio.js'
@@ -124,12 +124,51 @@ function App() {
   const [rotateX, setRotateX] = useState(0)
   const [rotateY, setRotateY] = useState(0)
   const [isListening, setIsListening] = useState(false)
+
+  // Trainer XP & Level state (v14)
+  const [trainerProfile, setTrainerProfile] = useLocalStorage<{ level: number; xp: number }>(
+    'pokedex-visual-gen1:trainer-profile-v14',
+    { level: 1, xp: 0 }
+  )
+  const [crtPowerOn, setCrtPowerOn] = useState(false)
+
+  const grantXP = useCallback((amount: number, reason?: string) => {
+    setTrainerProfile((current) => {
+      const safe = current || { level: 1, xp: 0 }
+      let newXp = safe.xp + amount
+      let newLevel = safe.level
+      let nextLevelXp = newLevel * 200
+      let leveledUp = false
+
+      while (newXp >= nextLevelXp) {
+        newXp -= nextLevelXp
+        newLevel += 1
+        nextLevelXp = newLevel * 200
+        leveledUp = true
+      }
+
+      if (leveledUp) {
+        // Retro 8-bit fanfare arpeggio audio
+        setTimeout(() => {
+          playLevelUpFanfare()
+        }, 80)
+        
+        // Show achievement/level banner using native systems
+        setShowAchievementBanner(`¡Nivel ${newLevel} alcanzado! 🏆`)
+        setTimeout(() => setShowAchievementBanner(null), 5000)
+      }
+
+      return { level: newLevel, xp: newXp }
+    })
+  }, [setTrainerProfile])
   const consoleRef = useRef<HTMLDivElement>(null)
 
   const handleOpenConsole = useCallback(() => {
     setIsConsoleOpened(true)
     sessionStorage.setItem('pokedex-visual-gen1:is-opened', 'true')
     playUiSlideOpen()
+    setCrtPowerOn(true)
+    setTimeout(() => setCrtPowerOn(false), 350)
   }, [])
 
   const handleSkinChange = useCallback(() => {
@@ -153,6 +192,8 @@ function App() {
 
     setIsRebooting(true)
     playUiPowerOn()
+    setCrtPowerOn(true)
+    setTimeout(() => setCrtPowerOn(false), 350)
     setConsoleSkin((prev) => {
       if (prev === 'red') return 'stealth'
       if (prev === 'stealth') return 'sinnoh'
@@ -458,6 +499,25 @@ function App() {
 
   // ── Handlers ───────────────────────────────────────────────────────────────
 
+  const handleUpdateCollectionWithXP = useCallback((pokemon: PokemonDetail, action: 'seen' | 'captured' = 'seen') => {
+    if (!pokemon?.id) return
+    
+    if (action === 'seen') {
+      const alreadyInCollection = collection.some(p => p.id === pokemon.id)
+      if (!alreadyInCollection) {
+        grantXP(50)
+      }
+    } else if (action === 'captured') {
+      const entry = collection.find(p => p.id === pokemon.id)
+      const alreadyCaptured = entry && entry.capturedAt && entry.capturedAt !== ''
+      if (!alreadyCaptured) {
+        grantXP(150)
+      }
+    }
+    
+    updateCollection(pokemon, action)
+  }, [collection, updateCollection, grantXP])
+
   const {
     handleImageSelected,
     handlePokemonSelected,
@@ -470,7 +530,7 @@ function App() {
     isAutoNarrate,
     setResult,
     rememberScan,
-    updateCollection,
+    updateCollection: handleUpdateCollectionWithXP,
     narratePokemon,
     fetchAndDisplay,
     handleAnalyze: runAnalyze,
@@ -756,6 +816,9 @@ function App() {
             <div className="pokedex-crt-reboot-overlay" aria-hidden="true">
               <div className="pokedex-reboot-line" />
             </div>
+          )}
+          {crtPowerOn && (
+            <div className="crt-power-on-flash" aria-hidden="true" />
           )}
           <AnimatePresence>
             {!isConsoleOpened && (
@@ -1261,8 +1324,8 @@ function App() {
                 isSpeaking={isSpeaking}
                 isScanning={isScanning}
                 onFeedback={handleScanFeedback}
-                onMarkCaptured={(pokemon) => updateCollection(pokemon, 'captured')}
-                onMarkSeen={(pokemon) => updateCollection(pokemon, 'seen')}
+                onMarkCaptured={(pokemon) => handleUpdateCollectionWithXP(pokemon, 'captured')}
+                onMarkSeen={(pokemon) => handleUpdateCollectionWithXP(pokemon, 'seen')}
                 onSpeakPokedex={narratePokemon}
                 onToggleFavorite={() => { if (result) toggleFavorite(result) }}
                 pokemonTotal={pokemonTotal}
@@ -1341,6 +1404,7 @@ function App() {
           onClose={() => setIsQuizOpen(false)}
           pokemonIndex={pokemonIndex}
           prefersReducedMotion={prefersReducedMotion}
+          onCorrectAnswer={() => grantXP(100)}
         />
 
         <AssistantModal
@@ -1370,6 +1434,8 @@ function App() {
           }}
           onImportProfile={handleImportProfile}
           prefersReducedMotion={prefersReducedMotion}
+          trainerLevel={trainerProfile?.level ?? 1}
+          trainerXP={trainerProfile?.xp ?? 0}
         />
       </DeviceShell>
     </main>
