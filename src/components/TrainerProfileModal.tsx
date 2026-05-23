@@ -40,6 +40,16 @@ export function TrainerProfileModal({
     }
   })
 
+  const [bestStreak] = useState(() => {
+    try {
+      return Number(localStorage.getItem('pokedex-visual-gen1:best-quiz-streak')) || 0
+    } catch {
+      return 0
+    }
+  })
+
+  const [activeBadgeInfo, setActiveBadgeInfo] = useState<string | null>(null)
+
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -182,7 +192,7 @@ export function TrainerProfileModal({
                       LV {trainerLevel}
                     </div>
                   </div>
-                  <div className="trainer-stats-row">
+                  <div className="trainer-stats-row flex-wrap gap-y-1.5">
                     <span className="trainer-stat-pill" title="Pokémon Vistos">
                       <Sparkles className="size-3" /> Vistos: {seenCount}
                     </span>
@@ -192,6 +202,11 @@ export function TrainerProfileModal({
                     <span className="trainer-stat-pill" title="Logros Obtenidos">
                       <Award className="size-3" /> Logros: {achievementsCount}
                     </span>
+                    {bestStreak > 0 && (
+                      <span className="trainer-stat-pill border-amber-500/30 text-amber-400" title={`Racha máxima de Quiz: ${bestStreak} aciertos`}>
+                        🔥 Racha: {bestStreak}
+                      </span>
+                    )}
                   </div>
                   {/* XP progress bar (v14) */}
                   {(() => {
@@ -220,20 +235,67 @@ export function TrainerProfileModal({
                 <h3 className="pc-box-section-title">
                   <Award className="size-4" /> Medallas del Campeón
                 </h3>
-                <div className="trainer-badges-grid">
-                  <div className={`trainer-badge-card ${unlockedAchievements.includes('Amante de la IA') ? 'badge-unlocked' : ''}`}>
+                 <div className="trainer-badges-grid">
+                  <div 
+                    onClick={() => {
+                      playUiClick()
+                      const unlocked = unlockedAchievements.includes('Amante de la IA')
+                      setActiveBadgeInfo(unlocked 
+                        ? "🎓 ¡Medalla Amante IA! Escaneaste y conversaste con la Inteligencia Artificial del Profesor." 
+                        : "🎓 Bloqueada. Requisito: Escanea y conversa con tu primer Pokémon usando el Asistente IA."
+                      )
+                    }}
+                    className={`trainer-badge-card ${unlockedAchievements.includes('Amante de la IA') ? 'badge-unlocked' : ''} cursor-pointer`}
+                    title="Detalles de logro"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.click()}
+                  >
                     <span className="trainer-badge-card-emoji">🎓</span>
                     <span className="trainer-badge-card-name">Amante IA</span>
                   </div>
-                  <div className={`trainer-badge-card ${unlockedAchievements.includes('Entrenador de Fuego') ? 'badge-unlocked' : ''}`}>
+                  <div 
+                    onClick={() => {
+                      playUiClick()
+                      const unlocked = unlockedAchievements.includes('Entrenador de Fuego')
+                      setActiveBadgeInfo(unlocked 
+                        ? "🔥 ¡Medalla Ígnea! Has capturado al menos un Pokémon de elemento Fuego." 
+                        : "🔥 Bloqueada. Requisito: Captura al menos un Pokémon de elemento Fuego."
+                      )
+                    }}
+                    className={`trainer-badge-card ${unlockedAchievements.includes('Entrenador de Fuego') ? 'badge-unlocked' : ''} cursor-pointer`}
+                    title="Detalles de logro"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.click()}
+                  >
                     <span className="trainer-badge-card-emoji">🔥</span>
                     <span className="trainer-badge-card-name">Fuego</span>
                   </div>
-                  <div className={`trainer-badge-card ${unlockedAchievements.includes('Cazador Legendario') ? 'badge-unlocked' : ''}`}>
+                  <div 
+                    onClick={() => {
+                      playUiClick()
+                      const unlocked = unlockedAchievements.includes('Cazador Legendario')
+                      setActiveBadgeInfo(unlocked 
+                        ? "✨ ¡Medalla Leyenda! Has avistado o capturado a tu primer Pokémon Legendario o Mítico." 
+                        : "✨ Bloqueada. Requisito: Escanea o captura tu primer Pokémon Legendario o Mítico."
+                      )
+                    }}
+                    className={`trainer-badge-card ${unlockedAchievements.includes('Cazador Legendario') ? 'badge-unlocked' : ''} cursor-pointer`}
+                    title="Detalles de logro"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.click()}
+                  >
                     <span className="trainer-badge-card-emoji">✨</span>
                     <span className="trainer-badge-card-name">Mítico</span>
                   </div>
                 </div>
+                {activeBadgeInfo && (
+                  <div className="mt-3 text-[10px] bg-slate-950/60 border border-slate-800 p-2 rounded text-slate-300 font-mono shadow-inner leading-relaxed animate-fade-in text-center select-none uppercase tracking-wide">
+                    {activeBadgeInfo}
+                  </div>
+                )}
               </div>
 
               {/* PC Box Grid */}

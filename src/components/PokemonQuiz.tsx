@@ -38,6 +38,13 @@ export function PokemonQuiz({ index, onClose, onCorrectAnswer }: PokemonQuizProp
   const [score, setScore] = useState(0)
   const [total, setTotal] = useState(0)
   const [questionKey, setQuestionKey] = useState(0)
+  const [currentStreak, setCurrentStreak] = useState(() => {
+    try {
+      return Number(localStorage.getItem('pokedex-visual-gen1:current-quiz-streak')) || 0
+    } catch {
+      return 0
+    }
+  })
 
   function nextQuestion() {
     setQuestion(makeQuestion(index))
@@ -51,7 +58,21 @@ export function PokemonQuiz({ index, onClose, onCorrectAnswer }: PokemonQuizProp
     setTotal((t) => t + 1)
     if (option.id === pokemon?.id) {
       setScore((s) => s + 1)
+      const nextStreak = currentStreak + 1
+      setCurrentStreak(nextStreak)
       onCorrectAnswer?.()
+      try {
+        localStorage.setItem('pokedex-visual-gen1:current-quiz-streak', String(nextStreak))
+        const best = Number(localStorage.getItem('pokedex-visual-gen1:best-quiz-streak')) || 0
+        if (nextStreak > best) {
+          localStorage.setItem('pokedex-visual-gen1:best-quiz-streak', String(nextStreak))
+        }
+      } catch {}
+    } else {
+      setCurrentStreak(0)
+      try {
+        localStorage.setItem('pokedex-visual-gen1:current-quiz-streak', '0')
+      } catch {}
     }
   }
 
@@ -64,7 +85,9 @@ export function PokemonQuiz({ index, onClose, onCorrectAnswer }: PokemonQuizProp
     <div className="quiz-container">
       <div className="quiz-header">
         <h2 className="quiz-title">¿Quién es ese Pokémon?</h2>
-        <div className="quiz-score" aria-live="polite" aria-atomic="true">{score}/{total}</div>
+        <div className="quiz-score" aria-live="polite" aria-atomic="true">
+          {currentStreak > 0 && <span className="quiz-streak-pill">🔥 Racha: {currentStreak}</span>} {score}/{total}
+        </div>
         <button type="button" className="assistant-modal-close" aria-label="Cerrar quiz" onClick={onClose}>
           <X className="size-5" aria-hidden="true" />
         </button>
