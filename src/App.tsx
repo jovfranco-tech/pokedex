@@ -73,7 +73,7 @@ function App() {
   const { canInstall, isInstalled, promptInstall } = usePwaInstall()
   const [swUpdateReady, setSwUpdateReady] = useState(false)
   const [crtMode, setCrtMode] = useLocalStorage<'active' | 'dimmed' | 'off'>('pokedex-visual-gen1:crt-mode', 'active')
-  const [consoleSkin, setConsoleSkin] = useLocalStorage<'red' | 'stealth' | 'sinnoh' | 'emerald'>('pokedex-visual-gen1:console-skin', 'red')
+  const [consoleSkin, setConsoleSkin] = useLocalStorage<'red' | 'stealth' | 'sinnoh' | 'emerald' | 'purple' | 'yellow'>('pokedex-visual-gen1:console-skin', 'red')
   const [voiceRate, setVoiceRate] = useLocalStorage<number>('pokedex-visual-gen1:voice-rate', 1.0)
   const [voiceAccent, setVoiceAccent] = useLocalStorage<'mx' | 'es'>('pokedex-visual-gen1:voice-accent', 'mx')
   const [pokedexVolume, setPokedexVolume] = useLocalStorage<number>('pokedex-visual-gen1:volume', 80)
@@ -116,6 +116,8 @@ function App() {
       if (prev === 'red') return 'stealth'
       if (prev === 'stealth') return 'sinnoh'
       if (prev === 'sinnoh') return 'emerald'
+      if (prev === 'emerald') return 'purple'
+      if (prev === 'purple') return 'yellow'
       return 'red'
     })
     setTimeout(() => {
@@ -186,6 +188,15 @@ function App() {
 
   // Subscribe to SW update notifications
   useEffect(() => onSwUpdate(() => setSwUpdateReady(true)), [])
+
+  // Trigger CRT screen phosphor reboot flicker on initial mount
+  useEffect(() => {
+    setIsRebooting(true)
+    const t = setTimeout(() => {
+      setIsRebooting(false)
+    }, 450)
+    return () => clearTimeout(t)
+  }, [])
 
   // Synchronize CRT screen styling classes on body
   useEffect(() => {
@@ -449,13 +460,13 @@ function App() {
               type="button"
               className="console-mini-button"
               aria-label={`Cambiar carcasa de la Pokédex (actual: ${
-                consoleSkin === 'red' ? 'Rojo' : consoleSkin === 'stealth' ? 'Sigilo' : consoleSkin === 'sinnoh' ? 'Sinnoh' : 'Esmeralda'
+                consoleSkin === 'red' ? 'Roja' : consoleSkin === 'stealth' ? 'Sigilo' : consoleSkin === 'sinnoh' ? 'Sinnoh' : consoleSkin === 'emerald' ? 'Esmeralda' : consoleSkin === 'purple' ? 'Uva Retro' : 'Amarillo Pika'
               })`}
               onClick={handleSkinChange}
             >
               <Palette className="size-4" aria-hidden="true" />
               Carcasa: {
-                consoleSkin === 'red' ? 'Roja' : consoleSkin === 'stealth' ? 'Sigilo' : consoleSkin === 'sinnoh' ? 'Sinnoh' : 'Esmeralda'
+                consoleSkin === 'red' ? 'Roja' : consoleSkin === 'stealth' ? 'Sigilo' : consoleSkin === 'sinnoh' ? 'Sinnoh' : consoleSkin === 'emerald' ? 'Esmeralda' : consoleSkin === 'purple' ? 'Uva Retro' : 'Amarillo Pika'
               }
             </m.button>
             <m.button
@@ -588,7 +599,20 @@ function App() {
 
             {/* Dynamic Hardware Volume Fader & LED Meter */}
             <div className="console-volume-controller" title="Volumen de Hardware">
-              <Volume2 className="size-3.5 text-white/60 shrink-0" aria-hidden="true" />
+              <button
+                type="button"
+                onClick={() => {
+                  playUiClick()
+                  const nextMuted = !isMuted
+                  setPokedexMuted(nextMuted)
+                  setIsMuted(nextMuted)
+                }}
+                className={`console-mute-switch-hardware ${isMuted ? 'mute-on' : 'mute-off'}`}
+                title={isMuted ? "Activar Sonido (Unmute)" : "Silenciar Sonido (Mute)"}
+                aria-label="Interruptor de silencio físico"
+              >
+                <span className="mute-switch-knob" />
+              </button>
               <input 
                 type="range"
                 min="0"
@@ -718,7 +742,11 @@ function App() {
                   type="button"
                   onClick={() => {
                     playUiClick()
+                    setIsRebooting(true)
                     handleReset()
+                    setTimeout(() => {
+                      setIsRebooting(false)
+                    }, 450)
                   }}
                   className="retro-button button-b"
                   title="Botón B — Reiniciar"
@@ -845,6 +873,7 @@ function App() {
           onClose={() => setIsAssistantOpen(false)}
           result={result}
           prefersReducedMotion={prefersReducedMotion}
+          history={scanHistory.slice(0, 3).map(x => `${x.displayName} (tipo ${x.type})`)}
         />
       </DeviceShell>
     </main>

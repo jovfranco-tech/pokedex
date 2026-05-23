@@ -48,6 +48,40 @@ export function Pokemon3DStage({ pokemon }: Pokemon3DStageProps) {
   const [tilt, setTilt] = useState<TiltState>(neutralTilt)
   const [imgLoaded, setImgLoaded] = useState(false)
   const [manualRotation, setManualRotation] = useState<number>(0)
+  const [isHoloActive, setIsHoloActive] = useState(() => {
+    try {
+      const stored = localStorage.getItem('pokedex-visual-gen1:holo-foil-active')
+      return stored !== 'false'
+    } catch {
+      return true
+    }
+  })
+
+  function toggleHolo() {
+    try {
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
+      if (audioCtx) {
+        const osc = audioCtx.createOscillator()
+        const gainNode = audioCtx.createGain()
+        osc.connect(gainNode)
+        gainNode.connect(audioCtx.destination)
+        osc.frequency.setValueAtTime(isHoloActive ? 600 : 1200, audioCtx.currentTime)
+        gainNode.gain.setValueAtTime(0.015, audioCtx.currentTime)
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1)
+        osc.start()
+        osc.stop(audioCtx.currentTime + 0.1)
+      }
+    } catch {}
+
+    setIsHoloActive((prev) => {
+      const next = !prev
+      try {
+        localStorage.setItem('pokedex-visual-gen1:holo-foil-active', String(next))
+      } catch {}
+      return next
+    })
+  }
+
   const modelSprite = pokemon.sprite
   const motionSprite = pokemon.animatedSprite
   const stageSprite = motionSprite || modelSprite
@@ -151,7 +185,7 @@ export function Pokemon3DStage({ pokemon }: Pokemon3DStageProps) {
               onLoad={() => setImgLoaded(true)}
             />
             <div className="pokemon-3d-card">
-              <div className="holographic-glare-foil" aria-hidden="true" />
+              {isHoloActive && <div className="holographic-glare-foil" aria-hidden="true" />}
               <img
                 src={stageSprite}
                 alt={`Holograma 3D de ${pokemon.name}`}
@@ -190,6 +224,21 @@ export function Pokemon3DStage({ pokemon }: Pokemon3DStageProps) {
         />
         <span className="dial-value" aria-hidden="true">{manualRotation}°</span>
       </div>
+
+      {/* Hologram Foil Toggle Button */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation()
+          toggleHolo()
+        }}
+        className={`hologram-foil-toggle-btn ${isHoloActive ? 'holo-enabled' : 'holo-disabled'}`}
+        title={isHoloActive ? "Quitar brillo prismático (Laminado)" : "Aplicar brillo prismático (Laminado)"}
+        aria-label="Alternar brillo holográfico"
+      >
+        <span className="sparkle-icon" aria-hidden="true">✨</span>
+        <span className="toggle-text">HOLO</span>
+      </button>
     </div>
   )
 }

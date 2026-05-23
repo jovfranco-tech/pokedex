@@ -1781,6 +1781,96 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 0 5px #fbbf24;
 }
 
+/* Retro Hardware Mute Sliding Switch (GameBoy style) */
+.console-mute-switch-hardware {
+  position: relative;
+  width: 28px;
+  height: 14px;
+  background: #2e2f38;
+  border: 1px solid #111827;
+  border-radius: 99px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+  outline: none;
+  padding: 0;
+  transition: background-color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.console-mute-switch-hardware.mute-on {
+  background: #ef4444 !important; /* red when muted */
+}
+
+.console-mute-switch-hardware.mute-off {
+  background: #10b981 !important; /* green when unmuted */
+}
+
+.mute-switch-knob {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 10px;
+  height: 10px;
+  background: linear-gradient(180deg, #f3f4f6 0%, #9ca3af 100%);
+  border: 0.5px solid #4b5563;
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.console-mute-switch-hardware.mute-on .mute-switch-knob {
+  transform: translateX(14px);
+}
+
+/* Hologram Foil Glassmorphic Toggle Button */
+.hologram-foil-toggle-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 99px;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: 'Outfit', sans-serif;
+  font-size: 9px;
+  font-weight: 800;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.hologram-foil-toggle-btn:hover {
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.hologram-foil-toggle-btn.holo-enabled {
+  background: rgba(239, 68, 68, 0.25);
+  color: #fbbf24;
+  border-color: rgba(251, 191, 36, 0.4);
+  text-shadow: 0 0 4px rgba(251, 191, 36, 0.6);
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.2), 0 2px 5px rgba(0, 0, 0, 0.4);
+}
+
+.hologram-foil-toggle-btn.holo-enabled .sparkle-icon {
+  animation: holo-sparkle-spin 2s linear infinite;
+  display: inline-block;
+}
+
+@keyframes holo-sparkle-spin {
+  0% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.2) rotate(180deg); }
+  100% { transform: scale(1) rotate(360deg); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .holographic-glare-foil {
     animation: none;

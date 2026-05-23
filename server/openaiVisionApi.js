@@ -284,7 +284,7 @@ async function identifyWithOpenAI({ apiKey, candidates, detail, fileName, imageD
   return JSON.parse(outputText)
 }
 
-async function answerWithOpenAI({ apiKey, model, pokemon, question }) {
+async function answerWithOpenAI({ apiKey, model, pokemon, question, history = [] }) {
   const context = pokemon
     ? {
       name: pokemon.name,
@@ -319,6 +319,7 @@ async function answerWithOpenAI({ apiKey, model, pokemon, question }) {
         'Mantén la respuesta compacta: 2 o 3 párrafos cortos como máximo.',
         'Separa ideas con una línea en blanco para que el texto respire en pantalla móvil.',
         'Usa los datos del Pokémon seleccionado cuando estén disponibles.',
+        'Si el usuario pregunta sobre comparaciones con Pokémon analizados previamente, usa la lista recentlyScannedPokemon proporcionada en el contexto.',
         'Si preguntan si es legendario, responde usando selectedPokemon.isLegendary. Si no es legendario pero selectedPokemon.isMythical es true, aclara que es mítico.',
         'Si preguntan si es mítico, responde usando selectedPokemon.isMythical. Si no es mítico pero selectedPokemon.isLegendary es true, aclara que es legendario.',
         'Si preguntan la diferencia entre legendario y mítico, explica que legendarios son mitos principales del mundo Pokémon y míticos son una categoría todavía más rara, a menudo ligada a eventos o historias especiales.',
@@ -335,6 +336,7 @@ async function answerWithOpenAI({ apiKey, model, pokemon, question }) {
               text: JSON.stringify({
                 question,
                 selectedPokemon: context,
+                recentlyScannedPokemon: history,
               }),
             },
           ],
@@ -379,6 +381,7 @@ export async function handlePokemonChatRequest(request, response, env = {}) {
   try {
     const body = await readJsonBody(request)
     const question = String(body.question ?? '').trim()
+    const history = Array.isArray(body.history) ? body.history : []
 
     if (!question) return sendJson(response, 400, { error: 'Escribe una pregunta.' })
 
@@ -393,6 +396,7 @@ export async function handlePokemonChatRequest(request, response, env = {}) {
           model: candidateModel,
           pokemon: body.pokemon ?? null,
           question,
+          history,
         })
         model = candidateModel
         break

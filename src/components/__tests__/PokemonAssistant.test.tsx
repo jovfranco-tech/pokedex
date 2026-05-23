@@ -82,7 +82,7 @@ describe('PokemonAssistant — submitting questions', () => {
     await user.type(screen.getByPlaceholderText(/Pikachu/i), 'es legendario?')
     await user.click(screen.getByRole('button', { name: /Preguntar/i }))
 
-    expect(askPokemonAssistant).toHaveBeenCalledWith('es legendario?', expect.objectContaining({ name: 'Pikachu' }))
+    expect(askPokemonAssistant).toHaveBeenCalledWith('es legendario?', expect.objectContaining({ name: 'Pikachu' }), [])
     // Wait for the answer to be revealed by the typewriter effect
     await waitFor(() => {
       expect(screen.getByText(/Respuesta de prueba/i)).toBeInTheDocument()
@@ -94,7 +94,7 @@ describe('PokemonAssistant — submitting questions', () => {
     render(<PokemonAssistant pokemon={null} />)
 
     await user.click(screen.getByRole('button', { name: /Este Pokémon es legendario/i }))
-    expect(askPokemonAssistant).toHaveBeenCalledWith('¿Este Pokémon es legendario?', null)
+    expect(askPokemonAssistant).toHaveBeenCalledWith('¿Este Pokémon es legendario?', null, [])
   })
 
   it('shows "Chat IA real" header when source is openai', async () => {

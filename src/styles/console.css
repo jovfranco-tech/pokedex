@@ -1910,9 +1910,34 @@ body.crt-off .console-crt-overlay {
   border-color: rgba(255, 255, 255, 0.32) !important;
 }
 
+.pokedex-console-card.skin-purple {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.03) 30%, rgba(0, 0, 0, 0.15) 100%),
+    radial-gradient(circle at 50% 50%, rgba(138, 92, 246, 0.72) 0%, rgba(76, 29, 149, 0.82) 70%, rgba(46, 16, 101, 0.95) 100%) !important;
+  box-shadow:
+    0 18px 36px rgba(76, 29, 149, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -7px 0 rgba(30, 9, 74, 0.4) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+.pokedex-console-card.skin-yellow {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0) 38%),
+    linear-gradient(180deg, #fcd34d 0%, #fbbf24 56%, #d97706 100%) !important;
+  box-shadow:
+    0 18px 36px rgba(217, 119, 6, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -7px 0 rgba(120, 53, 4, 0.25) !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
+}
+
 .pokedex-console-card.skin-stealth[style*="--type-color"],
 .pokedex-console-card.skin-sinnoh[style*="--type-color"],
-.pokedex-console-card.skin-emerald[style*="--type-color"] {
+.pokedex-console-card.skin-emerald[style*="--type-color"],
+.pokedex-console-card.skin-purple[style*="--type-color"],
+.pokedex-console-card.skin-yellow[style*="--type-color"] {
   border-color: var(--type-color) !important;
   box-shadow:
     0 18px 48px color-mix(in srgb, var(--type-color) 35%, transparent),

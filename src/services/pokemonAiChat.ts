@@ -23,6 +23,7 @@ interface ApiChatPayload {
 export async function askPokemonAssistant(
   question: string,
   pokemon: PokemonDetail | null,
+  history: string[] = []
 ): Promise<ChatResponse> {
   const localAnswer = answerPokemonQuestion(question, pokemon)
   const structuredAnswer = await tryAnswerStructuredPokemonQuestion(question, pokemon)
@@ -48,7 +49,7 @@ export async function askPokemonAssistant(
     const response = await fetch('/api/pokemon-chat', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ question, pokemon }),
+      body: JSON.stringify({ question, pokemon, history }),
       signal: controller.signal,
     })
     window.clearTimeout(timeoutId)

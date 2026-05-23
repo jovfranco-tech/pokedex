@@ -15,9 +15,10 @@ interface AssistantModalProps {
   onClose: () => void
   result: PokemonDetail | null
   prefersReducedMotion: boolean
+  history?: string[]
 }
 
-export function AssistantModal({ isOpen, onClose, result, prefersReducedMotion }: AssistantModalProps) {
+export function AssistantModal({ isOpen, onClose, result, prefersReducedMotion, history = [] }: AssistantModalProps) {
   const assistantTrapRef = useFocusTrap(isOpen)
 
   return (
@@ -78,7 +79,7 @@ export function AssistantModal({ isOpen, onClose, result, prefersReducedMotion }
             </header>
             <Suspense fallback={<div className="assistant-loading">Cargando asistente...</div>}>
               <ErrorBoundary message="El asistente tuvo un problema. Prueba recargando.">
-                <PokemonAssistant pokemon={result} />
+                <PokemonAssistant pokemon={result} history={history} />
               </ErrorBoundary>
             </Suspense>
           </m.section>

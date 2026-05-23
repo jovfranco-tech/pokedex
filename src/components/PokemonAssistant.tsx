@@ -66,9 +66,10 @@ function getAnswerParagraphs(text = ''): string[] {
 
 interface PokemonAssistantProps {
   pokemon: PokemonDetail | null
+  history?: string[]
 }
 
-export function PokemonAssistant({ pokemon }: PokemonAssistantProps) {
+export function PokemonAssistant({ pokemon, history = [] }: PokemonAssistantProps) {
   const [question, setQuestion] = useState('')
   const [lastQuestion, setLastQuestion] = useState('')
   const [answer, setAnswer] = useState('')
@@ -125,7 +126,7 @@ export function PokemonAssistant({ pokemon }: PokemonAssistantProps) {
     setQuestion('')
     setSpeechError('')
 
-    const response = await askPokemonAssistant(trimmedQuestion, pokemon)
+    const response = await askPokemonAssistant(trimmedQuestion, pokemon, history)
     setAnswer(response.answer)
     setSource(response.source)
     setIsThinking(false)
