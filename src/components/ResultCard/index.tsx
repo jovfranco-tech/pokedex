@@ -326,6 +326,9 @@ export function ResultCard({
         <div className="profile-art-card">
           <div key={result.id} className="console-crt-overlay" aria-hidden="true">
             <div className="console-screen-glass-glare" />
+            {(result.isLegendary || result.isMythical) && (
+              <div className="console-screen-holo-foil" aria-hidden="true" />
+            )}
           </div>
           <span className="profile-confidence">{result.confidenceScore}%</span>
           <button

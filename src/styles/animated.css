@@ -2374,3 +2374,26 @@
 .trainer-badge-card.badge-unlocked .trainer-badge-card-name {
   color: #fbbf24;
 }
+
+/* Holo foil reflection sheen on CRT screen for Legendary/Mythical (v13.1) */
+.console-screen-holo-foil {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 6;
+  border-radius: inherit;
+  opacity: 0.16;
+  mix-blend-mode: color-dodge;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 0, 0, 0.45) 0%,
+    rgba(255, 120, 0, 0.35) 20%,
+    rgba(255, 230, 0, 0.35) 40%,
+    rgba(0, 255, 120, 0.35) 60%,
+    rgba(0, 200, 255, 0.35) 80%,
+    rgba(220, 0, 255, 0.45) 100%
+  );
+  background-size: 250% 250%;
+  background-position: calc(var(--ry, 0deg) * 6 + 50%) calc(var(--rx, 0deg) * -6 + 50%);
+  transition: background-position 0.22s ease-out;
+}

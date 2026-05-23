@@ -768,7 +768,7 @@ function App() {
                 <m.div
                   className="pokedex-cover-panel-left"
                   initial={{ x: 0 }}
-                  exit={{ x: '-100%', transition: { duration: 0.5, ease: [0.77, 0, 0.175, 1] } }}
+                  exit={{ x: '-100%', transition: { type: 'spring', stiffness: 180, damping: 20, mass: 1 } }}
                 >
                   <div className="pokedex-cover-detail-line" />
                 </m.div>
@@ -777,7 +777,7 @@ function App() {
                 <m.div
                   className="pokedex-cover-panel-right"
                   initial={{ x: 0 }}
-                  exit={{ x: '100%', transition: { duration: 0.5, ease: [0.77, 0, 0.175, 1] } }}
+                  exit={{ x: '100%', transition: { type: 'spring', stiffness: 180, damping: 20, mass: 1 } }}
                 >
                   <div className="pokedex-cover-detail-line" />
                 </m.div>
