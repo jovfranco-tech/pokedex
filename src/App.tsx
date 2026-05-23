@@ -33,6 +33,8 @@ import {
 import { buildPokedexAnnouncement, speakPokedexLine, isPokedexMuted, setPokedexMuted, playUiClick, playUiSlideOpen, playUiPowerOn } from './utils/pokedexVoice.js'
 import { onSwUpdate } from './utils/registerServiceWorker.js'
 import { getPokemonTypeTheme } from './data/typeColors.js'
+import { ChiptuneRadio } from './utils/chiptuneRadio.js'
+import type { Station } from './utils/chiptuneRadio.js'
 import { shareAchievement } from './utils/shareCard.js'
 import type { PokemonDetail, PokemonIndexItem } from './services/pokeApi.js'
 
@@ -92,6 +94,23 @@ function App() {
       return true
     }
   })
+  const [wearTearEnabled, setWearTearEnabled] = useState(() => {
+    try {
+      return localStorage.getItem('pokedex-visual-gen1:wear-tear-enabled') === 'true'
+    } catch {
+      return false
+    }
+  })
+  const [radioStation, setRadioStation] = useState<Station>('off')
+  const [unlockedAchievements, setUnlockedAchievements] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem('pokedex-visual-gen1:achievements')
+      return stored ? JSON.parse(stored) : []
+    } catch {
+      return []
+    }
+  })
+  const [showAchievementBanner, setShowAchievementBanner] = useState<string | null>(null)
   const [sfxPack, setSfxPack] = useState<'8bit' | 'synth'>(() => {
     try {
       return (localStorage.getItem('pokedex-visual-gen1:sfx-pack') as '8bit' | 'synth') || '8bit'
@@ -297,6 +316,111 @@ function App() {
     } catch {}
   }, [stickersEnabled])
 
+  useEffect(() => {
+    try {
+      localStorage.setItem('pokedex-visual-gen1:wear-tear-enabled', String(wearTearEnabled))
+    } catch {}
+  }, [wearTearEnabled])
+
+  useEffect(() => {
+    ChiptuneRadio.setVolume(isMuted ? 0 : pokedexVolume)
+  }, [pokedexVolume, isMuted])
+
+  useEffect(() => {
+    ChiptuneRadio.selectStation(radioStation)
+    return () => {
+      ChiptuneRadio.selectStation('off')
+    }
+  }, [radioStation])
+
+  const triggerAchievementUnlock = useCallback((name: string) => {
+    setShowAchievementBanner(name)
+    try {
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
+      if (audioCtx && !isPokedexMuted()) {
+        const osc = audioCtx.createOscillator()
+        const gainNode = audioCtx.createGain()
+        osc.connect(gainNode)
+        gainNode.connect(audioCtx.destination)
+        
+        osc.type = 'triangle'
+        const now = audioCtx.currentTime
+        osc.frequency.setValueAtTime(523.25, now) // C5
+        osc.frequency.setValueAtTime(659.25, now + 0.08) // E5
+        osc.frequency.setValueAtTime(783.99, now + 0.16) // G5
+        osc.frequency.setValueAtTime(1046.50, now + 0.24) // C6
+        
+        gainNode.gain.setValueAtTime(0.06, now)
+        gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.5)
+        
+        osc.start()
+        osc.stop(now + 0.5)
+      }
+    } catch {}
+    setTimeout(() => {
+      setShowAchievementBanner(null)
+    }, 4500)
+  }, [isMuted])
+
+  useEffect(() => {
+    if (!result) return
+    
+    const current = [...unlockedAchievements]
+    const newUnlocks = [...current]
+
+    // 1. Entrenador de Fuego
+    if (!newUnlocks.includes('fire-master')) {
+      const fireCount = scanHistory.filter(p => 
+        p.type?.toLowerCase().includes('fire') || 
+        p.type?.toLowerCase().includes('fuego')
+      ).length
+      
+      const isNewFire = result.type?.some(t => 
+        t.toLowerCase().includes('fire') || 
+        t.toLowerCase().includes('fuego')
+      )
+
+      if (fireCount + (isNewFire ? 1 : 0) >= 3) {
+        newUnlocks.push('fire-master')
+        triggerAchievementUnlock('Entrenador de Fuego')
+      }
+    }
+
+    // 2. Cazador Legendario
+    if (!newUnlocks.includes('legend-hunter')) {
+      if (result.isLegendary || result.isMythical) {
+        newUnlocks.push('legend-hunter')
+        triggerAchievementUnlock('Cazador Legendario')
+      }
+    }
+
+    // 3. Gran Coleccionista
+    if (!newUnlocks.includes('great-collector')) {
+      if (collection.length >= 10) {
+        newUnlocks.push('great-collector')
+        triggerAchievementUnlock('Gran Coleccionista')
+      }
+    }
+
+    if (newUnlocks.length > current.length) {
+      setUnlockedAchievements(newUnlocks)
+      try {
+        localStorage.setItem('pokedex-visual-gen1:achievements', JSON.stringify(newUnlocks))
+      } catch {}
+    }
+  }, [result, scanHistory, collection, unlockedAchievements, triggerAchievementUnlock])
+
+  const handleChatSent = useCallback(() => {
+    if (!unlockedAchievements.includes('ai-lover')) {
+      const next = [...unlockedAchievements, 'ai-lover']
+      setUnlockedAchievements(next)
+      try {
+        localStorage.setItem('pokedex-visual-gen1:achievements', JSON.stringify(next))
+      } catch {}
+      triggerAchievementUnlock('Amante de la IA')
+    }
+  }, [unlockedAchievements, triggerAchievementUnlock])
+
   // Re-fetch stale results that are missing schema fields
   useEffect(() => {
     if (
@@ -369,6 +493,24 @@ function App() {
       <PwaUpdateBanner onDismiss={() => setSwUpdateReady(false)} />
     )}
     <main className={`pokedex-stage min-h-svh px-2 py-2 text-dex-ink sm:px-5 sm:py-4 ${isKidsMode ? 'kids-mode' : ''}`}>
+      <AnimatePresence>
+        {showAchievementBanner && (
+          <m.div
+            initial={{ opacity: 0, y: -40, scale: 0.85 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 30, scale: 0.9, transition: { duration: 0.22 } }}
+            className="achievement-unlock-banner"
+            role="alert"
+          >
+            <div className="achievement-icon">🏆</div>
+            <div>
+              <p className="achievement-title">¡LOGRO DESBLOQUEADO!</p>
+              <p className="achievement-name">{showAchievementBanner}</p>
+              <p className="achievement-desc">¡Se ha adherido una nueva pegatina al chasis!</p>
+            </div>
+          </m.div>
+        )}
+      </AnimatePresence>
       <div 
         className="pokedex-ambilight-glow" 
         style={result ? (getPokemonTypeTheme(result.type) as React.CSSProperties) : undefined}
@@ -380,6 +522,13 @@ function App() {
           className={`pokedex-console-card skin-${consoleSkin}`}
           style={result ? (getPokemonTypeTheme(result.type) as React.CSSProperties) : undefined}
         >
+          {wearTearEnabled && (
+            <div className="console-wear-tear-overlay" aria-hidden="true">
+              <div className="wear-scratch wear-scratch-1" />
+              <div className="wear-scratch wear-scratch-2" />
+              <div className="wear-scratch wear-scratch-3" />
+            </div>
+          )}
           {stickersEnabled && (
             <>
               <div className="pokedex-chassis-sticker sticker-pikachu" aria-hidden="true" title="Calcomanía Retro Pikachu">
@@ -391,6 +540,21 @@ function App() {
               <div className="pokedex-chassis-sticker sticker-badge" aria-hidden="true" title="Calcomanía Insignia de Liga">
                 ✨
               </div>
+              {unlockedAchievements.includes('fire-master') && (
+                <div className="pokedex-chassis-sticker sticker-charizard" aria-hidden="true" title="Calcomanía Desbloqueada: Charizard">
+                  🔥
+                </div>
+              )}
+              {unlockedAchievements.includes('legend-hunter') && (
+                <div className="pokedex-chassis-sticker sticker-mew" aria-hidden="true" title="Calcomanía Desbloqueada: Mew">
+                  ✨
+                </div>
+              )}
+              {unlockedAchievements.includes('ai-lover') && (
+                <div className="pokedex-chassis-sticker sticker-prof" aria-hidden="true" title="Calcomanía Desbloqueada: Profesor">
+                  🎓
+                </div>
+              )}
             </>
           )}
           {isRebooting && (
@@ -593,6 +757,39 @@ function App() {
             >
               <Sparkles className="size-4" aria-hidden="true" />
               Stickers
+            </m.button>
+            <m.button
+              whileTap={{ scale: 0.94 }}
+              transition={{ type: 'spring', stiffness: 450, damping: 15 }}
+              type="button"
+              className={`console-mini-button ${wearTearEnabled ? 'console-mini-button-active' : ''}`}
+              aria-label="Alternar desgaste retro en la carcasa"
+              onClick={() => {
+                playUiClick()
+                setWearTearEnabled(prev => !prev)
+              }}
+            >
+              <Palette className="size-4" aria-hidden="true" />
+              Desgaste: {wearTearEnabled ? 'Retro' : 'Nuevo'}
+            </m.button>
+            <m.button
+              whileTap={{ scale: 0.94 }}
+              transition={{ type: 'spring', stiffness: 450, damping: 15 }}
+              type="button"
+              className={`console-mini-button ${radioStation !== 'off' ? 'console-mini-button-active' : ''}`}
+              aria-label="Alternar radio chiptune de fondo"
+              onClick={() => {
+                playUiClick()
+                setRadioStation(prev => {
+                  if (prev === 'off') return 'route1'
+                  if (prev === 'route1') return 'center'
+                  if (prev === 'center') return 'lavender'
+                  return 'off'
+                })
+              }}
+            >
+              <Gamepad2 className="size-4" aria-hidden="true" />
+              Radio: {radioStation === 'off' ? 'Off' : radioStation === 'route1' ? 'Ruta 1' : radioStation === 'center' ? 'Centro' : 'Lavanda'}
             </m.button>
             <m.button
               whileTap={{ scale: 0.94 }}
@@ -948,6 +1145,7 @@ function App() {
           voicePitch={voicePitch}
           voiceAccent={voiceAccent}
           onThinkingChange={setIsAiThinking}
+          onChatSent={handleChatSent}
         />
       </DeviceShell>
     </main>

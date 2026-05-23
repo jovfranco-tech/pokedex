@@ -70,9 +70,10 @@ interface PokemonAssistantProps {
   voicePitch?: number
   voiceAccent?: string
   onThinkingChange?: (thinking: boolean) => void
+  onChatSent?: () => void
 }
 
-export function PokemonAssistant({ pokemon, history = [], voicePitch, voiceAccent, onThinkingChange }: PokemonAssistantProps) {
+export function PokemonAssistant({ pokemon, history = [], voicePitch, voiceAccent, onThinkingChange, onChatSent }: PokemonAssistantProps) {
   const [question, setQuestion] = useState('')
   const [lastQuestion, setLastQuestion] = useState('')
   const [answer, setAnswer] = useState('')
@@ -127,6 +128,7 @@ export function PokemonAssistant({ pokemon, history = [], voicePitch, voiceAccen
     if (!trimmedQuestion) return
 
     setIsThinking(true)
+    onChatSent?.()
     setLastQuestion(trimmedQuestion)
     setAnswer('')
     setVisibleAnswer('')
