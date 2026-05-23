@@ -1,5 +1,5 @@
 import { AnimatePresence, m, useReducedMotion } from 'framer-motion'
-import { Gamepad2, Heart, Info, Share2, Sparkles, Swords, ThumbsDown, ThumbsUp, Volume2 } from 'lucide-react'
+import { Download, Gamepad2, Heart, Info, Share2, Sparkles, Swords, ThumbsDown, ThumbsUp, Volume2 } from 'lucide-react'
 import { type ComponentType, useMemo, useState } from 'react'
 import { TypeBadge } from '../TypeBadge.js'
 import { getPokemonTypeTheme, getTypeMeta } from '../../data/typeColors.js'
@@ -159,6 +159,133 @@ export function ResultCard({
     finally { setIsSharing(false) }
   }
 
+  async function handleExportCard() {
+    if (!result) return
+    playUiClick()
+
+    const canvas = document.createElement('canvas')
+    canvas.width = 400
+    canvas.height = 560
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    // Draw background card (rounded rectangle or gradients)
+    // Draw type-themed background
+    const meta = getTypeMeta(result.type?.[0])
+    const secondaryMeta = result.type?.[1] ? getTypeMeta(result.type?.[1]) : meta
+
+    // Background gradient
+    const grad = ctx.createLinearGradient(0, 0, 0, 560)
+    grad.addColorStop(0, meta.color)
+    grad.addColorStop(1, secondaryMeta.color)
+    ctx.fillStyle = grad
+    ctx.fillRect(0, 0, 400, 560)
+
+    // Inner card border
+    ctx.lineWidth = 12
+    ctx.strokeStyle = '#1e293b'
+    ctx.strokeRect(6, 6, 388, 548)
+
+    // Card header background
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'
+    ctx.fillRect(20, 20, 360, 50)
+    ctx.lineWidth = 3
+    ctx.strokeStyle = '#1e293b'
+    ctx.strokeRect(20, 20, 360, 50)
+
+    // Pokemon Name & HP/Level
+    ctx.fillStyle = '#1e293b'
+    ctx.font = 'bold 20px "Courier New", monospace'
+    ctx.fillText(result.name.toUpperCase(), 35, 52)
+
+    ctx.font = 'bold 15px "Courier New", monospace'
+    ctx.fillText(result.displayNumber || `#${result.id}`, 290, 52)
+
+    // Illustration Frame
+    ctx.fillStyle = '#f8fafc'
+    ctx.fillRect(20, 85, 360, 260)
+    ctx.strokeRect(20, 85, 360, 260)
+
+    // Draw grid pattern inside frame to look retro/CRT
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.04)'
+    for (let y = 85; y < 345; y += 4) {
+      ctx.fillRect(20, y, 360, 2)
+    }
+
+    // Load and draw the Pokémon sprite (with anonymous crossOrigin)
+    const drawSprite = () => {
+      return new Promise<void>((resolve) => {
+        const img = new Image()
+        img.crossOrigin = 'anonymous'
+        img.onload = () => {
+          // Center the image in the frame
+          const size = 200
+          const x = 20 + (360 - size) / 2
+          const y = 85 + (260 - size) / 2
+          ctx.drawImage(img, x, y, size, size)
+          resolve()
+        }
+        img.onerror = () => {
+          // Fallback if image fails to load
+          ctx.fillStyle = '#94a3b8'
+          ctx.font = '14px monospace'
+          ctx.fillText('[Error al cargar Sprite]', 100, 215)
+          resolve()
+        }
+        img.src = result.sprite
+      })
+    }
+
+    await drawSprite()
+
+    // Stats / Info Panel
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'
+    ctx.fillRect(20, 360, 360, 180)
+    ctx.strokeRect(20, 360, 360, 180)
+
+    // Print stats
+    ctx.fillStyle = '#1e293b'
+    ctx.font = 'bold 14px "Courier New", monospace'
+    ctx.fillText(`TIPO: ${result.type?.join(' / ').toUpperCase()}`, 35, 395)
+    ctx.fillText(`PESO: ${result.weight || 'Desconocido'}`, 35, 420)
+    ctx.fillText(`ALTURA: ${result.height || 'Desconocido'}`, 35, 445)
+
+    // Description text wrapping
+    ctx.font = '12px "Courier New", monospace'
+    const desc = result.description || 'Sin descripción registrada en la base de datos de la Pokédex analógica.'
+    const words = desc.split(' ')
+    let line = ''
+    let yPos = 475
+    for (let n = 0; n < words.length; n++) {
+      const testLine = line + words[n] + ' '
+      const metrics = ctx.measureText(testLine)
+      if (metrics.width > 320 && n > 0) {
+        ctx.fillText(line, 35, yPos)
+        line = words[n] + ' '
+        yPos += 18
+      } else {
+        line = testLine
+      }
+    }
+    ctx.fillText(line, 35, yPos)
+
+    // Retro Holographic logo watermark
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.25)'
+    ctx.font = 'bold 10px monospace'
+    ctx.fillText('POKÉDEX IA V11 - RETRO EDITION', 180, 528)
+
+    // Download flow
+    try {
+      const dataUrl = canvas.toDataURL('image/png')
+      const link = document.createElement('a')
+      link.download = `pokedex-card-${result.apiName || result.id}.png`
+      link.href = dataUrl
+      link.click()
+    } catch (e) {
+      console.error('Failed to export canvas card', e)
+    }
+  }
+
   const motionProps = prefersReducedMotion
     ? { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }, transition: { duration: 0.15 } }
     : {
@@ -256,6 +383,16 @@ export function ResultCard({
         >
           <Share2 className="size-4" />
           {isSharing ? '…' : 'Compartir'}
+        </button>
+        <button
+          type="button"
+          onClick={handleExportCard}
+          className="profile-export-button"
+          aria-label={`Exportar ${result.name} como carta coleccionable`}
+          title="Exportar como Carta Coleccionable Retro (PNG)"
+        >
+          <Download className="size-4" />
+          Exportar
         </button>
       </div>
 

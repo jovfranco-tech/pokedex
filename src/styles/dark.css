@@ -93,13 +93,15 @@
 
   /* ── Surfaces ────────────────────────────────────────────────── */
   .profile-mini-stat,
-  .profile-sound-button {
+  .profile-sound-button,
+  .profile-export-button {
     border-color: rgba(50, 55, 78, 0.7);
     background: rgba(22, 25, 36, 0.9);
     box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.2);
   }
 
-  .profile-sound-button {
+  .profile-sound-button,
+  .profile-export-button {
     color: #a5a9bc;
   }
 
@@ -304,6 +306,7 @@
     background:
       radial-gradient(circle at 54% 58%, color-mix(in srgb, var(--type-color, #f4d23c) 18%, transparent), transparent 45%),
       linear-gradient(145deg, #1a1c28, #16182240 54%, color-mix(in srgb, var(--type-soft, #fff8cc) 8%, #16181e));
+    box-shadow: 0 16px 30px rgba(0, 0, 0, 0.5), 0 0 32px color-mix(in srgb, var(--type-color, #f4d23c) 65%, transparent);
   }
 
   .profile-confidence {

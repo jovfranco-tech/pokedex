@@ -69,9 +69,10 @@ interface PokemonAssistantProps {
   history?: string[]
   voicePitch?: number
   voiceAccent?: string
+  onThinkingChange?: (thinking: boolean) => void
 }
 
-export function PokemonAssistant({ pokemon, history = [], voicePitch, voiceAccent }: PokemonAssistantProps) {
+export function PokemonAssistant({ pokemon, history = [], voicePitch, voiceAccent, onThinkingChange }: PokemonAssistantProps) {
   const [question, setQuestion] = useState('')
   const [lastQuestion, setLastQuestion] = useState('')
   const [answer, setAnswer] = useState('')
@@ -87,6 +88,10 @@ export function PokemonAssistant({ pokemon, history = [], voicePitch, voiceAccen
   useEffect(() => {
     return () => recognitionRef.current?.stop?.()
   }, [])
+
+  useEffect(() => {
+    onThinkingChange?.(isThinking)
+  }, [isThinking, onThinkingChange])
 
   useEffect(() => {
     if (isThinking || !answer) {

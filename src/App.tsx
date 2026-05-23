@@ -84,6 +84,14 @@ function App() {
     return sessionStorage.getItem('pokedex-visual-gen1:is-opened') === 'true'
   })
   const [isRebooting, setIsRebooting] = useState(false)
+  const [isAiThinking, setIsAiThinking] = useState(false)
+  const [stickersEnabled, setStickersEnabled] = useState(() => {
+    try {
+      return localStorage.getItem('pokedex-visual-gen1:stickers-enabled') !== 'false'
+    } catch {
+      return true
+    }
+  })
   const [sfxPack, setSfxPack] = useState<'8bit' | 'synth'>(() => {
     try {
       return (localStorage.getItem('pokedex-visual-gen1:sfx-pack') as '8bit' | 'synth') || '8bit'
@@ -283,6 +291,12 @@ function App() {
     }
   }, [result?.apiName])
 
+  useEffect(() => {
+    try {
+      localStorage.setItem('pokedex-visual-gen1:stickers-enabled', String(stickersEnabled))
+    } catch {}
+  }, [stickersEnabled])
+
   // Re-fetch stale results that are missing schema fields
   useEffect(() => {
     if (
@@ -366,6 +380,19 @@ function App() {
           className={`pokedex-console-card skin-${consoleSkin}`}
           style={result ? (getPokemonTypeTheme(result.type) as React.CSSProperties) : undefined}
         >
+          {stickersEnabled && (
+            <>
+              <div className="pokedex-chassis-sticker sticker-pikachu" aria-hidden="true" title="Calcomanía Retro Pikachu">
+                ⚡️
+              </div>
+              <div className="pokedex-chassis-sticker sticker-pokeball" aria-hidden="true" title="Calcomanía Retro Pokéball">
+                🔴
+              </div>
+              <div className="pokedex-chassis-sticker sticker-badge" aria-hidden="true" title="Calcomanía Insignia de Liga">
+                ✨
+              </div>
+            </>
+          )}
           {isRebooting && (
             <div className="pokedex-crt-reboot-overlay" aria-hidden="true">
               <div className="pokedex-reboot-line" />
@@ -419,9 +446,9 @@ function App() {
             <div className="flex min-w-0 items-center gap-3">
               <div className="pokedex-logo-mark" aria-hidden="true" />
               <span 
-                className={`pokedex-hardware-led ${isSpeaking ? 'speaking' : isKidsMode ? 'kids' : 'active'}`} 
+                className={`pokedex-hardware-led ${isSpeaking ? 'speaking' : isAiThinking ? 'thinking' : isKidsMode ? 'kids' : 'active'}`} 
                 aria-hidden="true"
-                title={isSpeaking ? "Narración activa" : isKidsMode ? "Modo Niños" : "Pokédex Encendida"}
+                title={isSpeaking ? "Narración activa" : isAiThinking ? "Pensando..." : isKidsMode ? "Modo Niños" : "Pokédex Encendida"}
               />
               <div className="min-w-0">
                 <h1 className="truncate text-2xl font-black uppercase tracking-[0.05em] text-white">Pokédex IA</h1>
@@ -552,6 +579,20 @@ function App() {
             >
               <Sparkles className="size-4" aria-hidden="true" />
               Niños
+            </m.button>
+            <m.button
+              whileTap={{ scale: 0.94 }}
+              transition={{ type: 'spring', stiffness: 450, damping: 15 }}
+              type="button"
+              className={`console-mini-button ${stickersEnabled ? 'console-mini-button-active' : ''}`}
+              aria-label="Alternar calcomanías retro en la carcasa"
+              onClick={() => {
+                playUiClick()
+                setStickersEnabled(prev => !prev)
+              }}
+            >
+              <Sparkles className="size-4" aria-hidden="true" />
+              Stickers
             </m.button>
             <m.button
               whileTap={{ scale: 0.94 }}
@@ -906,6 +947,7 @@ function App() {
           history={scanHistory.slice(0, 3).map(x => `${x.displayName} (tipo ${x.type})`)}
           voicePitch={voicePitch}
           voiceAccent={voiceAccent}
+          onThinkingChange={setIsAiThinking}
         />
       </DeviceShell>
     </main>
