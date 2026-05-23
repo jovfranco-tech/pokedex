@@ -19,6 +19,95 @@ interface TrainerProfileModalProps {
   trainerXP: number
 }
 
+interface RetroQRCardProps {
+  level: number
+  seen: number
+  captured: number
+  streak: number
+  name: string
+}
+
+function RetroQRCard({ level, seen, captured, streak, name }: RetroQRCardProps) {
+  const size = 19
+  const grid = Array(size).fill(null).map(() => Array(size).fill(false))
+
+  const drawFinder = (x: number, y: number) => {
+    for (let r = 0; r < 7; r++) {
+      for (let c = 0; c < 7; c++) {
+        const isBorder = r === 0 || r === 6 || c === 0 || c === 6
+        const isCenter = r >= 2 && r <= 4 && c >= 2 && c <= 4
+        if (x + r < size && y + c < size) {
+          grid[x + r][y + c] = isBorder || isCenter
+        }
+      }
+    }
+  }
+
+  drawFinder(0, 0)
+  drawFinder(0, size - 7)
+  drawFinder(size - 7, 0)
+
+  const dataString = `pdx-v15:${name}:${level}:${seen}:${captured}:${streak}`
+  let hash = 0
+  for (let i = 0; i < dataString.length; i++) {
+    hash = (hash << 5) - hash + dataString.charCodeAt(i)
+    hash |= 0
+  }
+
+  const lcg = (seed: number) => {
+    let s = seed
+    return () => {
+      s = (s * 1664525 + 1013904223) % 4294967296
+      return s / 4294967296
+    }
+  }
+  const random = lcg(Math.abs(hash))
+
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      const isTopLeft = r < 8 && c < 8
+      const isTopRight = r < 8 && c >= size - 8
+      const isBottomLeft = r >= size - 8 && c < 8
+      if (!isTopLeft && !isTopRight && !isBottomLeft) {
+        grid[r][c] = random() > 0.5
+      }
+    }
+  }
+
+  return (
+    <div className="retro-qr-wrapper" title={`Tarjeta QR de Entrenador: ${dataString}`}>
+      <div 
+        className="retro-qr-grid" 
+        style={{ 
+          display: 'grid', 
+          gridTemplateColumns: `repeat(${size}, 1fr)`, 
+          gap: '1px', 
+          background: '#fff', 
+          padding: '5px', 
+          borderRadius: '12px', 
+          border: '3px solid #fbbf24', 
+          width: '84px', 
+          height: '84px', 
+          imageRendering: 'pixelated',
+          boxShadow: '0 4px 10px rgba(0, 0, 0, 0.3)'
+        }}
+      >
+        {grid.flatMap((row, r) =>
+          row.map((cell, c) => (
+            <div
+              key={`${r}-${c}`}
+              style={{
+                backgroundColor: cell ? '#1e293b' : 'transparent',
+                aspectRatio: '1',
+              }}
+            />
+          ))
+        )}
+      </div>
+    </div>
+  )
+}
+
 export function TrainerProfileModal({
   isOpen,
   onClose,
@@ -49,6 +138,7 @@ export function TrainerProfileModal({
   })
 
   const [activeBadgeInfo, setActiveBadgeInfo] = useState<string | null>(null)
+  const [showQr, setShowQr] = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -173,8 +263,50 @@ export function TrainerProfileModal({
             <div className="trainer-card-body">
               {/* Trainer Info Card */}
               <div className="trainer-info-panel">
-                <div className="trainer-avatar" aria-hidden="true">
-                  🎓
+                <div 
+                  className="trainer-avatar-wrapper cursor-pointer flex flex-col items-center"
+                  onClick={() => { playUiClick(); setShowQr(!showQr); }}
+                  title="Toca para alternar entre Ficha QR y Foto de perfil"
+                  style={{ width: '84px' }}
+                >
+                  <div className="relative size-[84px]" style={{ perspective: '1000px' }}>
+                    <AnimatePresence mode="wait">
+                      {!showQr ? (
+                        <m.div
+                          key="avatar"
+                          initial={{ rotateY: -90, opacity: 0 }}
+                          animate={{ rotateY: 0, opacity: 1 }}
+                          exit={{ rotateY: 90, opacity: 0 }}
+                          transition={{ duration: 0.22 }}
+                          className="trainer-avatar"
+                          aria-label="Foto de perfil del Entrenador. Toca para ver Ficha QR."
+                          style={{ backfaceVisibility: 'hidden', position: 'absolute', inset: 0 }}
+                        >
+                          🎓
+                        </m.div>
+                      ) : (
+                        <m.div
+                          key="qr"
+                          initial={{ rotateY: 90, opacity: 0 }}
+                          animate={{ rotateY: 0, opacity: 1 }}
+                          exit={{ rotateY: -90, opacity: 0 }}
+                          transition={{ duration: 0.22 }}
+                          style={{ backfaceVisibility: 'hidden', position: 'absolute', inset: 0 }}
+                        >
+                          <RetroQRCard 
+                            level={trainerLevel} 
+                            seen={seenCount} 
+                            captured={capturedCount} 
+                            streak={bestStreak} 
+                            name={trainerName} 
+                          />
+                        </m.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                  <span className="text-[8px] font-bold text-slate-400 select-none uppercase tracking-wider block mt-1.5 whitespace-nowrap">
+                    {!showQr ? "VER QR" : "VER FOTO"}
+                  </span>
                 </div>
                 <div className="trainer-details">
                   <div className="flex items-center gap-2 mb-2 flex-wrap">

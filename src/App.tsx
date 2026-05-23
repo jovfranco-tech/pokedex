@@ -31,7 +31,7 @@ import {
   fetchPokemonDetails,
   loadPokemonIndex,
 } from './services/pokeApi.js'
-import { buildPokedexAnnouncement, speakPokedexLine, isPokedexMuted, setPokedexMuted, playUiClick, playUiSlideOpen, playUiPowerOn, playLevelUpFanfare } from './utils/pokedexVoice.js'
+import { buildPokedexAnnouncement, speakPokedexLine, isPokedexMuted, setPokedexMuted, playUiClick, playUiSlideOpen, playUiPowerOn, playLevelUpFanfare, startAnalogHum, stopAnalogHum, playThermalClick } from './utils/pokedexVoice.js'
 import { onSwUpdate } from './utils/registerServiceWorker.js'
 import { getPokemonTypeTheme } from './data/typeColors.js'
 import { ChiptuneRadio } from './utils/chiptuneRadio.js'
@@ -76,12 +76,13 @@ function App() {
   const { canInstall, isInstalled, promptInstall } = usePwaInstall()
   const [swUpdateReady, setSwUpdateReady] = useState(false)
   const crtMode = 'active'
-  const [consoleSkin, setConsoleSkin] = useLocalStorage<'red' | 'stealth' | 'sinnoh' | 'emerald' | 'purple' | 'yellow'>('pokedex-visual-gen1:console-skin', 'red')
+  const [consoleSkin, setConsoleSkin] = useLocalStorage<'red' | 'stealth' | 'sinnoh' | 'emerald' | 'purple' | 'yellow' | 'atomic-purple' | 'jungle-green'>('pokedex-visual-gen1:console-skin', 'red')
   const voiceRate = 1.0
   const voiceAccent = 'mx'
   const [pokedexVolume, setPokedexVolume] = useLocalStorage<number>('pokedex-visual-gen1:volume', 80)
   const voicePitch = 0.55
   const [isMuted, setIsMuted] = useState(isPokedexMuted())
+  const [isHandsFreeActive, setIsHandsFreeActive] = useLocalStorage<boolean>('pokedex-visual-gen1:hands-free', false)
   const [isConsoleOpened, setIsConsoleOpened] = useState<boolean>(() => {
     if (typeof window === 'undefined') return true
     return sessionStorage.getItem('pokedex-visual-gen1:is-opened') === 'true'
@@ -180,6 +181,7 @@ function App() {
 
     setIsRebooting(true)
     playUiPowerOn()
+    playThermalClick()
     setCrtPowerOn(true)
     setTimeout(() => setCrtPowerOn(false), 350)
     setConsoleSkin((prev) => {
@@ -188,6 +190,8 @@ function App() {
       if (prev === 'sinnoh') return 'emerald'
       if (prev === 'emerald') return 'purple'
       if (prev === 'purple') return 'yellow'
+      if (prev === 'yellow') return 'atomic-purple'
+      if (prev === 'atomic-purple') return 'jungle-green'
       return 'red'
     })
     setTimeout(() => {
@@ -277,6 +281,18 @@ function App() {
     document.body.classList.add(`crt-${crtMode}`)
   }, [crtMode])
 
+  // Analog warm transformer background hum (continuous audio synth)
+  useEffect(() => {
+    if (isConsoleOpened && !isMuted) {
+      startAnalogHum()
+    } else {
+      stopAnalogHum()
+    }
+    return () => {
+      stopAnalogHum()
+    }
+  }, [isConsoleOpened, isMuted, pokedexVolume])
+
   // 3D Parallax and Glare Sheen dynamic tracking on physical card element
   useEffect(() => {
     const card = consoleRef.current
@@ -293,12 +309,16 @@ function App() {
       card.style.setProperty('--mouse-y', `${y}px`)
       card.style.setProperty('--rx', `${angleX}deg`)
       card.style.setProperty('--ry', `${angleY}deg`)
+      card.style.setProperty('--rx-num', `${angleX}`)
+      card.style.setProperty('--ry-num', `${angleY}`)
     }
     const handleMouseLeave = () => {
       card.style.setProperty('--mouse-x', '50%')
       card.style.setProperty('--mouse-y', '50%')
       card.style.setProperty('--rx', '0deg')
       card.style.setProperty('--ry', '0deg')
+      card.style.setProperty('--rx-num', '0')
+      card.style.setProperty('--ry-num', '0')
     }
     card.addEventListener('mousemove', handleMouseMove)
     card.addEventListener('mouseleave', handleMouseLeave)
@@ -517,6 +537,84 @@ function App() {
     setError,
     setScanCandidates,
   })
+
+  // Continuous hands-free voice-activated hotword listener (v15)
+  useEffect(() => {
+    if (!isHandsFreeActive || !isConsoleOpened) return undefined
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SpeechRecognition) return undefined
+
+    let recognition: any = null
+    let shouldRestart = true
+
+    const startListening = () => {
+      if (!shouldRestart) return
+      try {
+        recognition = new SpeechRecognition()
+        recognition.lang = 'es-MX'
+        recognition.interimResults = false
+        try {
+          recognition.continuous = true
+        } catch {}
+
+        recognition.onstart = () => {
+          console.log('[Hands-Free] Escuchando comandos...')
+        }
+        recognition.onend = () => {
+          if (shouldRestart) {
+            setTimeout(startListening, 350)
+          }
+        }
+        recognition.onerror = () => {
+          // Silent automatic recovery
+        }
+        recognition.onresult = (event: any) => {
+          const resultIndex = event.resultIndex ?? (event.results.length - 1)
+          const transcript = event.results?.[resultIndex]?.[0]?.transcript?.toLowerCase()?.trim() ?? ''
+          console.log('[Hands-Free] Detectado:', transcript)
+
+          if (transcript.includes('pokédex') || transcript.includes('pokedex') || transcript.includes('ok dex')) {
+            playUiClick()
+            
+            if (transcript.includes('inicia trivia') || transcript.includes('iniciar trivia') || transcript.includes('trivia') || transcript.includes('quiz') || transcript.includes('jugar')) {
+              playUiSlideOpen()
+              setIsQuizOpen(true)
+            } else if (transcript.includes('busca a') || transcript.includes('quién es') || transcript.includes('quien es')) {
+              const match = transcript.match(/(?:busca a|quién es|quien es)\s+([a-zñ0-9\-]+)/i)
+              const pkmnName = match?.[1]
+              if (pkmnName) {
+                const found = pokemonIndex.find(
+                  (p: any) => p.name.toLowerCase() === pkmnName.toLowerCase() || p.apiName.toLowerCase() === pkmnName.toLowerCase()
+                )
+                if (found) {
+                  playUiSlideOpen()
+                  handlePokemonSelected(found)
+                }
+              }
+            } else if (transcript.includes('limpiar') || transcript.includes('reiniciar') || transcript.includes('reset')) {
+              handleReset()
+            } else if (transcript.includes('cierra') || transcript.includes('cerrar') || transcript.includes('apagar')) {
+              playThermalClick()
+              setIsConsoleOpened(false)
+            }
+          }
+        }
+        recognition.start()
+      } catch (err) {
+        console.error('[Hands-Free] Error en reconocimiento:', err)
+      }
+    }
+
+    startListening()
+
+    return () => {
+      shouldRestart = false
+      try {
+        recognition?.stop()
+      } catch {}
+    }
+  }, [isHandsFreeActive, isConsoleOpened, pokemonIndex, handlePokemonSelected, handleReset])
 
   // ── CRT Glitch Trigger (v13) ───────────────────────────────────────────────
   useEffect(() => {
@@ -741,8 +839,13 @@ function App() {
             ...(result ? (getPokemonTypeTheme(result.type) as React.CSSProperties) : {}),
             '--rx': `${rotateX}deg`,
             '--ry': `${rotateY}deg`,
+            '--rx-num': rotateX,
+            '--ry-num': rotateY,
           } as React.CSSProperties}
         >
+          {['atomic-purple', 'jungle-green'].includes(consoleSkin) && (
+            <div className="console-circuitry-bg" aria-hidden="true" />
+          )}
 
           {isRebooting && (
             <div className="pokedex-crt-reboot-overlay" aria-hidden="true">
@@ -832,13 +935,13 @@ function App() {
               type="button"
               className="console-mini-button"
               aria-label={`Cambiar carcasa de la Pokédex (actual: ${
-                consoleSkin === 'red' ? 'Roja' : consoleSkin === 'stealth' ? 'Sigilo' : consoleSkin === 'sinnoh' ? 'Sinnoh' : consoleSkin === 'emerald' ? 'Esmeralda' : consoleSkin === 'purple' ? 'Uva Retro' : 'Amarillo Pika'
+                consoleSkin === 'red' ? 'Roja' : consoleSkin === 'stealth' ? 'Sigilo' : consoleSkin === 'sinnoh' ? 'Sinnoh' : consoleSkin === 'emerald' ? 'Esmeralda' : consoleSkin === 'purple' ? 'Uva Retro' : consoleSkin === 'yellow' ? 'Amarillo Pika' : consoleSkin === 'atomic-purple' ? 'Atomic Purple' : 'Jungle Green'
               })`}
               onClick={handleSkinChange}
             >
               <Palette className="size-4" aria-hidden="true" />
               Carcasa: {
-                consoleSkin === 'red' ? 'Roja' : consoleSkin === 'stealth' ? 'Sigilo' : consoleSkin === 'sinnoh' ? 'Sinnoh' : consoleSkin === 'emerald' ? 'Esmeralda' : consoleSkin === 'purple' ? 'Uva Retro' : 'Amarillo Pika'
+                consoleSkin === 'red' ? 'Roja' : consoleSkin === 'stealth' ? 'Sigilo' : consoleSkin === 'sinnoh' ? 'Sinnoh' : consoleSkin === 'emerald' ? 'Esmeralda' : consoleSkin === 'purple' ? 'Uva Retro' : consoleSkin === 'yellow' ? 'Amarillo Pika' : consoleSkin === 'atomic-purple' ? 'Atomic Purple' : 'Jungle Green'
               }
             </m.button>
             <m.button
@@ -903,6 +1006,18 @@ function App() {
             >
               <Mic className="size-4" />
               Auto
+            </m.button>
+            <m.button
+              whileTap={{ scale: 0.94 }}
+              transition={{ type: 'spring', stiffness: 450, damping: 15 }}
+              type="button"
+              className={`console-mini-button ${isHandsFreeActive ? 'console-mini-button-active' : ''}`}
+              onClick={() => { playUiClick(); setIsHandsFreeActive((value) => !value); }}
+              aria-label={isHandsFreeActive ? 'Desactivar manos libres' : 'Activar manos libres'}
+              title="Escucha comandos continuos como 'Pokédex, inicia trivia'"
+            >
+              {isHandsFreeActive ? <Mic className="size-4 text-green-400" /> : <MicOff className="size-4 text-slate-400" />}
+              Voz Activa
             </m.button>
             <m.button
               whileTap={{ scale: 0.94 }}
@@ -983,7 +1098,7 @@ function App() {
             </div>
           </div>
 
-          <div className="console-status-bar" role="status" aria-live="polite" aria-atomic="true">
+          <div className={`console-status-bar ${isScanning ? 'console-status-bar-scanning' : ''}`} role="status" aria-live="polite" aria-atomic="true">
             <span
               className={`console-led console-led-red ${error || (!result && !isScanning) ? 'console-led-active' : ''}`}
               aria-hidden="true"

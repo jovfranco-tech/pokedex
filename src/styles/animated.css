@@ -2394,7 +2394,7 @@
     rgba(220, 0, 255, 0.45) 100%
   );
   background-size: 250% 250%;
-  background-position: calc(var(--ry, 0deg) * 6 + 50%) calc(var(--rx, 0deg) * -6 + 50%);
+  background-position: calc(var(--ry-num, 0) * 6% + 50%) calc(var(--rx-num, 0) * -6% + 50%);
   transition: background-position 0.22s ease-out;
 }
 

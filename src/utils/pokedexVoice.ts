@@ -571,3 +571,119 @@ export function playLevelUpFanfare(): void {
     // Safe fallback
   }
 }
+
+// Global nodes for the continuous analog hum
+let _humOsc1: OscillatorNode | null = null
+let _humOsc2: OscillatorNode | null = null
+let _humGain: GainNode | null = null
+
+export function startAnalogHum(): void {
+  if (typeof window === 'undefined' || isPokedexMuted()) return
+  try {
+    const ctx = getAudioContext()
+    if (!ctx) return
+    if (_humOsc1 || _humOsc2) return // Already active
+
+    let vol = 0.8
+    try {
+      const storedVol = localStorage.getItem('pokedex-visual-gen1:volume')
+      if (storedVol !== null) {
+        vol = parseFloat(storedVol) / 100
+      }
+    } catch {}
+
+    const go = () => {
+      const start = ctx.currentTime
+      _humGain = ctx.createGain()
+      // Extremely low gain (0.002) so it's a warm, deep, very subtle background hum
+      _humGain.gain.setValueAtTime(vol * 0.005, start)
+
+      // Fundamental frequency (60Hz)
+      _humOsc1 = ctx.createOscillator()
+      _humOsc1.type = 'sine'
+      _humOsc1.frequency.setValueAtTime(60, start)
+
+      // Second harmonic (120Hz)
+      _humOsc2 = ctx.createOscillator()
+      _humOsc2.type = 'sine'
+      _humOsc2.frequency.setValueAtTime(120, start)
+
+      _humOsc1.connect(_humGain)
+      _humOsc2.connect(_humGain)
+      _humGain.connect(ctx.destination)
+
+      _humOsc1.start(start)
+      _humOsc2.start(start)
+    }
+
+    if (ctx.state === 'suspended') {
+      ctx.resume().then(go).catch(() => {})
+    } else {
+      go()
+    }
+  } catch {
+    // Safe fallback
+  }
+}
+
+export function stopAnalogHum(): void {
+  try {
+    if (_humOsc1) {
+      _humOsc1.stop()
+      _humOsc1.disconnect()
+      _humOsc1 = null
+    }
+    if (_humOsc2) {
+      _humOsc2.stop()
+      _humOsc2.disconnect()
+      _humOsc2 = null
+    }
+    if (_humGain) {
+      _humGain.disconnect()
+      _humGain = null
+    }
+  } catch {
+    // Safe fallback
+  }
+}
+
+export function playThermalClick(): void {
+  if (typeof window === 'undefined' || isPokedexMuted()) return
+  try {
+    const ctx = getAudioContext()
+    if (!ctx) return
+    const go = () => {
+      let vol = 0.8
+      try {
+        const storedVol = localStorage.getItem('pokedex-visual-gen1:volume')
+        if (storedVol !== null) {
+          vol = parseFloat(storedVol) / 100
+        }
+      } catch {}
+
+      const start = ctx.currentTime
+      
+      // High-pitched dry degaussing discharge crack
+      const osc = ctx.createOscillator()
+      const g = ctx.createGain()
+      osc.type = 'triangle'
+      osc.frequency.setValueAtTime(120, start)
+      osc.frequency.exponentialRampToValueAtTime(11000, start + 0.045)
+      
+      g.gain.setValueAtTime(vol * 0.06, start)
+      g.gain.exponentialRampToValueAtTime(0.0001, start + 0.045)
+      
+      osc.connect(g)
+      g.connect(ctx.destination)
+      osc.start(start)
+      osc.stop(start + 0.045)
+    }
+    if (ctx.state === 'suspended') {
+      ctx.resume().then(go).catch(() => {})
+    } else {
+      go()
+    }
+  } catch {
+    // Safe fallback
+  }
+}
