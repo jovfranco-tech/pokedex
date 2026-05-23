@@ -284,7 +284,8 @@ async function identifyWithOpenAI({ apiKey, candidates, detail, fileName, imageD
   return JSON.parse(outputText)
 }
 
-async function answerWithOpenAI({ apiKey, model, pokemon, question, history = [] }) {
+async function answerWithOpenAI({ apiKey, model, pokemon, question, history = [], voiceOpts = {} }) {
+  const pitch = Number(voiceOpts.pitch ?? 0.55)
   const context = pokemon
     ? {
       name: pokemon.name,
@@ -319,6 +320,11 @@ async function answerWithOpenAI({ apiKey, model, pokemon, question, history = []
         'Mantén la respuesta compacta: 2 o 3 párrafos cortos como máximo.',
         'Separa ideas con una línea en blanco para que el texto respire en pantalla móvil.',
         'Usa los datos del Pokémon seleccionado cuando estén disponibles.',
+        pitch === 0.2
+          ? 'Adopta la personalidad erudita, científica y sabia del legendario Profesor Oak. Habla de forma culta, amable, docente y educada.'
+          : pitch === 1.0
+          ? 'Adopta la personalidad de RotomDex: enérgica, parlanchina, súper entusiasta y robótica. Utiliza interjecciones electrónicas graciosas (ej. ¡Bzzzt!) y un tono muy alegre.'
+          : 'Adopta la personalidad amigable de una computadora clásica de Pokédex, servicial y directa.',
         'Si el usuario pregunta sobre comparaciones con Pokémon analizados previamente, usa la lista recentlyScannedPokemon proporcionada en el contexto.',
         'Si preguntan si es legendario, responde usando selectedPokemon.isLegendary. Si no es legendario pero selectedPokemon.isMythical es true, aclara que es mítico.',
         'Si preguntan si es mítico, responde usando selectedPokemon.isMythical. Si no es mítico pero selectedPokemon.isLegendary es true, aclara que es legendario.',
@@ -382,6 +388,7 @@ export async function handlePokemonChatRequest(request, response, env = {}) {
     const body = await readJsonBody(request)
     const question = String(body.question ?? '').trim()
     const history = Array.isArray(body.history) ? body.history : []
+    const voiceOpts = body.voiceOpts || {}
 
     if (!question) return sendJson(response, 400, { error: 'Escribe una pregunta.' })
 
@@ -397,6 +404,7 @@ export async function handlePokemonChatRequest(request, response, env = {}) {
           pokemon: body.pokemon ?? null,
           question,
           history,
+          voiceOpts,
         })
         model = candidateModel
         break

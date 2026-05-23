@@ -30,7 +30,7 @@ import {
   fetchPokemonDetails,
   loadPokemonIndex,
 } from './services/pokeApi.js'
-import { buildPokedexAnnouncement, speakPokedexLine, isPokedexMuted, setPokedexMuted, playUiClick, playUiSlideOpen } from './utils/pokedexVoice.js'
+import { buildPokedexAnnouncement, speakPokedexLine, isPokedexMuted, setPokedexMuted, playUiClick, playUiSlideOpen, playUiPowerOn } from './utils/pokedexVoice.js'
 import { onSwUpdate } from './utils/registerServiceWorker.js'
 import { getPokemonTypeTheme } from './data/typeColors.js'
 import { shareAchievement } from './utils/shareCard.js'
@@ -84,6 +84,13 @@ function App() {
     return sessionStorage.getItem('pokedex-visual-gen1:is-opened') === 'true'
   })
   const [isRebooting, setIsRebooting] = useState(false)
+  const [sfxPack, setSfxPack] = useState<'8bit' | 'synth'>(() => {
+    try {
+      return (localStorage.getItem('pokedex-visual-gen1:sfx-pack') as '8bit' | 'synth') || '8bit'
+    } catch {
+      return '8bit'
+    }
+  })
   const consoleRef = useRef<HTMLDivElement>(null)
 
   const handleOpenConsole = useCallback(() => {
@@ -112,6 +119,7 @@ function App() {
     } catch (e) {}
 
     setIsRebooting(true)
+    playUiPowerOn()
     setConsoleSkin((prev) => {
       if (prev === 'red') return 'stealth'
       if (prev === 'stealth') return 'sinnoh'
@@ -192,6 +200,7 @@ function App() {
   // Trigger CRT screen phosphor reboot flicker on initial mount
   useEffect(() => {
     setIsRebooting(true)
+    playUiPowerOn()
     const t = setTimeout(() => {
       setIsRebooting(false)
     }, 450)
@@ -473,6 +482,26 @@ function App() {
               whileTap={{ scale: 0.94 }}
               transition={{ type: 'spring', stiffness: 450, damping: 15 }}
               type="button"
+              className={`console-mini-button ${sfxPack === 'synth' ? 'console-mini-button-active' : ''}`}
+              aria-label={`Cambiar pack de sonido (actual: ${sfxPack === 'synth' ? 'Moderno Synth' : 'Retro 8-bits'})`}
+              onClick={() => {
+                playUiClick()
+                setSfxPack((prev) => {
+                  const next = prev === '8bit' ? 'synth' : '8bit'
+                  try {
+                    localStorage.setItem('pokedex-visual-gen1:sfx-pack', next)
+                  } catch {}
+                  return next
+                })
+              }}
+            >
+              <Volume2 className="size-4" aria-hidden="true" />
+              Sonido: {sfxPack === 'synth' ? 'Synth' : 'Retro'}
+            </m.button>
+            <m.button
+              whileTap={{ scale: 0.94 }}
+              transition={{ type: 'spring', stiffness: 450, damping: 15 }}
+              type="button"
               className={`console-mini-button ${isMuted ? 'console-mini-button-active' : ''}`}
               aria-label={isMuted ? 'Activar sonido de voz' : 'Silenciar sonido de voz'}
               aria-pressed={isMuted}
@@ -743,6 +772,7 @@ function App() {
                   onClick={() => {
                     playUiClick()
                     setIsRebooting(true)
+                    playUiPowerOn()
                     handleReset()
                     setTimeout(() => {
                       setIsRebooting(false)
@@ -874,6 +904,8 @@ function App() {
           result={result}
           prefersReducedMotion={prefersReducedMotion}
           history={scanHistory.slice(0, 3).map(x => `${x.displayName} (tipo ${x.type})`)}
+          voicePitch={voicePitch}
+          voiceAccent={voiceAccent}
         />
       </DeviceShell>
     </main>

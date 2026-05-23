@@ -197,7 +197,9 @@ export function ResultCard({
         </div>
 
         <div className="profile-art-card">
-          <div key={result.id} className="console-crt-overlay" aria-hidden="true" />
+          <div key={result.id} className="console-crt-overlay" aria-hidden="true">
+            <div className="console-screen-glass-glare" />
+          </div>
           <span className="profile-confidence">{result.confidenceScore}%</span>
           <button
             type="button"

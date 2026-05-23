@@ -51,6 +51,9 @@ vi.mock('../../utils/pokedexVoice.ts', () => ({
   setPokedexMuted: vi.fn(),
   stopPokedexVoice: vi.fn(),
   speakWithPokedexVoice: vi.fn(),
+  playUiClick: vi.fn(),
+  playUiSlideOpen: vi.fn(),
+  playUiPowerOn: vi.fn(),
 }))
 
 vi.mock('../../utils/playPokemonCry.ts', () => ({

@@ -138,13 +138,81 @@ export function playUiClick(): void {
     if (!ctx) return
     const go = () => {
       let vol = 0.8
+      let pack = '8bit'
+      try {
+        const storedVol = localStorage.getItem('pokedex-visual-gen1:volume')
+        if (storedVol !== null) {
+          vol = parseFloat(storedVol) / 100
+        }
+        const storedPack = localStorage.getItem('pokedex-visual-gen1:sfx-pack')
+        if (storedPack !== null) {
+          pack = storedPack
+        }
+      } catch {}
+      
+      if (pack === 'synth') {
+        const start = ctx.currentTime
+        const osc = ctx.createOscillator()
+        const g = ctx.createGain()
+        osc.type = 'sine'
+        osc.frequency.setValueAtTime(3200, start)
+        osc.frequency.exponentialRampToValueAtTime(100, start + 0.015)
+        g.gain.setValueAtTime(vol * 0.12, start)
+        g.gain.exponentialRampToValueAtTime(0.0001, start + 0.015)
+        osc.connect(g)
+        g.connect(ctx.destination)
+        osc.start(start)
+        osc.stop(start + 0.015)
+      } else {
+        scheduleTone(ctx, 1600, 0, 0.03, vol * 0.1)
+      }
+    }
+    if (ctx.state === 'suspended') {
+      ctx.resume().then(go).catch(() => {})
+    } else {
+      go()
+    }
+  } catch {
+    // Safe fallback
+  }
+}
+
+export function playUiPowerOn(): void {
+  if (typeof window === 'undefined' || isPokedexMuted()) return
+  try {
+    const ctx = getAudioContext()
+    if (!ctx) return
+    const go = () => {
+      let vol = 0.8
       try {
         const storedVol = localStorage.getItem('pokedex-visual-gen1:volume')
         if (storedVol !== null) {
           vol = parseFloat(storedVol) / 100
         }
       } catch {}
-      scheduleTone(ctx, 1600, 0, 0.03, vol * 0.1)
+
+      const start = ctx.currentTime
+      const osc1 = ctx.createOscillator()
+      const g1 = ctx.createGain()
+      osc1.type = 'square'
+      osc1.frequency.setValueAtTime(987, start) // B5
+      g1.gain.setValueAtTime(vol * 0.04, start)
+      g1.gain.exponentialRampToValueAtTime(0.0001, start + 0.12)
+      osc1.connect(g1)
+      g1.connect(ctx.destination)
+      osc1.start(start)
+      osc1.stop(start + 0.12)
+
+      const osc2 = ctx.createOscillator()
+      const g2 = ctx.createGain()
+      osc2.type = 'square'
+      osc2.frequency.setValueAtTime(1318, start + 0.08) // E6
+      g2.gain.setValueAtTime(vol * 0.04, start + 0.08)
+      g2.gain.exponentialRampToValueAtTime(0.0001, start + 0.35)
+      osc2.connect(g2)
+      g2.connect(ctx.destination)
+      osc2.start(start + 0.08)
+      osc2.stop(start + 0.35)
     }
     if (ctx.state === 'suspended') {
       ctx.resume().then(go).catch(() => {})

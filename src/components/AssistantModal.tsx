@@ -16,9 +16,11 @@ interface AssistantModalProps {
   result: PokemonDetail | null
   prefersReducedMotion: boolean
   history?: string[]
+  voicePitch?: number
+  voiceAccent?: string
 }
 
-export function AssistantModal({ isOpen, onClose, result, prefersReducedMotion, history = [] }: AssistantModalProps) {
+export function AssistantModal({ isOpen, onClose, result, prefersReducedMotion, history = [], voicePitch, voiceAccent }: AssistantModalProps) {
   const assistantTrapRef = useFocusTrap(isOpen)
 
   return (
@@ -79,7 +81,7 @@ export function AssistantModal({ isOpen, onClose, result, prefersReducedMotion, 
             </header>
             <Suspense fallback={<div className="assistant-loading">Cargando asistente...</div>}>
               <ErrorBoundary message="El asistente tuvo un problema. Prueba recargando.">
-                <PokemonAssistant pokemon={result} history={history} />
+                <PokemonAssistant pokemon={result} history={history} voicePitch={voicePitch} voiceAccent={voiceAccent} />
               </ErrorBoundary>
             </Suspense>
           </m.section>
