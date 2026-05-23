@@ -170,7 +170,7 @@ export function StatsPanel({ stats = [] }: StatsPanelProps) {
     { x: 100, y: 194, anchor: 'middle' }, // speed (bottom)
     { x: 22,  y: 142, anchor: 'end'    }, // sp-defense (bottom-left)
     { x: 22,  y: 64,  anchor: 'end'    }, // sp-attack (top-left)
-  ]
+  ] as const
 
   return (
     <div className="stats-container-block">

@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { m, AnimatePresence } from 'framer-motion'
-import { X, Download, Upload, Trash2, Award, Sparkles, User, Shield, Layers } from 'lucide-react'
+import { X, Download, Upload, Trash2, Award, Sparkles, Shield, Layers } from 'lucide-react'
 import { playUiClick, playUiPowerOn, playUiSlideOpen } from '../utils/pokedexVoice.ts'
 import type { CollectionEntry, FavoriteEntry } from '../hooks/useCollection.ts'
 import { formatPokemonNumber } from '../utils/formatPokemonNumber.ts'
@@ -184,7 +184,7 @@ export function TrainerProfileModal({
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
-    } catch (e) {
+    } catch {
       alert('Error al exportar el perfil.')
     }
   }
@@ -213,7 +213,7 @@ export function TrainerProfileModal({
         onImportProfile(data)
         playUiPowerOn()
         alert(`¡Perfil de ${trainer} importado con éxito!`)
-      } catch (err) {
+      } catch {
         alert('Error al importar: El archivo JSON está corrupto o no es compatible.')
       }
     }
@@ -231,7 +231,7 @@ export function TrainerProfileModal({
       }
     : {
         hidden: { opacity: 0, scale: 0.95 },
-        visible: { opacity: 1, scale: 1, transition: { type: 'spring', duration: 0.4, bounce: 0.15 } },
+        visible: { opacity: 1, scale: 1, transition: { type: 'spring' as const, duration: 0.4, bounce: 0.15 } },
         exit: { opacity: 0, scale: 0.95, transition: { duration: 0.2 } },
       }
 

@@ -67,7 +67,7 @@ function App() {
   const [isAutoNarrate, setIsAutoNarrate] = useLocalStorage<boolean>(AUTO_NARRATE_KEY, false)
   const [scanFeedback, setScanFeedback] = useLocalStorage<Record<number, string>>(SCAN_FEEDBACK_KEY, {})
   const [isSpeaking, setIsSpeaking] = useState(false)
-  const prefersReducedMotion = useReducedMotion()
+  const prefersReducedMotion = !!useReducedMotion()
   const [isAssistantOpen, setIsAssistantOpen] = useState(false)
   const [isQuizOpen, setIsQuizOpen] = useState(false)
   const [pokemonIndex, setPokemonIndex] = useState<PokemonIndexItem[]>([])
@@ -89,9 +89,19 @@ function App() {
   })
   const [isRebooting, setIsRebooting] = useState(false)
   const [isAiThinking, setIsAiThinking] = useState(false)
-  const stickersEnabled = false
-  const wearTearEnabled = false
   const [radioStation, setRadioStation] = useState<Station>('off')
+  const [isOnline, setIsOnline] = useState(() => typeof navigator !== 'undefined' ? navigator.onLine : true)
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true)
+    const handleOffline = () => setIsOnline(false)
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [])
   const [unlockedAchievements, setUnlockedAchievements] = useState<string[]>(() => {
     try {
       const stored = localStorage.getItem('pokedex-visual-gen1:achievements')
@@ -121,7 +131,7 @@ function App() {
   )
   const [crtPowerOn, setCrtPowerOn] = useState(false)
 
-  const grantXP = useCallback((amount: number, reason?: string) => {
+  const grantXP = useCallback((amount: number) => {
     setTrainerProfile((current) => {
       const safe = current || { level: 1, xp: 0 }
       let newXp = safe.xp + amount
@@ -177,7 +187,7 @@ function App() {
         osc.start()
         osc.stop(audioCtx.currentTime + 0.3)
       }
-    } catch (e) {}
+    } catch {}
 
     setIsRebooting(true)
     playUiPowerOn()
@@ -736,7 +746,7 @@ function App() {
                 name: cleanQuery,
                 apiName: cleanQuery.toLowerCase(),
                 displayName: cleanQuery,
-              })
+              } as any)
             }
           }
         }
@@ -753,7 +763,7 @@ function App() {
     } else {
       try {
         recognitionRef.current?.start()
-      } catch (err) {
+      } catch {
         // Fallback
       }
     }
@@ -1111,7 +1121,12 @@ function App() {
               className={`console-led console-led-green ${result && !isScanning && !error ? 'console-led-active' : ''}`}
               aria-hidden="true"
             />
-            <span className="ml-auto flex items-center gap-2">
+            <span className="ml-auto flex items-center gap-2 text-[10px] font-bold">
+              {!isOnline && (
+                <span className="mr-1.5 flex items-center gap-0.5 rounded bg-red-600/40 px-1 py-0.5 text-[9px] text-red-200 border border-red-500/20 font-black">
+                  OFFLINE
+                </span>
+              )}
               <CircleDot className="size-3 fill-white/70 text-white/70" aria-hidden="true" />
               {isScanning ? 'Analizando...' : result ? 'Identificado' : lastScanLabel}
             </span>
@@ -1137,6 +1152,8 @@ function App() {
                 onImageSelected={handleImageSelected}
                 onReset={handleReset}
                 previewUrl={previewUrl}
+                selectedPokemonId={result?.id}
+                isConsoleOpened={isConsoleOpened}
               />
             </ErrorBoundary>
 
@@ -1343,7 +1360,7 @@ function App() {
           onClose={() => setIsAssistantOpen(false)}
           result={result}
           prefersReducedMotion={prefersReducedMotion}
-          history={scanHistory.slice(0, 3).map(x => `${x.displayName} (tipo ${x.type})`)}
+          history={scanHistory.slice(0, 3).map(x => `${x.name} (tipo ${x.type})`)}
           voicePitch={voicePitch}
           voiceAccent={voiceAccent}
           onThinkingChange={setIsAiThinking}

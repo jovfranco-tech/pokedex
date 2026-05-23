@@ -8,6 +8,8 @@ interface ImageScannerProps {
   onImageSelected: (file: File | null) => void
   onReset: () => void
   previewUrl: string
+  selectedPokemonId?: number
+  isConsoleOpened?: boolean
 }
 
 export function ImageScanner({
@@ -17,6 +19,8 @@ export function ImageScanner({
   onImageSelected,
   onReset,
   previewUrl,
+  selectedPokemonId,
+  isConsoleOpened = true,
 }: ImageScannerProps) {
   const cameraInputRef = useRef<HTMLInputElement>(null)
   const galleryInputRef = useRef<HTMLInputElement>(null)
@@ -36,6 +40,16 @@ export function ImageScanner({
       streamRef.current?.getTracks().forEach((track) => track.stop())
     }
   }, [])
+
+  useEffect(() => {
+    stopCamera()
+  }, [selectedPokemonId])
+
+  useEffect(() => {
+    if (!isConsoleOpened) {
+      stopCamera()
+    }
+  }, [isConsoleOpened])
 
   function handleInputChange(event: React.ChangeEvent<HTMLInputElement>) {
     stopCamera()
@@ -176,6 +190,12 @@ export function ImageScanner({
           <UploadCloud className="size-5" aria-hidden="true" />
           Subir
         </button>
+      </div>
+
+      <div className="mt-2 text-center" aria-hidden="true">
+        <span className="text-[9px] font-black text-white/30 tracking-wider uppercase">
+          Escáner Visual IA & Simulación de Respaldo Local
+        </span>
       </div>
 
       <input

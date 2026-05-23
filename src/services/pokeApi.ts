@@ -1008,7 +1008,6 @@ export async function fetchPokemonDetails(
         const types = guessTypesFromId(item.id)
         const isMega = item.isMega || item.name.includes('-mega')
         const isPrimal = item.isPrimal || item.name.includes('-primal')
-        const isSpecialForm = isMega || isPrimal
 
         const categoryFlags = getPokemonCategoryFlags({
           apiName: item.apiName,
@@ -1029,8 +1028,6 @@ export async function fetchPokemonDetails(
           apiName: item.apiName,
           baseName: item.displayName.replace(/ (Mega|Primal).*$/, ''),
           displayNumber: item.displayNumber ?? `#${String(item.id).padStart(3, '0')}`,
-          isMega,
-          isPrimal,
           formLabel: isMega ? 'Mega Evolución' : isPrimal ? 'Forma Primigenia' : '',
           ...categoryFlags,
           type: types,

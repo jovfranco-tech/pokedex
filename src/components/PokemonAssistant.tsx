@@ -296,6 +296,12 @@ export function PokemonAssistant({ pokemon, history = [], voicePitch, voiceAccen
           <Send className="size-5" />
         </button>
       </form>
+
+      <div className="mt-2 text-center" aria-hidden="true">
+        <span className="text-[9px] font-black text-white/30 tracking-wider uppercase">
+          Asistente Virtual IA & Base de Conocimiento Local
+        </span>
+      </div>
     </section>
   )
 }

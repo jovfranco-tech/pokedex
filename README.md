@@ -240,6 +240,15 @@ npm run dist:win
 
 Sin certificado válido, el instalador funciona, pero Windows puede avisar que viene de un editor desconocido.
 
+## Seguridad y Privacidad
+
+La Pokédex IA implementa estrictos controles de seguridad y privacidad siguiendo prácticas **OWASP-lite**:
+
+- **Arquitectura Local-First y Respaldo Local:** Todos tus Pokémon capturados, vistos, historial y favoritos se persisten localmente en el dispositivo mediante `localStorage` con una réplica reactiva asíncrona en una base de datos local **IndexedDB** (`indexedDbBackup.ts`) para garantizar inmunidad contra pérdidas accidentales de datos sin necesidad de registrar cuentas externas.
+- **Protección Activa de Privacidad en Cámara:** La cámara web o del móvil requiere consentimiento explícito. Para evitar fugas de privacidad, el stream se apaga automáticamente en cuanto se identifica un Pokémon. Adicionalmente, al cerrar la tapa del chasis físico (`isConsoleOpened = false`), el componente del escáner se **desmonta físicamente del DOM**, deteniendo instantáneamente todos los tracks de medios en ejecución.
+- **Transparencia de IA y Fallbacks:** El asistente y el escáner notifican visualmente si el reconocimiento y las respuestas están impulsados por IA real en la nube o por la robusta base de datos y simulación local offline.
+- **Hardening de Headers en Vercel:** Configurada con una rigurosa Content-Security-Policy (CSP) y directivas `X-Frame-Options: DENY` en `vercel.json` para bloquear inyecciones de código malicioso y ataques de secuestro de clic (clickjacking).
+
 ## Roadmap V2
 
 - Evolución visual del Pokémon.

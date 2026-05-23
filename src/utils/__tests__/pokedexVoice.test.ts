@@ -90,6 +90,7 @@ describe('speakSyncAndWait', () => {
       onend: (() => void) | null = null
       onerror: (() => void) | null = null
       constructor(_text: string) {
+        void _text
         utteranceRef.onend = null
         utteranceRef.onerror = null
         // Link instance properties to the shared ref so tests can trigger them
