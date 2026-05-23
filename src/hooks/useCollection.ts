@@ -59,6 +59,8 @@ export interface UseCollectionResult {
   rememberScan: (pokemon: PokemonDetail) => void
   updateCollection: (pokemon: PokemonDetail, action?: 'seen' | 'captured') => void
   toggleFavorite: (result: PokemonDetail) => void
+  releasePokemon: (id: number) => void
+  restoreCollectionData: (history: any[], favs: any[], coll: any[]) => void
 }
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
@@ -158,6 +160,24 @@ export function useCollection({
     })
   }
 
+  function releasePokemon(id: number): void {
+    setCollection((current) => {
+      const safe = Array.isArray(current) ? current : []
+      return safe.map((item) => {
+        if (item.id === id) {
+          return { ...item, capturedAt: '' }
+        }
+        return item
+      })
+    })
+  }
+
+  function restoreCollectionData(history: any[], favs: any[], coll: any[]): void {
+    setScanHistory(history || [])
+    setFavorites(favs || [])
+    setCollection(coll || [])
+  }
+
   return {
     scanHistory,
     favorites,
@@ -165,5 +185,7 @@ export function useCollection({
     rememberScan,
     updateCollection,
     toggleFavorite,
+    releasePokemon,
+    restoreCollectionData,
   }
 }

@@ -1,7 +1,7 @@
 import { AnimatePresence, LazyMotion, m, useReducedMotion } from 'framer-motion'
 
 const loadMotionFeatures = () => import('framer-motion').then((mod) => mod.domAnimation)
-import { Bot, CircleDot, Download, Gamepad2, Gauge, Languages, Mic, Palette, Sparkles, Tv, Volume2, VolumeX } from 'lucide-react'
+import { Bot, CircleDot, Download, Gamepad2, Gauge, Languages, Mic, Palette, Sparkles, Tv, Volume2, VolumeX, User, MicOff } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { CollectionStrip } from './components/CollectionStrip.js'
 import { DeviceShell } from './components/DeviceShell.js'
@@ -17,6 +17,7 @@ import { ScanHistoryStrip } from './components/ScanHistoryStrip.js'
 import { PwaUpdateBanner } from './components/PwaUpdateBanner.js'
 import { QuizModal } from './components/QuizModal.js'
 import { AssistantModal } from './components/AssistantModal.js'
+import { TrainerProfileModal } from './components/TrainerProfileModal.js'
 import { useAchievements } from './hooks/useAchievements.js'
 import { useCollection } from './hooks/useCollection.js'
 import { useImagePreview } from './hooks/useImagePreview.js'
@@ -118,6 +119,11 @@ function App() {
       return '8bit'
     }
   })
+  const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const [crtGlitch, setCrtGlitch] = useState(false)
+  const [rotateX, setRotateX] = useState(0)
+  const [rotateY, setRotateY] = useState(0)
+  const [isListening, setIsListening] = useState(false)
   const consoleRef = useRef<HTMLDivElement>(null)
 
   const handleOpenConsole = useCallback(() => {
@@ -170,6 +176,8 @@ function App() {
     rememberScan,
     updateCollection,
     toggleFavorite,
+    releasePokemon,
+    restoreCollectionData,
   } = useCollection({
     historyKey: SCAN_HISTORY_KEY,
     favoritesKey: FAVORITES_KEY,
@@ -333,6 +341,8 @@ function App() {
     }
   }, [radioStation])
 
+
+
   const triggerAchievementUnlock = useCallback((name: string) => {
     setShowAchievementBanner(name)
     try {
@@ -470,6 +480,187 @@ function App() {
     setScanCandidates,
   })
 
+  // ── CRT Glitch Trigger (v13) ───────────────────────────────────────────────
+  useEffect(() => {
+    if (result) {
+      setCrtGlitch(true)
+      const timer = setTimeout(() => setCrtGlitch(false), 150)
+      return () => clearTimeout(timer)
+    }
+  }, [result])
+
+  useEffect(() => {
+    if (isScanning) {
+      setCrtGlitch(true)
+      const timer = setTimeout(() => setCrtGlitch(false), 200)
+      return () => clearTimeout(timer)
+    }
+  }, [isScanning])
+
+  // ── 3D Parallax Tilt (Desktop cursor move) (v13) ───────────────────────────
+  useEffect(() => {
+    if (prefersReducedMotion) return
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!consoleRef.current) return
+      const rect = consoleRef.current.getBoundingClientRect()
+      const x = e.clientX - rect.left - rect.width / 2
+      const y = e.clientY - rect.top - rect.height / 2
+      
+      const rx = -(y / (rect.height / 2)) * 6
+      const ry = (x / (rect.width / 2)) * 6
+      
+      setRotateX(rx)
+      setRotateY(ry)
+
+      const mouseX = ((e.clientX - rect.left) / rect.width) * 100
+      const mouseY = ((e.clientY - rect.top) / rect.height) * 100
+      consoleRef.current.style.setProperty('--mouse-x', `${mouseX}%`)
+      consoleRef.current.style.setProperty('--mouse-y', `${mouseY}%`)
+    }
+
+    const handleMouseLeave = () => {
+      setRotateX(0)
+      setRotateY(0)
+    }
+
+    const element = consoleRef.current
+    if (element) {
+      window.addEventListener('mousemove', handleMouseMove)
+      element.addEventListener('mouseleave', handleMouseLeave)
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      if (element) {
+        element.removeEventListener('mouseleave', handleMouseLeave)
+      }
+    }
+  }, [prefersReducedMotion])
+
+  // ── 3D Gyroscope phone tilt (v13) ──────────────────────────────────────────
+  useEffect(() => {
+    if (prefersReducedMotion) return
+
+    const handleOrientation = (e: DeviceOrientationEvent) => {
+      const beta = e.beta ?? 0
+      const gamma = e.gamma ?? 0
+
+      const rx = Math.max(-8, Math.min(8, (beta - 45) / 5))
+      const ry = Math.max(-8, Math.min(8, gamma / 5))
+
+      setRotateX(rx)
+      setRotateY(ry)
+    }
+
+    if (typeof window !== 'undefined' && 'DeviceOrientationEvent' in window) {
+      window.addEventListener('deviceorientation', handleOrientation)
+    }
+
+    return () => {
+      if (typeof window !== 'undefined' && 'DeviceOrientationEvent' in window) {
+        window.removeEventListener('deviceorientation', handleOrientation)
+      }
+    }
+  }, [prefersReducedMotion])
+
+  // ── Speech-to-Text Setup & Recognition Handler (v13) ───────────────────────
+  const recognitionRef = useRef<any>(null)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition()
+      recognition.continuous = false
+      recognition.interimResults = false
+      recognition.lang = 'es-MX'
+
+      recognition.onstart = () => {
+        setIsListening(true)
+      }
+
+      recognition.onend = () => {
+        setIsListening(false)
+      }
+
+      recognition.onresult = (event: any) => {
+        const text = event.results[0][0].transcript
+        if (text) {
+          playUiClick()
+          const cleanQuery = text.trim().replace(/\.$/, '')
+          if (cleanQuery) {
+            const match = pokemonIndex.find(
+              (p) => p.name.toLowerCase() === cleanQuery.toLowerCase() || p.displayName.toLowerCase() === cleanQuery.toLowerCase()
+            )
+            if (match) {
+              handlePokemonSelected(match)
+            } else {
+              handlePokemonSelected({
+                name: cleanQuery,
+                apiName: cleanQuery.toLowerCase(),
+                displayName: cleanQuery,
+              })
+            }
+          }
+        }
+      }
+
+      recognitionRef.current = recognition
+    }
+  }, [pokemonIndex, handlePokemonSelected])
+
+  const toggleVoiceSearch = useCallback(() => {
+    playUiClick()
+    if (isListening) {
+      recognitionRef.current?.stop()
+    } else {
+      try {
+        recognitionRef.current?.start()
+      } catch (err) {
+        // Fallback
+      }
+    }
+  }, [isListening])
+
+  // ── Trainer Profile Backup Restoration (v13) ───────────────────────────────
+  const handleImportProfile = useCallback((importedData: any) => {
+    if (!importedData || typeof importedData !== 'object') return
+
+    if (importedData.trainerName) {
+      localStorage.setItem('pokedex-visual-gen1:trainer-name', importedData.trainerName)
+    }
+    
+    // Restore collections
+    restoreCollectionData(
+      importedData.collection || [],
+      importedData.favorites || [],
+      importedData.collection || []
+    )
+
+    // Restore achievements
+    if (Array.isArray(importedData.achievements)) {
+      setUnlockedAchievements(importedData.achievements)
+      localStorage.setItem('pokedex-visual-gen1:achievements', JSON.stringify(importedData.achievements))
+    }
+
+    // Config options
+    if (importedData.stickersEnabled !== undefined) {
+      setStickersEnabled(importedData.stickersEnabled)
+      localStorage.setItem('pokedex-visual-gen1:stickers-enabled', String(importedData.stickersEnabled))
+    }
+    if (importedData.wearTearEnabled !== undefined) {
+      setWearTearEnabled(importedData.wearTearEnabled)
+      localStorage.setItem('pokedex-visual-gen1:wear-tear-enabled', String(importedData.wearTearEnabled))
+    }
+    if (importedData.consoleSkin) {
+      setConsoleSkin(importedData.consoleSkin)
+    }
+    if (importedData.crtMode) {
+      setCrtMode(importedData.crtMode)
+    }
+  }, [setConsoleSkin, setCrtMode, restoreCollectionData])
+
   function handleScanFeedback(vote: 'correct' | 'wrong' | null) {
     if (!result?.id || !vote) return
     setScanFeedback((prev) => ({ ...prev, [result.id]: vote }))
@@ -520,7 +711,11 @@ function App() {
         <section
           ref={consoleRef}
           className={`pokedex-console-card skin-${consoleSkin}`}
-          style={result ? (getPokemonTypeTheme(result.type) as React.CSSProperties) : undefined}
+          style={{
+            ...(result ? (getPokemonTypeTheme(result.type) as React.CSSProperties) : {}),
+            '--rx': `${rotateX}deg`,
+            '--ry': `${rotateY}deg`,
+          } as React.CSSProperties}
         >
           {wearTearEnabled && (
             <div className="console-wear-tear-overlay" aria-hidden="true">
@@ -935,6 +1130,8 @@ function App() {
                 isLoading={isIndexLoading}
                 onSelect={handlePokemonSelected}
                 variant="console"
+                onVoiceSearch={toggleVoiceSearch}
+                isListening={isListening}
               />
             </ErrorBoundary>
 
@@ -992,6 +1189,16 @@ function App() {
                 <Gamepad2 className="size-5" />
                 Quiz
               </m.button>
+              <m.button
+                whileTap={{ scale: 0.96 }}
+                transition={{ type: 'spring', stiffness: 450, damping: 15 }}
+                type="button"
+                className="console-ai-button flex-1"
+                onClick={() => { playUiClick(); setIsProfileOpen(true); }}
+              >
+                <User className="size-5" />
+                Perfil
+              </m.button>
             </div>
 
             {/* Retro Gaming Controller Footer: D-Pad and Action Buttons A & B */}
@@ -1041,7 +1248,7 @@ function App() {
         </section>
 
         {/* Column 2: skip-link target + result card — wrapped so both share one grid cell */}
-        <div style={{ minWidth: 0 }} className="result-column">
+        <div style={{ minWidth: 0 }} className={`result-column ${crtGlitch ? 'screen-glitch' : ''}`}>
           <div id="main-result" tabIndex={-1} style={{ outline: 'none' }} />
           <AnimatePresence mode="wait">
             <ErrorBoundary message="No se pudo mostrar el Pokémon. Prueba buscando otro.">
@@ -1146,6 +1353,23 @@ function App() {
           voiceAccent={voiceAccent}
           onThinkingChange={setIsAiThinking}
           onChatSent={handleChatSent}
+        />
+
+        <TrainerProfileModal
+          isOpen={isProfileOpen}
+          onClose={() => setIsProfileOpen(false)}
+          collection={collection}
+          favorites={favorites}
+          unlockedAchievements={unlockedAchievements}
+          onSelectPokemon={(apiName) => {
+            const match = pokemonIndex.find((p) => p.apiName === apiName)
+            if (match) handlePokemonSelected(match)
+          }}
+          onUpdateCollection={(id, action) => {
+            if (action === 'release') releasePokemon(id)
+          }}
+          onImportProfile={handleImportProfile}
+          prefersReducedMotion={prefersReducedMotion}
         />
       </DeviceShell>
     </main>

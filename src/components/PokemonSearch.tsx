@@ -1,5 +1,5 @@
 import { m, useReducedMotion } from 'framer-motion'
-import { Loader2, Search } from 'lucide-react'
+import { Loader2, Search, Mic } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { formatPokemonNumber } from '../utils/formatPokemonNumber.js'
 import { searchPokemonIndex } from '../services/pokeApi.js'
@@ -12,6 +12,8 @@ interface PokemonSearchProps {
   isLoading: boolean
   onSelect: (pokemon: PokemonIndexItem) => void
   variant?: 'panel' | 'console'
+  onVoiceSearch?: () => void
+  isListening?: boolean
 }
 
 // Helper function to calculate Levenshtein distance
@@ -71,7 +73,14 @@ function findSpellingSuggestion(query: string, list: PokemonIndexItem[]): Pokemo
   return null
 }
 
-export function PokemonSearch({ index, isLoading, onSelect, variant = 'panel' }: PokemonSearchProps) {
+export function PokemonSearch({
+  index,
+  isLoading,
+  onSelect,
+  variant = 'panel',
+  onVoiceSearch,
+  isListening = false,
+}: PokemonSearchProps) {
   const [query, setQuery] = useState('')
   const [filterGen, setFilterGen] = useState(0)
   const prefersReducedMotion = useReducedMotion()
@@ -114,6 +123,17 @@ export function PokemonSearch({ index, isLoading, onSelect, variant = 'panel' }:
             placeholder="Pikachu, Charizard, #150..."
             className="console-search-input"
           />
+          {onVoiceSearch && (
+            <button
+              type="button"
+              onClick={onVoiceSearch}
+              className={`voice-search-btn ${isListening ? 'listening' : ''}`}
+              title="Dictar nombre"
+              aria-label="Buscar dictando nombre por voz"
+            >
+              <Mic className="size-4" />
+            </button>
+          )}
           <button type="submit" className="console-go-button" aria-label="Ir — buscar Pokémon">
             {isLoading ? <Loader2 className="size-4 animate-spin" /> : 'Ir'}
           </button>
