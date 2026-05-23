@@ -103,6 +103,18 @@ export function ResultCard({
   const [activeTab, setActiveTab] = useState('info')
   const [isSharing, setIsSharing] = useState(false)
   const [a11yAnnouncement, setA11yAnnouncement] = useState('')
+  const [prevPokemon, setPrevPokemon] = useState<PokemonDetail | null>(null)
+  const [ghostPokemon, setGhostPokemon] = useState<PokemonDetail | null>(null)
+  const [ghostKey, setGhostKey] = useState(0)
+
+  if (result && (!prevPokemon || prevPokemon.id !== result.id)) {
+    if (prevPokemon && prevPokemon.id !== result.id) {
+      setGhostPokemon(prevPokemon)
+      setGhostKey((prev) => prev + 1)
+    }
+    setPrevPokemon(result)
+  }
+
   const visibleTabs = useMemo(
     () => (isKidsMode ? profileTabs.filter((tab) => ['info', 'stage'].includes(tab.id)) : profileTabs),
     [isKidsMode],
@@ -347,6 +359,17 @@ export function ResultCard({
           >
             <Heart className="size-4" />
           </button>
+          {ghostPokemon && ghostPokemon.sprite && (
+            <m.img
+              key={`ghost-${ghostKey}`}
+              src={ghostPokemon.sprite}
+              alt=""
+              className="profile-art-ghost"
+              initial={{ opacity: 0.75, scale: 1 }}
+              animate={{ opacity: 0, scale: 1.04 }}
+              transition={{ duration: 0.85, ease: 'easeOut' }}
+            />
+          )}
           <img key={result.apiName ?? result.id} src={result.sprite} alt={`Ilustración de ${result.name}`} />
         </div>
       </div>
